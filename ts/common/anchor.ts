@@ -4,6 +4,9 @@
  */
 import {AnchorOrientationHint} from "@jsplumb/core"
 
+/**
+ * @public
+ */
 export interface AnchorOptions extends Record<string, any> {
     /**
      * Optional css class that will be applied to any DOM element for an endpoint using this anchor.
@@ -141,6 +144,7 @@ export type FullAnchorSpec = {type:AnchorId, options:AnchorOptions}
 
 /**
  * An anchor spec in the form [ x, y, ox, oy ]
+ * @public
  */
 export type ArrayAnchorSpec = [ number, number, AnchorOrientationHint, AnchorOrientationHint, number?, number? ]
 
