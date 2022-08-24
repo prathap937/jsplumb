@@ -152,6 +152,9 @@ export declare enum AnchorLocations {
     TopRight = "TopRight"
 }
 
+/**
+ * @public
+ */
 export declare interface AnchorOptions extends Record<string, any> {
     /**
      * Optional css class that will be applied to any DOM element for an endpoint using this anchor.
@@ -180,6 +183,7 @@ export declare type AnchorSpec = SingleAnchorSpec | Array<SingleAnchorSpec>;
 
 /**
  * An anchor spec in the form [ x, y, ox, oy ]
+ * @public
  */
 export declare type ArrayAnchorSpec = [number, number, AnchorOrientationHint, AnchorOrientationHint, number?, number?];
 
