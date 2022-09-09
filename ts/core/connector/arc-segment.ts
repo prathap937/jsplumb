@@ -1,9 +1,12 @@
-import {AbstractSegment, defaultSegmentHandler, PointNearPath, SegmentParams} from "@jsplumb/common"
+import {defaultSegmentHandler, PointNearPath, Segment, SegmentParams} from "@jsplumb/common"
 import {normal, theta, TWO_PI, PointXY, BoundingBox} from '@jsplumb/util'
 import {SegmentHandler, Segments} from "./segments"
 
 const VERY_SMALL_VALUE = 0.0000000001
 
+/**
+ * @internal
+ */
 function gentleRound (n:number):number {
     let f = Math.floor(n), r = Math.ceil(n)
     if (n - f < VERY_SMALL_VALUE) {
@@ -15,6 +18,9 @@ function gentleRound (n:number):number {
     return n
 }
 
+/**
+ * @internal
+ */
 function _calcAngleForLocation (segment:ArcSegment, location:number):number {
     if (segment.anticlockwise) {
         let sa = segment.startAngle < segment.endAngle ? segment.startAngle + TWO_PI : segment.startAngle,
@@ -29,10 +35,16 @@ function _calcAngleForLocation (segment:ArcSegment, location:number):number {
     }
 }
 
-function _calcAngle (segment:ArcSegment, _x:number, _y:number):number {
-    return theta({x:segment.cx, y:segment.cy}, {x:_x, y:_y})
+/**
+ * @internal
+ */
+function _calcAngle (cx:number, cy:number, _x:number, _y:number):number {
+    return theta({x:cx, y:cy}, {x:_x, y:_y})
 }
 
+/**
+ * @internal
+ */
 function _getPath(segment:ArcSegment, isFirstSegment: boolean): string {
     let laf = segment.sweep > Math.PI ? 1 : 0,
         sf = segment.anticlockwise ? 0 : 1
@@ -40,6 +52,9 @@ function _getPath(segment:ArcSegment, isFirstSegment: boolean): string {
     return (isFirstSegment ? "M" + segment.x1 + " " + segment.y1 + " " : "") + "A " + segment.radius + " " + segment.radius + " 0 " + laf + "," + sf + " " + segment.x2 + " " + segment.y2
 }
 
+/**
+ * @internal
+ */
 function _getLength (segment:ArcSegment):number {
     return segment.length
 }
@@ -47,6 +62,7 @@ function _getLength (segment:ArcSegment):number {
 /**
  * returns the point on the segment's path that is 'location' along the length of the path, where 'location' is a decimal from
  * 0 to 1 inclusive.
+ * @internal
  */
 function _pointOnPath(segment:ArcSegment, location:number, absolute?:boolean):PointXY {
 
@@ -80,6 +96,9 @@ function _gradientAtPoint (segment:ArcSegment, location:number, absolute?:boolea
     return m
 }
 
+/**
+ * @internal
+ */
 function _pointAlongPathFrom (segment:ArcSegment, location:number, distance:number, absolute?:boolean):PointXY {
     let p = _pointOnPath(segment, location, absolute),
         arcSpan = distance / segment.circumference * 2 * Math.PI,
@@ -104,12 +123,75 @@ export interface ArcSegmentParams extends SegmentParams {
 }
 
 /**
+ * Identifer for arc segments.
+ * @public
+ */
+export const SEGMENT_TYPE_ARC = "Arc"
+
+/**
  * @internal
  */
-export class ArcSegment extends AbstractSegment {
+function _createArcSegment(params:ArcSegmentParams):ArcSegment {
 
-    static segmentType:string = "Arc"
-    type = ArcSegment.segmentType
+    let startAngle:number,
+        endAngle:number,
+        x1 = params.x1,
+        x2 = params.x2,
+        y1 = params.y1,
+        y2 = params.y2,
+        cx = params.cx,
+        cy = params.cy,
+        radius = params.r,
+        anticlockwise = params.ac
+
+    if (params.startAngle && params.endAngle) {
+
+        startAngle = params.startAngle
+        endAngle = params.endAngle
+
+        x1 = cx + (radius * Math.cos(startAngle))
+        y1 = cy + (radius * Math.sin(startAngle))
+        x2 = cx + (radius * Math.cos(endAngle))
+        y2 = cy + (radius * Math.sin(endAngle))
+    }
+    else {
+        startAngle = _calcAngle(cx, cy, x1, y1)
+        endAngle = _calcAngle(cx, cy, x2, y2)
+    }
+
+    if (endAngle < 0) {
+        endAngle += TWO_PI
+    }
+    if (startAngle < 0) {
+        startAngle += TWO_PI
+    }
+
+    let ea = endAngle < startAngle ? endAngle + TWO_PI : endAngle
+    let sweep = Math.abs(ea - startAngle)
+    if (anticlockwise) {
+        sweep = TWO_PI - sweep
+    }
+
+    let circumference = 2 * Math.PI * radius
+    let frac = sweep / TWO_PI
+    let length = circumference * frac
+
+    let extents = {
+        xmin: cx - radius,
+        xmax: cx + radius,
+        ymin: cy - radius,
+        ymax: cy + radius
+    }
+
+    return {
+        x1, x2, y1, y2, startAngle, endAngle, cx, cy, radius, anticlockwise, sweep, circumference, frac, length, extents, type:SEGMENT_TYPE_ARC
+    }
+}
+
+/**
+ * @internal
+ */
+export interface ArcSegment extends Segment {
 
     cx:number
     cy:number
@@ -123,66 +205,11 @@ export class ArcSegment extends AbstractSegment {
     length:number
     circumference:number
     frac:number
-
-    constructor(params:ArcSegmentParams) {
-
-        super(params)
-
-        this.cx = params.cx
-        this.cy = params.cy
-        this.radius = params.r
-        this.anticlockwise = params.ac
-
-        if (params.startAngle && params.endAngle) {
-
-            this.startAngle = params.startAngle
-            this.endAngle = params.endAngle
-
-            this.x1 = this.cx + (this.radius * Math.cos(this.startAngle))
-            this.y1 = this.cy + (this.radius * Math.sin(this.startAngle))
-            this.x2 = this.cx + (this.radius * Math.cos(this.endAngle))
-            this.y2 = this.cy + (this.radius * Math.sin(this.endAngle))
-        }
-        else {
-            this.startAngle = _calcAngle(this, this.x1, this.y1)
-            this.endAngle = _calcAngle(this, this.x2, this.y2)
-        }
-
-        if (this.endAngle < 0) {
-            this.endAngle += TWO_PI
-        }
-        if (this.startAngle < 0) {
-            this.startAngle += TWO_PI
-        }
-
-        let ea = this.endAngle < this.startAngle ? this.endAngle + TWO_PI : this.endAngle
-        this.sweep = Math.abs(ea - this.startAngle)
-        if (this.anticlockwise) {
-            this.sweep = TWO_PI - this.sweep
-        }
-
-        this.circumference = 2 * Math.PI * this.radius
-        this.frac = this.sweep / TWO_PI
-        this.length = this.circumference * this.frac
-
-        this.extents = {
-            xmin: this.cx - this.radius,
-            xmax: this.cx + this.radius,
-            ymin: this.cy - this.radius,
-            ymax: this.cy + this.radius
-        }
-    }
-
-
-
-
-
-    // TODO: lineIntersection
 }
 
 const ArcSegmentHandler:SegmentHandler<ArcSegment>  = {
-    create(segmentType: string, params: any): ArcSegment {
-        return new ArcSegment(params)
+    create(segmentType: string, params: ArcSegmentParams): ArcSegment {
+        return _createArcSegment(params)
     },
     findClosestPointOnPath(s: ArcSegment, x: number, y: number): PointNearPath {
         return defaultSegmentHandler.findClosestPointOnPath(this, s, x, y)
@@ -197,6 +224,7 @@ const ArcSegmentHandler:SegmentHandler<ArcSegment>  = {
         return _gradientAtPoint(s, location, absolute)
     },
     lineIntersection(s: ArcSegment, x1: number, y1: number, x2: number, y2: number): Array<PointXY> {
+        // TODO: lineIntersection
         return defaultSegmentHandler.lineIntersection(this, x1, y1, x2, y2)
     },
     pointAlongPathFrom(s: ArcSegment, location: number, distance: number, absolute?: boolean): PointXY {
@@ -206,12 +234,14 @@ const ArcSegmentHandler:SegmentHandler<ArcSegment>  = {
         return _pointOnPath(s, location, absolute)
     },
     boxIntersection (s:ArcSegment, x:number, y:number, w:number, h:number):Array<PointXY> {
+        // TODO: boxIntersection
         return defaultSegmentHandler.boxIntersection(this, s, x, y, w, h)
     },
     boundingBoxIntersection(s:ArcSegment, box:BoundingBox):Array<PointXY> {
+        // TODO: boundingBoxIntersection
         return defaultSegmentHandler.boundingBoxIntersection(this, s, box)
     }
 
 }
 
-Segments.register(ArcSegment.segmentType, ArcSegmentHandler)
+Segments.register(SEGMENT_TYPE_ARC, ArcSegmentHandler)

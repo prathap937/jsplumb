@@ -1,6 +1,6 @@
 
 import {BoundingBox, gradient, lineLength, pointOnLine, PointXY} from '@jsplumb/util'
-import {AbstractSegment, PointNearPath, Segment, SegmentParams} from "@jsplumb/common"
+import {PointNearPath, Segment, SegmentParams} from "@jsplumb/common"
 import {SegmentHandler, Segments} from "./segments"
 
 /**
@@ -13,23 +13,49 @@ export type StraightSegmentCoordinates = { x1:number, y1:number, x2:number, y2:n
  */
 export interface StraightSegmentParams extends SegmentParams {}
 
+/**
+ *
+ * @param q
+ * @param p1
+ * @param p2
+ * @internal
+ */
 function _pointLiesBetween (q:number, p1:number, p2:number):boolean {
     return (p2 > p1) ? (p1 <= q && q <= p2) : (p1 >= q && q >= p2)
 }
 
-// is c between a and b?
+/**
+ * is c between a and b?
+ * @param a
+ * @param b
+ * @param c
+ * @internal
+ */
 function _within (a:number, b:number, c:number):boolean {
     return c >= Math.min(a, b) && c <= Math.max(a, b)
 }
 
-// find which of a and b is closest to c
+/**
+ * find which of a and b is closest to c
+ * @internal
+ */
+
 function _closest (a:number, b:number, c:number):number {
     return Math.abs(c - a) < Math.abs(c - b) ? a : b
 }
 
+/**
+ *
+ * @param segment
+ * @param _x1
+ * @param _y1
+ * @param _x2
+ * @param _y2
+ * @internal
+ */
 function _lineIntersection (segment:StraightSegment, _x1:number, _y1:number, _x2:number, _y2:number):Array<PointXY> {
     let m2 = Math.abs(gradient({x: _x1, y: _y1}, {x: _x2, y: _y2})),
-    m1 = Math.abs(this.m),
+    m1 = Math.abs(segment.m),
     b = m1 === Infinity ? segment.x1 : segment.y1 - (m1 * segment.x1),
     out:Array<PointXY> = [],
     b2 = m2 === Infinity ? _x1 : _y1 - (m2 * _x1)
@@ -74,7 +100,7 @@ function _lineIntersection (segment:StraightSegment, _x1:number, _y1:number, _x2
                 // Y = mX + b
                 X = (b2 - b) / (m1 - m2)
                 Y = (m1 * X) + b
-                if(_pointLiesBetween(X, segment.x1, segment.x2) && this._pointLiesBetween(Y, segment.y1, segment.y2)) {
+                if(_pointLiesBetween(X, segment.x1, segment.x2) && _pointLiesBetween(Y, segment.y1, segment.y2)) {
                     out.push({x: X, y:Y})
                 }
             }
@@ -84,15 +110,31 @@ function _lineIntersection (segment:StraightSegment, _x1:number, _y1:number, _x2
     return out
 }
 
+/**
+ *
+ * @param segment
+ * @param x
+ * @param y
+ * @param w
+ * @param h
+ * @internal
+ */
 function _boxIntersection(segment:StraightSegment, x:number, y:number, w:number, h:number) {
     let a:Array<PointXY> = []
-    a.push.apply(a, this.lineIntersection(x, y, x + w, y))
-    a.push.apply(a, this.lineIntersection(x + w, y, x + w, y + h))
-    a.push.apply(a, this.lineIntersection(x + w, y + h, x, y + h))
-    a.push.apply(a, this.lineIntersection(x, y + h, x, y))
+    a.push.apply(a, _lineIntersection(segment, x, y, x + w, y))
+    a.push.apply(a, _lineIntersection(segment, x + w, y, x + w, y + h))
+    a.push.apply(a, _lineIntersection(segment, x + w, y + h, x, y + h))
+    a.push.apply(a, _lineIntersection(segment, x, y + h, x, y))
     return a
 }
 
+/**
+ *
+ * @param segment
+ * @param x
+ * @param y
+ * @internal
+ */
 function _findClosestPointOnPath (segment:StraightSegment, x:number, y:number):PointNearPath {
     let out:PointNearPath = {
         d: Infinity,
@@ -134,18 +176,39 @@ function _findClosestPointOnPath (segment:StraightSegment, x:number, y:number):P
     return out
 }
 
+/**
+ *
+ * @param segment
+ * @internal
+ */
 function _getLength(segment:StraightSegment):number {
     return segment.length
 }
 
+/**
+ *
+ * @param segment
+ * @internal
+ */
 function _getGradient(segment:StraightSegment):number {
     return segment.m
 }
 
+/**
+ *
+ * @param segment
+ * @param isFirstSegment
+ * @internal
+ */
 function _getPath(segment:StraightSegment, isFirstSegment:boolean):string {
     return (isFirstSegment ? "M " + segment.x1 + " " + segment.y1 + " " : "") + "L " + segment.x2 + " " + segment.y2
 }
 
+/**
+ *
+ * @param segment
+ * @internal
+ */
 function _recalc (segment:StraightSegment):void {
     segment.length = Math.sqrt(Math.pow(segment.x2 - segment.x1, 2) + Math.pow(segment.y2 - segment.y1, 2))
     segment.m = gradient({x: segment.x1, y: segment.y1}, {x: segment.x2, y: segment.y2})
@@ -159,6 +222,11 @@ function _recalc (segment:StraightSegment):void {
     }
 }
 
+/**
+ * @internal
+ * @param segment
+ * @param coords
+ */
 function _setCoordinates (segment:StraightSegment, coords:StraightSegmentCoordinates):void {
     segment.x1 = coords.x1
     segment.y1 = coords.y1
@@ -167,6 +235,12 @@ function _setCoordinates (segment:StraightSegment, coords:StraightSegmentCoordin
     _recalc(segment)
 }
 
+/**
+ * @internal
+ * @param segment
+ * @param location
+ * @param absolute
+ */
 function _pointOnPath(segment:StraightSegment, location:number, absolute?:boolean):PointXY {
     if (location === 0 && !absolute) {
         return { x: segment.x1, y: segment.y1 }
@@ -182,6 +256,7 @@ function _pointOnPath(segment:StraightSegment, location:number, absolute?:boolea
 
 /**
  * returns the gradient of the segment at the given point - which for us is constant.
+ * @internal
  */
 function _gradientAtPoint (segment:StraightSegment, location:number, absolute?:boolean):number {
     return segment.m
@@ -191,6 +266,7 @@ function _gradientAtPoint (segment:StraightSegment, location:number, absolute?:b
  * returns the point on the segment's path that is 'distance' along the length of the path from 'location', where
  * 'location' is a decimal from 0 to 1 inclusive, and 'distance' is a number of pixels.
  * this hands off to jsPlumbUtil to do the maths, supplying two points and the distance.
+ * @internal
  */
 function _pointAlongPathFrom (segment:StraightSegment, location:number, distance:number, absolute?:boolean):PointXY {
     let p = _pointOnPath(segment, location, absolute),
@@ -206,96 +282,56 @@ function _pointAlongPathFrom (segment:StraightSegment, location:number, distance
 /**
  * @internal
  */
-export class StraightSegment extends AbstractSegment {
+function blankStraightSegment():StraightSegment {
+    return {
+        type:SEGMENT_TYPE_STRAIGHT,
+        m:0,
+        length:0,
+        m2:0,
+        x1:0,
+        x2:0,
+        y1:0,
+        y2:0,
+        extents:{
+            xmin:0, xmax:0, ymin:0, ymax:0
+        }
+    }
+}
 
+/**
+ * @internal
+ * @param params
+ */
+function _createStraightSegment(params:StraightSegmentParams):StraightSegment {
+    const s = blankStraightSegment()
+    _setCoordinates(s, params)
+    return s
+}
+
+/**
+ * Identifier for straight segments.
+ * @public
+ */
+export const SEGMENT_TYPE_STRAIGHT = "Straight"
+
+/**
+ * Defines a straight segment.
+ * @interna;
+ */
+export interface StraightSegment extends Segment {
     length:number
     m:number
     m2:number
-
-    constructor(params:StraightSegmentParams) {
-        super(params)
-        _setCoordinates(this, {x1: params.x1, y1: params.y1, x2: params.x2, y2: params.y2})
-    }
-
-    // getPath(isFirstSegment: boolean): string {
-    //     return _getPath(this, isFirstSegment)
-    // }
-
-    static segmentType:string = "Straight"
-    type = StraightSegment.segmentType
-
-    // getLength ():number {
-    //     return _getLength(this)
-    // }
-    //
-    // getGradient ():number {
-    //     return _getGradient(this)
-    // }
-    //
-    // /**
-    //  * returns the point on the segment's path that is 'location' along the length of the path, where 'location' is a decimal from
-    //  * 0 to 1 inclusive. for the straight line segment this is simple maths.
-    //  */
-    // pointOnPath(location:number, absolute?:boolean):PointXY {
-    //     return _pointOnPath(this, location, absolute)
-    // }
-    //
-    // /**
-    //  * returns the gradient of the segment at the given point - which for us is constant.
-    //  */
-    // gradientAtPoint (location:number, absolute?:boolean):number {
-    //     return _gradientAtPoint(this, location, absolute)
-    // }
-    //
-    // /**
-    //  * returns the point on the segment's path that is 'distance' along the length of the path from 'location', where
-    //  * 'location' is a decimal from 0 to 1 inclusive, and 'distance' is a number of pixels.
-    //  * this hands off to jsPlumbUtil to do the maths, supplying two points and the distance.
-    //  */
-    // pointAlongPathFrom (location:number, distance:number, absolute?:boolean):PointXY {
-    //     return _pointAlongPathFrom(this, location, distance, absolute)
-    // }
-    //
-    // /**
-    //  * Finds the closest point on this segment to [x,y]. See
-    //  * notes on this method in AbstractSegment.
-    //  */
-    // findClosestPointOnPath (x:number, y:number):PointNearPath {
-    //     return _findClosestPointOnPath(this, x, y)
-    // }
-    //
-    // /**
-    //  * Calculates all intersections of the given line with this segment.
-    //  * @param _x1
-    //  * @param _y1
-    //  * @param _x2
-    //  * @param _y2
-    //  * @returns Array of intersecting points.
-    //  */
-    // lineIntersection (_x1:number, _y1:number, _x2:number, _y2:number):Array<PointXY> {
-    //     return _lineIntersection(this, _x1, _y1, _x2, _y2)
-    // }
-    //
-    // /**
-    //  * Calculates all intersections of the given box with this segment. By default this method simply calls `lineIntersection` with each of the four
-    //  * faces of the box; subclasses can override this if they think there's a faster way to compute the entire box at once.
-    //  * @param x X position of top left corner of box
-    //  * @param y Y position of top left corner of box
-    //  * @param w width of box
-    //  * @param h height of box
-    //  * @returns Array of intersecting points
-    //  */
-    // boxIntersection (x:number, y:number, w:number, h:number):Array<PointXY> {
-    //     return _boxIntersection(this, x, y, w, h)
-    // }
 }
 
 const StraightSegmentHandler:SegmentHandler<StraightSegment>  = {
-    create(segmentType: string, params: any): StraightSegment {
-        return new StraightSegment(params)
-    }, findClosestPointOnPath(s: StraightSegment, x: number, y: number): PointNearPath {
+    create(segmentType: string, params: StraightSegmentParams): StraightSegment {
+        return _createStraightSegment(params)
+    },
+    findClosestPointOnPath(s: StraightSegment, x: number, y: number): PointNearPath {
         return _findClosestPointOnPath(s, x, y)
-    }, getLength(s: StraightSegment): number {
+    },
+    getLength(s: StraightSegment): number {
         return _getLength(s)
     },
     getPath(s: StraightSegment, isFirstSegment: boolean): string {
@@ -319,7 +355,6 @@ const StraightSegmentHandler:SegmentHandler<StraightSegment>  = {
     boundingBoxIntersection(s:StraightSegment, box:BoundingBox):Array<PointXY> {
         return _boxIntersection(s, box.x, box.y, box.w, box.h)
     }
-
 }
 
-Segments.register(StraightSegment.segmentType, StraightSegmentHandler)
+Segments.register(SEGMENT_TYPE_STRAIGHT, StraightSegmentHandler)
