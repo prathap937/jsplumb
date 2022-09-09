@@ -7,6 +7,7 @@ import { Endpoint} from '../endpoint/endpoint'
 
 import { ViewportElement } from "../viewport"
 import {AnchorPlacement, ConnectorOptions, PaintAxis, EMPTY_BOUNDS, Segment, Connector, Geometry} from "@jsplumb/common"
+import {SegmentHandler, Segments} from "./segments"
 
 /**
  * @internal
@@ -55,6 +56,14 @@ export interface PaintGeometry {
     points: [ number, number, number, number, number, number, number, number ]
     stubs:[number, number]
     anchorOrientation?:string
+}
+
+function _getHandler(segment:Segment):SegmentHandler<any> {
+    return Segments.get(segment.type)
+}
+
+function _getSegmentLength(segment:Segment):number {
+    return _getHandler(segment).getLength(segment)
 }
 
 /**
@@ -186,7 +195,7 @@ export abstract class AbstractConnector implements Connector {
 
         let out:SegmentForPoint = { d: Infinity, s: null, x: null, y: null, l: null, x1:null, y1:null, x2:null, y2:null, index:null, connectorLocation:null }
         for (let i = 0; i < this.segments.length; i++) {
-            let _s = this.segments[i].findClosestPointOnPath(x, y)
+            let _s =_getHandler(this.segments[i]).findClosestPointOnPath(this.segments[i], x, y)
             if (_s.d < out.d) {
                 out.d = _s.d
                 out.l = _s.l
@@ -208,7 +217,7 @@ export abstract class AbstractConnector implements Connector {
     lineIntersection (x1:number, y1:number, x2:number, y2:number):Array<PointXY> {
         let out:Array<PointXY> = []
         for (let i = 0; i < this.segments.length; i++) {
-            out.push.apply(out, this.segments[i].lineIntersection(x1, y1, x2, y2))
+            out.push.apply(out, _getHandler(this.segments[i]).lineIntersection(this.segments[i], x1, y1, x2, y2))
         }
         return out
     }
@@ -216,7 +225,7 @@ export abstract class AbstractConnector implements Connector {
     boxIntersection (x:number, y:number, w:number, h:number):Array<PointXY> {
         let out:Array<PointXY> = []
         for (let i = 0; i < this.segments.length; i++) {
-            out.push.apply(out, this.segments[i].boxIntersection(x, y, w, h))
+            out.push.apply(out, _getHandler(this.segments[i]).boxIntersection(this.segments[i], x, y, w, h))
         }
         return out
     }
@@ -224,7 +233,7 @@ export abstract class AbstractConnector implements Connector {
     boundingBoxIntersection (box:any):Array<PointXY> {
         let out:Array<PointXY> = []
         for (let i = 0; i < this.segments.length; i++) {
-            out.push.apply(out, this.segments[i].boundingBoxIntersection(box))
+            out.push.apply(out, _getHandler(this.segments[i]).boundingBoxIntersection(this.segments[i], box))
         }
         return out
     }
@@ -232,7 +241,7 @@ export abstract class AbstractConnector implements Connector {
     _updateSegmentProportions () {
         let curLoc = 0
         for (let i = 0; i < this.segments.length; i++) {
-            let sl = this.segments[i].getLength()
+            let sl = _getSegmentLength(this.segments[i])
             this.segmentProportionalLengths[i] = sl / this.totalLength
             this.segmentProportions[i] = [curLoc, (curLoc += (sl / this.totalLength)) ]
         }
@@ -295,14 +304,15 @@ export abstract class AbstractConnector implements Connector {
         return { segment: this.segments[idx], proportion: inSegmentProportion, index: idx }
     }
 
-    _addSegment (clazz:Constructable<Segment>, params:any) {
+    _addSegment (segmentType:string, params:any) {
         if (params.x1 === params.x2 && params.y1 === params.y2) {
             return
         }
 
-        let s = (new clazz(params))
+        const handler = Segments.get(segmentType)
+        let s = handler.create(segmentType, params)
         this.segments.push(s)
-        this.totalLength += s.getLength()
+        this.totalLength += handler.getLength(s)
         this.updateBounds(s)
     }
 
@@ -401,24 +411,24 @@ export abstract class AbstractConnector implements Connector {
     private dumpSegmentsToConsole ():void {
         log("SEGMENTS:")
         for (let i = 0; i < this.segments.length; i++) {
-            log(this.segments[i].type, "" + this.segments[i].getLength(), "" + this.segmentProportions[i])
+            log(this.segments[i].type, "" + _getSegmentLength(this.segments[i]), "" + this.segmentProportions[i])
         }
     }
 
     pointOnPath (location:number, absolute?:boolean):PointXY {
         let seg = this._findSegmentForLocation(location, absolute)
-        return seg.segment && seg.segment.pointOnPath(seg.proportion, false) || {x:0, y:0}
+        return seg.segment && _getHandler(seg.segment).pointOnPath(seg.segment, seg.proportion, false) || {x:0, y:0}
     }
 
     gradientAtPoint (location:number, absolute?:boolean):number {
         let seg = this._findSegmentForLocation(location, absolute)
-        return seg.segment && seg.segment.gradientAtPoint(seg.proportion, false) || 0
+        return seg.segment && _getHandler(seg.segment).gradientAtPoint(seg.segment, seg.proportion, false) || 0
     }
 
     pointAlongPathFrom (location:number, distance:number, absolute?:boolean):PointXY {
         let seg = this._findSegmentForLocation(location, absolute)
         // TODO what happens if this crosses to the next segment?
-        return seg.segment && seg.segment.pointAlongPathFrom(seg.proportion, distance, false) || {x:0, y:0}
+        return seg.segment && Segments.get(seg.segment.type).pointAlongPathFrom(seg.segment, seg.proportion, distance, false) || {x:0, y:0}
     }
 
     compute (params:ConnectorComputeParams):void {

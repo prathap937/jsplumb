@@ -95,7 +95,7 @@ export abstract class AbstractBezierConnector extends AbstractConnector {
             paintInfo.points[3] = _h
 
             // ADD AN ARC SEGMENT.
-            this._addSegment(ArcSegment, {
+            this._addSegment(ArcSegment.segmentType, {
                 loopback: true,
                 x1: (x1 - _x) + 4,
                 y1: y1 - _y,

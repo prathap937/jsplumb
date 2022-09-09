@@ -1,6 +1,6 @@
 import {AbstractBezierConnector, AbstractBezierOptions} from "./abstract-bezier-connector"
-import {BezierSegment} from "./bezier-segment"
-import {Connection, ConnectorComputeParams, PaintGeometry} from "@jsplumb/core"
+import {CubicBezierSegment, QuadraticBezierSegment} from "./bezier-segment"
+import {Connection, ConnectorComputeParams, PaintGeometry, StraightSegment} from "@jsplumb/core"
 import { AnchorPlacement } from "@jsplumb/common"
 import {PointXY} from "@jsplumb/util"
 
@@ -161,7 +161,6 @@ export class StateMachineConnector extends AbstractBezierConnector {
                 segment = _segment(_sx, _sy, _tx, _ty),
                 distance = Math.sqrt(Math.pow(_tx - _sx, 2) + Math.pow(_ty - _sy, 2))
 
-
             // calculate the control point.  this code will be where we'll put in a rudimentary element avoidance scheme; it
             // will work by extending the control point to force the curve to be, um, curvier.
             this._controlPoint = _findControlPoint(_midx,
@@ -176,12 +175,10 @@ export class StateMachineConnector extends AbstractBezierConnector {
             this._controlPoint = this.geometry.controlPoints[0]
         }
 
-        let cp1x, cp2x, cp1y, cp2y
+        let cp1x, cp1y
 
         cp1x = this._controlPoint.x
-        cp2x = this._controlPoint.x
         cp1y = this._controlPoint.y
-        cp2y = this._controlPoint.y
 
         this.geometry = {
             controlPoints:[this._controlPoint, this._controlPoint],
@@ -189,10 +186,9 @@ export class StateMachineConnector extends AbstractBezierConnector {
             target:params.targetPos
         }
 
-        this._addSegment(BezierSegment, {
+        this._addSegment(QuadraticBezierSegment.segmentType, {
             x1: _tx, y1: _ty, x2: _sx, y2: _sy,
-            cp1x: cp1x, cp1y: cp1y,
-            cp2x: cp2x, cp2y: cp2y
+            cp1x: cp1x, cp1y: cp1y
         })
     }
 

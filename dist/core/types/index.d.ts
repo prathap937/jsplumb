@@ -20,6 +20,7 @@ export * from "./connector/connection-impl";
 export * from "./connector/connectors";
 export * from "./connector/straight-segment";
 export * from './connector/straight-connector';
+export * from './connector/segments';
 export * from "./selection/connection-selection";
 export * from './endpoint/endpoint';
 export * from './endpoint/endpoint-options';

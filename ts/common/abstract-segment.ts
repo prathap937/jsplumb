@@ -1,4 +1,5 @@
 import {Extents , BoundingBox, PointXY} from "@jsplumb/util"
+import {SegmentHandler} from "@jsplumb/core"
 
 /**
  * @internal
@@ -58,18 +59,39 @@ export interface Segment {
     type:string
 
     extents:Extents
-    lineIntersection (x1:number, y1:number, x2:number, y2:number):Array<PointXY>
-    boxIntersection (x:number, y:number, w:number, h:number):Array<PointXY>
-    boundingBoxIntersection (box:BoundingBox):Array<PointXY>
+    // lineIntersection (x1:number, y1:number, x2:number, y2:number):Array<PointXY>
+    // boxIntersection (x:number, y:number, w:number, h:number):Array<PointXY>
+    // boundingBoxIntersection (box:BoundingBox):Array<PointXY>
 
-    getLength():number
-    pointOnPath (location:number, absolute?:boolean):PointXY
-    gradientAtPoint (location:number, absolute?:boolean):number
-    pointAlongPathFrom (location:number, distance:number, absolute?:boolean):PointXY
-    findClosestPointOnPath (x:number, y:number):PointNearPath
+    // getLength():number
+    // pointOnPath (location:number, absolute?:boolean):PointXY
+    // gradientAtPoint (location:number, absolute?:boolean):number
+    // pointAlongPathFrom (location:number, distance:number, absolute?:boolean):PointXY
+    // //findClosestPointOnPath (x:number, y:number):PointNearPath
 
-    getPath(isFirstSegment:boolean):string
+    // getPath(isFirstSegment:boolean):string
 }
+
+export const defaultSegmentHandler = {
+    boxIntersection(handler:SegmentHandler<any>, segment:Segment, x:number, y:number, w:number, h:number):Array<PointXY> {
+        let a:Array<PointXY> = []
+        a.push.apply(a, handler.lineIntersection(segment, x, y, x + w, y))
+        a.push.apply(a, handler.lineIntersection(segment, x + w, y, x + w, y + h))
+        a.push.apply(a, handler.lineIntersection(segment, x + w, y + h, x, y + h))
+        a.push.apply(a, handler.lineIntersection(segment, x, y + h, x, y))
+        return a
+    },
+    boundingBoxIntersection(handler:SegmentHandler<any>, segment:Segment, box:BoundingBox):Array<PointXY> {
+        return this.boxIntersection(handler, segment, box.x, box.y, box.w, box.h)
+    },
+    lineIntersection(handler:SegmentHandler<any>, x1:number, y1:number, x2:number, y2:number):Array<PointXY> {
+        return []
+    },
+    findClosestPointOnPath(handler:SegmentHandler<any>, segment:Segment, x:number, y:number):PointNearPath {
+        return noSuchPoint()
+    }
+}
+
 
 /**
  * Base class for segments in connectors.
@@ -90,12 +112,12 @@ export abstract class AbstractSegment implements Segment {
     /**
      * Abstract method that subclasses are required to implement. Returns the length of the segment.
      */
-    abstract getLength():number
+    //abstract getLength():number
 
-    abstract pointOnPath (location:number, absolute?:boolean):PointXY
-    abstract gradientAtPoint (location:number, absolute?:boolean):number
-    abstract pointAlongPathFrom (location:number, distance:number, absolute?:boolean):PointXY
-    abstract getPath(isFirstSegment:boolean):string
+    // abstract pointOnPath (location:number, absolute?:boolean):PointXY
+    // abstract gradientAtPoint (location:number, absolute?:boolean):number
+    // abstract pointAlongPathFrom (location:number, distance:number, absolute?:boolean):PointXY
+    // abstract getPath(isFirstSegment:boolean):string
 
     constructor(protected params:SegmentParams) {
 
@@ -113,9 +135,9 @@ export abstract class AbstractSegment implements Segment {
      * @param y - Y location to find closest point to
      * @returns a `PointNearPath` object, which contains the location of the closest point plus other useful information.
      */
-    findClosestPointOnPath (x:number, y:number):PointNearPath {
-        return noSuchPoint()
-    }
+    // findClosestPointOnPath (x:number, y:number):PointNearPath {
+    //     return noSuchPoint()
+    // }
 
     /**
      * Computes the list of points on the segment that intersect the given line.
@@ -125,9 +147,9 @@ export abstract class AbstractSegment implements Segment {
      * @param y2 - Y location of point 2
      * @returns A list of intersecting points
      */
-    lineIntersection (x1:number, y1:number, x2:number, y2:number):Array<PointXY> {
-        return []
-    }
+    // lineIntersection (x1:number, y1:number, x2:number, y2:number):Array<PointXY> {
+    //     return []
+    // }
 
     /**
      * Computes the list of points on the segment that intersect the box with the given origin and size.
@@ -137,21 +159,21 @@ export abstract class AbstractSegment implements Segment {
      * @param h - height of the box
      * @returns A list of intersecting points
      */
-    boxIntersection (x:number, y:number, w:number, h:number):Array<PointXY> {
-        let a:Array<PointXY> = []
-        a.push.apply(a, this.lineIntersection(x, y, x + w, y))
-        a.push.apply(a, this.lineIntersection(x + w, y, x + w, y + h))
-        a.push.apply(a, this.lineIntersection(x + w, y + h, x, y + h))
-        a.push.apply(a, this.lineIntersection(x, y + h, x, y))
-        return a
-    }
+    // boxIntersection (x:number, y:number, w:number, h:number):Array<PointXY> {
+    //     let a:Array<PointXY> = []
+    //     a.push.apply(a, this.lineIntersection(x, y, x + w, y))
+    //     a.push.apply(a, this.lineIntersection(x + w, y, x + w, y + h))
+    //     a.push.apply(a, this.lineIntersection(x + w, y + h, x, y + h))
+    //     a.push.apply(a, this.lineIntersection(x, y + h, x, y))
+    //     return a
+    // }
 
     /**
      * Computes the list of points on the segment that intersect the given bounding box.
      * @param box - Box to test for intersections.
      * @returns A list of intersecting points
      */
-    boundingBoxIntersection (box:BoundingBox):Array<PointXY> {
-        return this.boxIntersection(box.x, box.y, box.w, box.h)
-    }
+    // boundingBoxIntersection (box:BoundingBox):Array<PointXY> {
+    //     return this.boxIntersection(box.x, box.y, box.w, box.h)
+    // }
 }

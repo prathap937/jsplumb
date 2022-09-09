@@ -2,7 +2,7 @@ import {AbstractBezierConnector, AbstractBezierOptions} from "./abstract-bezier-
 import {Connection, PaintGeometry, ConnectorComputeParams} from "@jsplumb/core"
 import { AnchorPlacement } from "@jsplumb/common"
 
-import {BezierSegment} from "./bezier-segment"
+import {CubicBezierSegment} from "./bezier-segment"
 import {PointXY} from "@jsplumb/util"
 
 /**
@@ -90,10 +90,9 @@ export class BezierConnector extends AbstractBezierConnector {
             controlPoints:[_CP, _CP2],
             source:p.sourcePos,
             target:p.targetPos
-
         }
 
-        this._addSegment(BezierSegment, {
+        this._addSegment(CubicBezierSegment.segmentType, {
             x1: _sx, y1: _sy, x2: _tx, y2: _ty,
             cp1x: _CP.x, cp1y: _CP.y, cp2x: _CP2.x, cp2y: _CP2.y
         })

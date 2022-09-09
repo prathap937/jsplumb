@@ -122,7 +122,13 @@
                 connector: {type:"Bezier", options:{ curviness: 63 } },
                 maxConnections: 3,
                 target: true,
-                dropOptions: exampleDropOptions
+                dropOptions: exampleDropOptions,
+                connectorOverlays:[
+                    {
+                        type:"Arrow",
+                        options:{location:0.5}
+                    }
+                ]
             };
 
             //
@@ -144,7 +150,7 @@
                     stroke: example3Color,
                     strokeWidth: 4
                 },
-                connector: "Flowchart",
+                connector: "StateMachine",
                 target: true,
                 dropOptions: exampleDropOptions,
                 beforeDetach: function (conn) {
@@ -152,7 +158,13 @@
                 },
                 onMaxConnections: function (info) {
                     alert("Cannot drop connection " + info.connection.id + " : maxConnections has been reached on Endpoint " + info.endpoint.id);
-                }
+                },
+                connectorOverlays:[
+                    {
+                        type:"Arrow",
+                        options:{location:0.5}
+                    }
+                ]
             };
 
             var dd1 = document.getElementById('dragDropWindow1'),

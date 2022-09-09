@@ -1,4 +1,4 @@
-import { PointXY, Extents, Constructable } from "@jsplumb/util";
+import { PointXY, Extents } from "@jsplumb/util";
 import { Connection } from './connection-impl';
 import { Orientation } from '../factory/anchor-record-factory';
 import { Endpoint } from '../endpoint/endpoint';
@@ -154,7 +154,7 @@ export declare abstract class AbstractConnector implements Connector {
         proportion: number;
         index: number;
     };
-    _addSegment(clazz: Constructable<Segment>, params: any): void;
+    _addSegment(segmentType: string, params: any): void;
     _clearSegments(): void;
     getLength(): number;
     private _prepareCompute;

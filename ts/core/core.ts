@@ -87,6 +87,7 @@ import {Connectors} from "./connector/connectors"
 
 import {StraightConnector} from "./connector/straight-connector"
 import {ConnectionDragSelector} from "./source-selector"
+import {Segments} from "./connector/segments"
 
 export interface jsPlumbElement<E> {
     _jsPlumbGroup: UIGroup<E>
@@ -2372,7 +2373,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
     getPathData (connector:AbstractConnector):any {
         let p = ""
         for (let i = 0; i < connector.segments.length; i++) {
-            p += connector.segments[i].getPath(i === 0)
+            p += Segments.get(connector.segments[i].type).getPath(connector.segments[i], i === 0)
             p += " "
         }
         return p

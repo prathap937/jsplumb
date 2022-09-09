@@ -1,5 +1,4 @@
 import { AbstractSegment, SegmentParams } from "@jsplumb/common";
-import { PointXY } from '@jsplumb/util';
 /**
  * @internal
  */
@@ -28,19 +27,5 @@ export declare class ArcSegment extends AbstractSegment {
     circumference: number;
     frac: number;
     constructor(params: ArcSegmentParams);
-    private _calcAngle;
-    private _calcAngleForLocation;
-    getPath(isFirstSegment: boolean): string;
-    getLength(): number;
-    /**
-     * returns the point on the segment's path that is 'location' along the length of the path, where 'location' is a decimal from
-     * 0 to 1 inclusive.
-     */
-    pointOnPath(location: number, absolute?: boolean): PointXY;
-    /**
-     * returns the gradient of the segment at the given point.
-     */
-    gradientAtPoint(location: number, absolute?: boolean): number;
-    pointAlongPathFrom(location: number, distance: number, absolute?: boolean): PointXY;
 }
 //# sourceMappingURL=arc-segment.d.ts.map
