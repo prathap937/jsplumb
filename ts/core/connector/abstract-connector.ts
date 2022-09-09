@@ -6,7 +6,16 @@ import { Orientation} from '../factory/anchor-record-factory'
 import { Endpoint} from '../endpoint/endpoint'
 
 import { ViewportElement } from "../viewport"
-import {AnchorPlacement, ConnectorOptions, PaintAxis, EMPTY_BOUNDS, Segment, Connector, Geometry} from "@jsplumb/common"
+import {
+    AnchorPlacement,
+    ConnectorOptions,
+    PaintAxis,
+    EMPTY_BOUNDS,
+    Segment,
+    Connector,
+    Geometry,
+    SegmentParams
+} from "@jsplumb/common"
 import {SegmentHandler, Segments} from "./segments"
 
 /**
@@ -304,7 +313,7 @@ export abstract class AbstractConnector implements Connector {
         return { segment: this.segments[idx], proportion: inSegmentProportion, index: idx }
     }
 
-    _addSegment (segmentType:string, params:any) {
+    _addSegment<T extends SegmentParams>(segmentType:string, params:T) {
         if (params.x1 === params.x2 && params.y1 === params.y2) {
             return
         }
