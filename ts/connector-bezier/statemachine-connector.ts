@@ -1,6 +1,9 @@
 import {AbstractBezierConnector, AbstractBezierOptions} from "./abstract-bezier-connector"
-import {CubicBezierSegment, QuadraticBezierSegment} from "./bezier-segment"
-import {Connection, ConnectorComputeParams, PaintGeometry, StraightSegment} from "@jsplumb/core"
+import {
+    QuadraticBezierSegmentParams,
+    SEGMENT_TYPE_QUADRATIC_BEZIER
+} from "./bezier-segment"
+import {Connection, ConnectorComputeParams, PaintGeometry} from "@jsplumb/core"
 import { AnchorPlacement } from "@jsplumb/common"
 import {PointXY} from "@jsplumb/util"
 
@@ -175,10 +178,10 @@ export class StateMachineConnector extends AbstractBezierConnector {
             this._controlPoint = this.geometry.controlPoints[0]
         }
 
-        let cp1x, cp1y
+        let cpx, cpy
 
-        cp1x = this._controlPoint.x
-        cp1y = this._controlPoint.y
+        cpx = this._controlPoint.x
+        cpy = this._controlPoint.y
 
         this.geometry = {
             controlPoints:[this._controlPoint, this._controlPoint],
@@ -186,9 +189,9 @@ export class StateMachineConnector extends AbstractBezierConnector {
             target:params.targetPos
         }
 
-        this._addSegment(QuadraticBezierSegment.segmentType, {
+        this._addSegment<QuadraticBezierSegmentParams>(SEGMENT_TYPE_QUADRATIC_BEZIER, {
             x1: _tx, y1: _ty, x2: _sx, y2: _sy,
-            cp1x: cp1x, cp1y: cp1y
+            cpx: cpx, cpy: cpy
         })
     }
 
