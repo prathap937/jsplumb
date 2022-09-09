@@ -205,13 +205,13 @@
                 sgnEqual = sgny === sgnx,
                 cx = sgnEqual && ac || !sgnEqual && !ac ? next[0] : current[2],
                 cy = sgnEqual && ac || !sgnEqual && !ac ? current[3] : next[1];
-            this._addSegment(core.StraightSegment.segmentType, {
+            this._addSegment(core.SEGMENT_TYPE_STRAIGHT, {
               x1: current[0],
               y1: current[1],
               x2: current[2],
               y2: current[3]
             });
-            this._addSegment(core.ArcSegment.segmentType, {
+            this._addSegment(core.SEGMENT_TYPE_ARC, {
               r: radiusToUse,
               x1: current[2],
               y1: current[3],
@@ -222,7 +222,7 @@
               ac: ac
             });
           } else {
-            this._addSegment(core.StraightSegment.segmentType, {
+            this._addSegment(core.SEGMENT_TYPE_STRAIGHT, {
               x1: current[0],
               y1: current[1],
               x2: current[2],
@@ -232,7 +232,7 @@
           current = next;
         }
         if (next != null) {
-          this._addSegment(core.StraightSegment.segmentType, {
+          this._addSegment(core.SEGMENT_TYPE_STRAIGHT, {
             x1: next[0],
             y1: next[1],
             x2: next[2],

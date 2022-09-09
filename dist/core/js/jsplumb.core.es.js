@@ -1,5 +1,5 @@
-import { log, quadrant, pointOnLine, gradient, lineLength, uuid, isString, EventGenerator, isFunction, clone, extend, merge, setToArray, populate, isNumber, map, isObject, isAssignableFrom, getWithFunction, removeWithFunction, suggest, forEach, getsert, insertSorted, findWithFunction, rotatePoint, filterList, functionChain, addToDictionary, theta, TWO_PI, normal, perpendicularLineTo } from '@jsplumb/util';
-import { EMPTY_BOUNDS, AbstractSegment, PerimeterAnchorShapes, AnchorLocations, DEFAULT, WILDCARD, defaultSegmentHandler } from '@jsplumb/common';
+import { log, quadrant, pointOnLine, gradient, lineLength, uuid, isString, EventGenerator, isFunction, clone, extend, merge, setToArray, populate, isNumber, map, isObject, isAssignableFrom, getWithFunction, removeWithFunction, suggest, forEach, getsert, insertSorted, findWithFunction, rotatePoint, filterList, functionChain, addToDictionary, normal, theta, TWO_PI, perpendicularLineTo } from '@jsplumb/util';
+import { EMPTY_BOUNDS, PerimeterAnchorShapes, AnchorLocations, DEFAULT, WILDCARD, defaultSegmentHandler } from '@jsplumb/common';
 
 function _classCallCheck(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -840,7 +840,7 @@ function _lineIntersection(segment, _x1, _y1, _x2, _y2) {
     x: _x2,
     y: _y2
   })),
-      m1 = Math.abs(this.m),
+      m1 = Math.abs(segment.m),
       b = m1 === Infinity ? segment.x1 : segment.y1 - m1 * segment.x1,
       out = [],
       b2 = m2 === Infinity ? _x1 : _y1 - m2 * _x1;
@@ -886,7 +886,7 @@ function _lineIntersection(segment, _x1, _y1, _x2, _y2) {
       } else {
         X = (b2 - b) / (m1 - m2);
         Y = m1 * X + b;
-        if (_pointLiesBetween(X, segment.x1, segment.x2) && this._pointLiesBetween(Y, segment.y1, segment.y2)) {
+        if (_pointLiesBetween(X, segment.x1, segment.x2) && _pointLiesBetween(Y, segment.y1, segment.y2)) {
           out.push({
             x: X,
             y: Y
@@ -899,10 +899,10 @@ function _lineIntersection(segment, _x1, _y1, _x2, _y2) {
 }
 function _boxIntersection(segment, x, y, w, h) {
   var a = [];
-  a.push.apply(a, this.lineIntersection(x, y, x + w, y));
-  a.push.apply(a, this.lineIntersection(x + w, y, x + w, y + h));
-  a.push.apply(a, this.lineIntersection(x + w, y + h, x, y + h));
-  a.push.apply(a, this.lineIntersection(x, y + h, x, y));
+  a.push.apply(a, _lineIntersection(segment, x, y, x + w, y));
+  a.push.apply(a, _lineIntersection(segment, x + w, y, x + w, y + h));
+  a.push.apply(a, _lineIntersection(segment, x + w, y + h, x, y + h));
+  a.push.apply(a, _lineIntersection(segment, x, y + h, x, y));
   return a;
 }
 function _findClosestPointOnPath(segment, x, y) {
@@ -1013,31 +1013,33 @@ function _pointAlongPathFrom$1(segment, location, distance, absolute) {
   }
   return pointOnLine(p, farAwayPoint, distance);
 }
-var StraightSegment = function (_AbstractSegment) {
-  _inherits(StraightSegment, _AbstractSegment);
-  var _super = _createSuper(StraightSegment);
-  function StraightSegment(params) {
-    var _this;
-    _classCallCheck(this, StraightSegment);
-    _this = _super.call(this, params);
-    _defineProperty(_assertThisInitialized(_this), "length", void 0);
-    _defineProperty(_assertThisInitialized(_this), "m", void 0);
-    _defineProperty(_assertThisInitialized(_this), "m2", void 0);
-    _defineProperty(_assertThisInitialized(_this), "type", StraightSegment.segmentType);
-    _setCoordinates(_assertThisInitialized(_this), {
-      x1: params.x1,
-      y1: params.y1,
-      x2: params.x2,
-      y2: params.y2
-    });
-    return _this;
-  }
-  return StraightSegment;
-}(AbstractSegment);
-_defineProperty(StraightSegment, "segmentType", "Straight");
+function blankStraightSegment() {
+  return {
+    type: SEGMENT_TYPE_STRAIGHT,
+    m: 0,
+    length: 0,
+    m2: 0,
+    x1: 0,
+    x2: 0,
+    y1: 0,
+    y2: 0,
+    extents: {
+      xmin: 0,
+      xmax: 0,
+      ymin: 0,
+      ymax: 0
+    }
+  };
+}
+function _createStraightSegment(params) {
+  var s = blankStraightSegment();
+  _setCoordinates(s, params);
+  return s;
+}
+var SEGMENT_TYPE_STRAIGHT = "Straight";
 var StraightSegmentHandler = {
   create: function create(segmentType, params) {
-    return new StraightSegment(params);
+    return _createStraightSegment(params);
   },
   findClosestPointOnPath: function findClosestPointOnPath(s, x, y) {
     return _findClosestPointOnPath(s, x, y);
@@ -1067,7 +1069,7 @@ var StraightSegmentHandler = {
     return _boxIntersection(s, box.x, box.y, box.w, box.h);
   }
 };
-Segments.register(StraightSegment.segmentType, StraightSegmentHandler);
+Segments.register(SEGMENT_TYPE_STRAIGHT, StraightSegmentHandler);
 
 var StraightConnector = function (_AbstractConnector) {
   _inherits(StraightConnector, _AbstractConnector);
@@ -1090,19 +1092,19 @@ var StraightConnector = function (_AbstractConnector) {
   }, {
     key: "_compute",
     value: function _compute(paintInfo, p) {
-      this._addSegment(StraightSegment.segmentType, {
+      this._addSegment(SEGMENT_TYPE_STRAIGHT, {
         x1: paintInfo.sx,
         y1: paintInfo.sy,
         x2: paintInfo.startStubX,
         y2: paintInfo.startStubY
       });
-      this._addSegment(StraightSegment.segmentType, {
+      this._addSegment(SEGMENT_TYPE_STRAIGHT, {
         x1: paintInfo.startStubX,
         y1: paintInfo.startStubY,
         x2: paintInfo.endStubX,
         y2: paintInfo.endStubY
       });
-      this._addSegment(StraightSegment.segmentType, {
+      this._addSegment(SEGMENT_TYPE_STRAIGHT, {
         x1: paintInfo.endStubX,
         y1: paintInfo.endStubY,
         x2: paintInfo.tx,
@@ -7256,10 +7258,10 @@ function _calcAngleForLocation(segment, location) {
     return segment.startAngle + ss * location;
   }
 }
-function _calcAngle(segment, _x, _y) {
+function _calcAngle(cx, cy, _x, _y) {
   return theta({
-    x: segment.cx,
-    y: segment.cy
+    x: cx,
+    y: cy
   }, {
     x: _x,
     y: _y
@@ -7322,67 +7324,71 @@ function _pointAlongPathFrom(segment, location, distance, absolute) {
     y: startY
   };
 }
-var ArcSegment = function (_AbstractSegment) {
-  _inherits(ArcSegment, _AbstractSegment);
-  var _super = _createSuper(ArcSegment);
-  function ArcSegment(params) {
-    var _this;
-    _classCallCheck(this, ArcSegment);
-    _this = _super.call(this, params);
-    _defineProperty(_assertThisInitialized(_this), "type", ArcSegment.segmentType);
-    _defineProperty(_assertThisInitialized(_this), "cx", void 0);
-    _defineProperty(_assertThisInitialized(_this), "cy", void 0);
-    _defineProperty(_assertThisInitialized(_this), "radius", void 0);
-    _defineProperty(_assertThisInitialized(_this), "anticlockwise", void 0);
-    _defineProperty(_assertThisInitialized(_this), "startAngle", void 0);
-    _defineProperty(_assertThisInitialized(_this), "endAngle", void 0);
-    _defineProperty(_assertThisInitialized(_this), "sweep", void 0);
-    _defineProperty(_assertThisInitialized(_this), "length", void 0);
-    _defineProperty(_assertThisInitialized(_this), "circumference", void 0);
-    _defineProperty(_assertThisInitialized(_this), "frac", void 0);
-    _this.cx = params.cx;
-    _this.cy = params.cy;
-    _this.radius = params.r;
-    _this.anticlockwise = params.ac;
-    if (params.startAngle && params.endAngle) {
-      _this.startAngle = params.startAngle;
-      _this.endAngle = params.endAngle;
-      _this.x1 = _this.cx + _this.radius * Math.cos(_this.startAngle);
-      _this.y1 = _this.cy + _this.radius * Math.sin(_this.startAngle);
-      _this.x2 = _this.cx + _this.radius * Math.cos(_this.endAngle);
-      _this.y2 = _this.cy + _this.radius * Math.sin(_this.endAngle);
-    } else {
-      _this.startAngle = _calcAngle(_assertThisInitialized(_this), _this.x1, _this.y1);
-      _this.endAngle = _calcAngle(_assertThisInitialized(_this), _this.x2, _this.y2);
-    }
-    if (_this.endAngle < 0) {
-      _this.endAngle += TWO_PI;
-    }
-    if (_this.startAngle < 0) {
-      _this.startAngle += TWO_PI;
-    }
-    var ea = _this.endAngle < _this.startAngle ? _this.endAngle + TWO_PI : _this.endAngle;
-    _this.sweep = Math.abs(ea - _this.startAngle);
-    if (_this.anticlockwise) {
-      _this.sweep = TWO_PI - _this.sweep;
-    }
-    _this.circumference = 2 * Math.PI * _this.radius;
-    _this.frac = _this.sweep / TWO_PI;
-    _this.length = _this.circumference * _this.frac;
-    _this.extents = {
-      xmin: _this.cx - _this.radius,
-      xmax: _this.cx + _this.radius,
-      ymin: _this.cy - _this.radius,
-      ymax: _this.cy + _this.radius
-    };
-    return _this;
+var SEGMENT_TYPE_ARC = "Arc";
+function _createArcSegment(params) {
+  var startAngle,
+      endAngle,
+      x1 = params.x1,
+      x2 = params.x2,
+      y1 = params.y1,
+      y2 = params.y2,
+      cx = params.cx,
+      cy = params.cy,
+      radius = params.r,
+      anticlockwise = params.ac;
+  if (params.startAngle && params.endAngle) {
+    startAngle = params.startAngle;
+    endAngle = params.endAngle;
+    x1 = cx + radius * Math.cos(startAngle);
+    y1 = cy + radius * Math.sin(startAngle);
+    x2 = cx + radius * Math.cos(endAngle);
+    y2 = cy + radius * Math.sin(endAngle);
+  } else {
+    startAngle = _calcAngle(cx, cy, x1, y1);
+    endAngle = _calcAngle(cx, cy, x2, y2);
   }
-  return ArcSegment;
-}(AbstractSegment);
-_defineProperty(ArcSegment, "segmentType", "Arc");
+  if (endAngle < 0) {
+    endAngle += TWO_PI;
+  }
+  if (startAngle < 0) {
+    startAngle += TWO_PI;
+  }
+  var ea = endAngle < startAngle ? endAngle + TWO_PI : endAngle;
+  var sweep = Math.abs(ea - startAngle);
+  if (anticlockwise) {
+    sweep = TWO_PI - sweep;
+  }
+  var circumference = 2 * Math.PI * radius;
+  var frac = sweep / TWO_PI;
+  var length = circumference * frac;
+  var extents = {
+    xmin: cx - radius,
+    xmax: cx + radius,
+    ymin: cy - radius,
+    ymax: cy + radius
+  };
+  return {
+    x1: x1,
+    x2: x2,
+    y1: y1,
+    y2: y2,
+    startAngle: startAngle,
+    endAngle: endAngle,
+    cx: cx,
+    cy: cy,
+    radius: radius,
+    anticlockwise: anticlockwise,
+    sweep: sweep,
+    circumference: circumference,
+    frac: frac,
+    length: length,
+    extents: extents,
+    type: SEGMENT_TYPE_ARC
+  };
+}
 var ArcSegmentHandler = {
   create: function create(segmentType, params) {
-    return new ArcSegment(params);
+    return _createArcSegment(params);
   },
   findClosestPointOnPath: function findClosestPointOnPath(s, x, y) {
     return defaultSegmentHandler.findClosestPointOnPath(this, s, x, y);
@@ -7412,7 +7418,7 @@ var ArcSegmentHandler = {
     return defaultSegmentHandler.boundingBoxIntersection(this, s, box);
   }
 };
-Segments.register(ArcSegment.segmentType, ArcSegmentHandler);
+Segments.register(SEGMENT_TYPE_ARC, ArcSegmentHandler);
 
 var DEFAULT_WIDTH = 20;
 var DEFAULT_LENGTH = 20;
@@ -7585,4 +7591,4 @@ EndpointFactory.registerHandler(RectangleEndpointHandler);
 EndpointFactory.registerHandler(BlankEndpointHandler);
 Connectors.register(StraightConnector.type, StraightConnector);
 
-export { ABSOLUTE, ADD_CLASS_ACTION, ATTRIBUTE_GROUP, ATTRIBUTE_MANAGED, ATTRIBUTE_NOT_DRAGGABLE, ATTRIBUTE_SCOPE, ATTRIBUTE_SCOPE_PREFIX, ATTRIBUTE_TABINDEX, AbstractConnector, ArcSegment, ArrowOverlay, BLOCK, BOTTOM, BlankEndpoint, BlankEndpointHandler, CHECK_CONDITION, CHECK_DROP_ALLOWED, CLASS_CONNECTED, CLASS_CONNECTOR, CLASS_CONNECTOR_OUTLINE, CLASS_ENDPOINT, CLASS_ENDPOINT_ANCHOR_PREFIX, CLASS_ENDPOINT_CONNECTED, CLASS_ENDPOINT_DROP_ALLOWED, CLASS_ENDPOINT_DROP_FORBIDDEN, CLASS_ENDPOINT_FLOATING, CLASS_ENDPOINT_FULL, CLASS_GROUP_COLLAPSED, CLASS_GROUP_EXPANDED, CLASS_OVERLAY, Component, Connection, ConnectionDragSelector, ConnectionSelection, Connectors, CustomOverlay, DEFAULT_KEY_ALLOW_NESTED_GROUPS, DEFAULT_KEY_ANCHOR, DEFAULT_KEY_ANCHORS, DEFAULT_KEY_CONNECTIONS_DETACHABLE, DEFAULT_KEY_CONNECTION_OVERLAYS, DEFAULT_KEY_CONNECTOR, DEFAULT_KEY_CONTAINER, DEFAULT_KEY_ENDPOINT, DEFAULT_KEY_ENDPOINTS, DEFAULT_KEY_ENDPOINT_HOVER_STYLE, DEFAULT_KEY_ENDPOINT_HOVER_STYLES, DEFAULT_KEY_ENDPOINT_OVERLAYS, DEFAULT_KEY_ENDPOINT_STYLE, DEFAULT_KEY_ENDPOINT_STYLES, DEFAULT_KEY_HOVER_CLASS, DEFAULT_KEY_HOVER_PAINT_STYLE, DEFAULT_KEY_LIST_STYLE, DEFAULT_KEY_MAX_CONNECTIONS, DEFAULT_KEY_PAINT_STYLE, DEFAULT_KEY_REATTACH_CONNECTIONS, DEFAULT_KEY_SCOPE, DiamondOverlay, DotEndpoint, DotEndpointHandler, ERROR_SOURCE_DOES_NOT_EXIST, ERROR_SOURCE_ENDPOINT_FULL, ERROR_TARGET_DOES_NOT_EXIST, ERROR_TARGET_ENDPOINT_FULL, EVENT_ANCHOR_CHANGED, EVENT_CONNECTION, EVENT_CONNECTION_DETACHED, EVENT_CONNECTION_MOVED, EVENT_CONTAINER_CHANGE, EVENT_ENDPOINT_REPLACED, EVENT_GROUP_ADDED, EVENT_GROUP_COLLAPSE, EVENT_GROUP_EXPAND, EVENT_GROUP_MEMBER_ADDED, EVENT_GROUP_MEMBER_REMOVED, EVENT_GROUP_REMOVED, EVENT_INTERNAL_CONNECTION, EVENT_INTERNAL_CONNECTION_DETACHED, EVENT_INTERNAL_ENDPOINT_UNREGISTERED, EVENT_MANAGE_ELEMENT, EVENT_MAX_CONNECTIONS, EVENT_NESTED_GROUP_ADDED, EVENT_NESTED_GROUP_REMOVED, EVENT_UNMANAGE_ELEMENT, EVENT_ZOOM, Endpoint, EndpointFactory, EndpointRepresentation, EndpointSelection, FIXED, GroupManager, INTERCEPT_BEFORE_DETACH, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_DROP, INTERCEPT_BEFORE_START_DETACH, IS_DETACH_ALLOWED, JsPlumbInstance, KEY_CONNECTION_OVERLAYS, LEFT, LabelOverlay, LightweightFloatingAnchor, LightweightRouter, NONE, Overlay, OverlayFactory, PlainArrowOverlay, REDROP_POLICY_ANY, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_SOURCE_OR_TARGET, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_STRICT, REMOVE_CLASS_ACTION, RIGHT, RectangleEndpoint, RectangleEndpointHandler, SELECTOR_MANAGED_ELEMENT, SOURCE, SOURCE_INDEX, STATIC, Segments, StraightConnector, StraightSegment, TARGET, TARGET_INDEX, TOP, UIGroup, UINode, Viewport, X_AXIS_FACES, Y_AXIS_FACES, _createPerimeterAnchor, _removeTypeCssHelper, _updateHoverStyle, att, classList, cls, convertToFullOverlaySpec, createFloatingAnchor, getDefaultFace, isArrowOverlay, isContinuous, isCustomOverlay, isDiamondOverlay, isDynamic, isEdgeSupported, _isFloating as isFloating, isFullOverlaySpec, isLabelOverlay, isPlainArrowOverlay, makeLightweightAnchorFromSpec };
+export { ABSOLUTE, ADD_CLASS_ACTION, ATTRIBUTE_GROUP, ATTRIBUTE_MANAGED, ATTRIBUTE_NOT_DRAGGABLE, ATTRIBUTE_SCOPE, ATTRIBUTE_SCOPE_PREFIX, ATTRIBUTE_TABINDEX, AbstractConnector, ArrowOverlay, BLOCK, BOTTOM, BlankEndpoint, BlankEndpointHandler, CHECK_CONDITION, CHECK_DROP_ALLOWED, CLASS_CONNECTED, CLASS_CONNECTOR, CLASS_CONNECTOR_OUTLINE, CLASS_ENDPOINT, CLASS_ENDPOINT_ANCHOR_PREFIX, CLASS_ENDPOINT_CONNECTED, CLASS_ENDPOINT_DROP_ALLOWED, CLASS_ENDPOINT_DROP_FORBIDDEN, CLASS_ENDPOINT_FLOATING, CLASS_ENDPOINT_FULL, CLASS_GROUP_COLLAPSED, CLASS_GROUP_EXPANDED, CLASS_OVERLAY, Component, Connection, ConnectionDragSelector, ConnectionSelection, Connectors, CustomOverlay, DEFAULT_KEY_ALLOW_NESTED_GROUPS, DEFAULT_KEY_ANCHOR, DEFAULT_KEY_ANCHORS, DEFAULT_KEY_CONNECTIONS_DETACHABLE, DEFAULT_KEY_CONNECTION_OVERLAYS, DEFAULT_KEY_CONNECTOR, DEFAULT_KEY_CONTAINER, DEFAULT_KEY_ENDPOINT, DEFAULT_KEY_ENDPOINTS, DEFAULT_KEY_ENDPOINT_HOVER_STYLE, DEFAULT_KEY_ENDPOINT_HOVER_STYLES, DEFAULT_KEY_ENDPOINT_OVERLAYS, DEFAULT_KEY_ENDPOINT_STYLE, DEFAULT_KEY_ENDPOINT_STYLES, DEFAULT_KEY_HOVER_CLASS, DEFAULT_KEY_HOVER_PAINT_STYLE, DEFAULT_KEY_LIST_STYLE, DEFAULT_KEY_MAX_CONNECTIONS, DEFAULT_KEY_PAINT_STYLE, DEFAULT_KEY_REATTACH_CONNECTIONS, DEFAULT_KEY_SCOPE, DiamondOverlay, DotEndpoint, DotEndpointHandler, ERROR_SOURCE_DOES_NOT_EXIST, ERROR_SOURCE_ENDPOINT_FULL, ERROR_TARGET_DOES_NOT_EXIST, ERROR_TARGET_ENDPOINT_FULL, EVENT_ANCHOR_CHANGED, EVENT_CONNECTION, EVENT_CONNECTION_DETACHED, EVENT_CONNECTION_MOVED, EVENT_CONTAINER_CHANGE, EVENT_ENDPOINT_REPLACED, EVENT_GROUP_ADDED, EVENT_GROUP_COLLAPSE, EVENT_GROUP_EXPAND, EVENT_GROUP_MEMBER_ADDED, EVENT_GROUP_MEMBER_REMOVED, EVENT_GROUP_REMOVED, EVENT_INTERNAL_CONNECTION, EVENT_INTERNAL_CONNECTION_DETACHED, EVENT_INTERNAL_ENDPOINT_UNREGISTERED, EVENT_MANAGE_ELEMENT, EVENT_MAX_CONNECTIONS, EVENT_NESTED_GROUP_ADDED, EVENT_NESTED_GROUP_REMOVED, EVENT_UNMANAGE_ELEMENT, EVENT_ZOOM, Endpoint, EndpointFactory, EndpointRepresentation, EndpointSelection, FIXED, GroupManager, INTERCEPT_BEFORE_DETACH, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_DROP, INTERCEPT_BEFORE_START_DETACH, IS_DETACH_ALLOWED, JsPlumbInstance, KEY_CONNECTION_OVERLAYS, LEFT, LabelOverlay, LightweightFloatingAnchor, LightweightRouter, NONE, Overlay, OverlayFactory, PlainArrowOverlay, REDROP_POLICY_ANY, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_SOURCE_OR_TARGET, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_STRICT, REMOVE_CLASS_ACTION, RIGHT, RectangleEndpoint, RectangleEndpointHandler, SEGMENT_TYPE_ARC, SEGMENT_TYPE_STRAIGHT, SELECTOR_MANAGED_ELEMENT, SOURCE, SOURCE_INDEX, STATIC, Segments, StraightConnector, TARGET, TARGET_INDEX, TOP, UIGroup, UINode, Viewport, X_AXIS_FACES, Y_AXIS_FACES, _createPerimeterAnchor, _removeTypeCssHelper, _updateHoverStyle, att, classList, cls, convertToFullOverlaySpec, createFloatingAnchor, getDefaultFace, isArrowOverlay, isContinuous, isCustomOverlay, isDiamondOverlay, isDynamic, isEdgeSupported, _isFloating as isFloating, isFullOverlaySpec, isLabelOverlay, isPlainArrowOverlay, makeLightweightAnchorFromSpec };

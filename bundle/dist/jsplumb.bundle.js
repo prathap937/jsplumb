@@ -534,13 +534,13 @@ var jsPlumbBrowserUI = (function (exports) {
     }
   }
 
-  function _classCallCheck$5(instance, Constructor) {
+  function _classCallCheck$4(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError("Cannot call a class as a function");
     }
   }
 
-  function _defineProperties$5(target, props) {
+  function _defineProperties$4(target, props) {
     for (var i = 0; i < props.length; i++) {
       var descriptor = props[i];
       descriptor.enumerable = descriptor.enumerable || false;
@@ -550,13 +550,13 @@ var jsPlumbBrowserUI = (function (exports) {
     }
   }
 
-  function _createClass$5(Constructor, protoProps, staticProps) {
-    if (protoProps) _defineProperties$5(Constructor.prototype, protoProps);
-    if (staticProps) _defineProperties$5(Constructor, staticProps);
+  function _createClass$4(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties$4(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties$4(Constructor, staticProps);
     return Constructor;
   }
 
-  function _defineProperty$5(obj, key, value) {
+  function _defineProperty$4(obj, key, value) {
     if (key in obj) {
       Object.defineProperty(obj, key, {
         value: value,
@@ -652,16 +652,16 @@ var jsPlumbBrowserUI = (function (exports) {
 
   var EventGenerator = function () {
     function EventGenerator() {
-      _classCallCheck$5(this, EventGenerator);
-      _defineProperty$5(this, "_listeners", {});
-      _defineProperty$5(this, "eventsSuspended", false);
-      _defineProperty$5(this, "tick", false);
-      _defineProperty$5(this, "eventsToDieOn", {
+      _classCallCheck$4(this, EventGenerator);
+      _defineProperty$4(this, "_listeners", {});
+      _defineProperty$4(this, "eventsSuspended", false);
+      _defineProperty$4(this, "tick", false);
+      _defineProperty$4(this, "eventsToDieOn", {
         "ready": true
       });
-      _defineProperty$5(this, "queue", []);
+      _defineProperty$4(this, "queue", []);
     }
-    _createClass$5(EventGenerator, [{
+    _createClass$4(EventGenerator, [{
       key: "fire",
       value: function fire(event, value, originalEvent) {
         var ret = null;
@@ -775,10 +775,10 @@ var jsPlumbBrowserUI = (function (exports) {
     _inherits$4(OptimisticEventGenerator, _EventGenerator);
     var _super = _createSuper$4(OptimisticEventGenerator);
     function OptimisticEventGenerator() {
-      _classCallCheck$5(this, OptimisticEventGenerator);
+      _classCallCheck$4(this, OptimisticEventGenerator);
       return _super.apply(this, arguments);
     }
-    _createClass$5(OptimisticEventGenerator, [{
+    _createClass$4(OptimisticEventGenerator, [{
       key: "shouldFireEvent",
       value: function shouldFireEvent(event, value, originalEvent) {
         return true;
@@ -1001,43 +1001,6 @@ var jsPlumbBrowserUI = (function (exports) {
     AnchorLocations["TopRight"] = "TopRight";
   })(exports.AnchorLocations || (exports.AnchorLocations = {}));
 
-  function _classCallCheck$4(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-
-  function _defineProperties$4(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
-  }
-
-  function _createClass$4(Constructor, protoProps, staticProps) {
-    if (protoProps) _defineProperties$4(Constructor.prototype, protoProps);
-    if (staticProps) _defineProperties$4(Constructor, staticProps);
-    return Constructor;
-  }
-
-  function _defineProperty$4(obj, key, value) {
-    if (key in obj) {
-      Object.defineProperty(obj, key, {
-        value: value,
-        enumerable: true,
-        configurable: true,
-        writable: true
-      });
-    } else {
-      obj[key] = value;
-    }
-
-    return obj;
-  }
-
   function noSuchPoint() {
     return {
       d: Infinity,
@@ -1058,49 +1021,25 @@ var jsPlumbBrowserUI = (function (exports) {
       ymax: -Infinity
     };
   }
-  var AbstractSegment = function () {
-    function AbstractSegment(params) {
-      _classCallCheck$4(this, AbstractSegment);
-      this.params = params;
-      _defineProperty$4(this, "x1", void 0);
-      _defineProperty$4(this, "x2", void 0);
-      _defineProperty$4(this, "y1", void 0);
-      _defineProperty$4(this, "y2", void 0);
-      _defineProperty$4(this, "extents", EMPTY_BOUNDS());
-      _defineProperty$4(this, "type", void 0);
-      this.x1 = params.x1;
-      this.y1 = params.y1;
-      this.x2 = params.x2;
-      this.y2 = params.y2;
+  var defaultSegmentHandler = {
+    boxIntersection: function boxIntersection(handler, segment, x, y, w, h) {
+      var a = [];
+      a.push.apply(a, handler.lineIntersection(segment, x, y, x + w, y));
+      a.push.apply(a, handler.lineIntersection(segment, x + w, y, x + w, y + h));
+      a.push.apply(a, handler.lineIntersection(segment, x + w, y + h, x, y + h));
+      a.push.apply(a, handler.lineIntersection(segment, x, y + h, x, y));
+      return a;
+    },
+    boundingBoxIntersection: function boundingBoxIntersection(handler, segment, box) {
+      return this.boxIntersection(handler, segment, box.x, box.y, box.w, box.h);
+    },
+    lineIntersection: function lineIntersection(handler, x1, y1, x2, y2) {
+      return [];
+    },
+    findClosestPointOnPath: function findClosestPointOnPath(handler, segment, x, y) {
+      return noSuchPoint();
     }
-    _createClass$4(AbstractSegment, [{
-      key: "findClosestPointOnPath",
-      value: function findClosestPointOnPath(x, y) {
-        return noSuchPoint();
-      }
-    }, {
-      key: "lineIntersection",
-      value: function lineIntersection(x1, y1, x2, y2) {
-        return [];
-      }
-    }, {
-      key: "boxIntersection",
-      value: function boxIntersection(x, y, w, h) {
-        var a = [];
-        a.push.apply(a, this.lineIntersection(x, y, x + w, y));
-        a.push.apply(a, this.lineIntersection(x + w, y, x + w, y + h));
-        a.push.apply(a, this.lineIntersection(x + w, y + h, x, y + h));
-        a.push.apply(a, this.lineIntersection(x, y + h, x, y));
-        return a;
-      }
-    }, {
-      key: "boundingBoxIntersection",
-      value: function boundingBoxIntersection(box) {
-        return this.boxIntersection(box.x, box.y, box.w, box.h);
-      }
-    }]);
-    return AbstractSegment;
-  }();
+  };
 
   var UNDEFINED = "undefined";
   var DEFAULT = "default";
@@ -1542,6 +1481,29 @@ var jsPlumbBrowserUI = (function (exports) {
     }
   };
 
+  var segmentMap = {};
+  var Segments = {
+    register: function register(segmentType, segmentHandler) {
+      segmentMap[segmentType] = segmentHandler;
+    },
+    get: function get(segmentType) {
+      var sh = segmentMap[segmentType];
+      if (!sh) {
+        throw {
+          message: "jsPlumb: no segment handler found for segment type '" + segmentType + "'"
+        };
+      } else {
+        return sh;
+      }
+    }
+  };
+
+  function _getHandler(segment) {
+    return Segments.get(segment.type);
+  }
+  function _getSegmentLength(segment) {
+    return _getHandler(segment).getLength(segment);
+  }
   var AbstractConnector = function () {
     function AbstractConnector(connection, params) {
       _classCallCheck$3(this, AbstractConnector);
@@ -1649,7 +1611,7 @@ var jsPlumbBrowserUI = (function (exports) {
           connectorLocation: null
         };
         for (var i = 0; i < this.segments.length; i++) {
-          var _s = this.segments[i].findClosestPointOnPath(x, y);
+          var _s = _getHandler(this.segments[i]).findClosestPointOnPath(this.segments[i], x, y);
           if (_s.d < out.d) {
             out.d = _s.d;
             out.l = _s.l;
@@ -1671,7 +1633,7 @@ var jsPlumbBrowserUI = (function (exports) {
       value: function lineIntersection(x1, y1, x2, y2) {
         var out = [];
         for (var i = 0; i < this.segments.length; i++) {
-          out.push.apply(out, this.segments[i].lineIntersection(x1, y1, x2, y2));
+          out.push.apply(out, _getHandler(this.segments[i]).lineIntersection(this.segments[i], x1, y1, x2, y2));
         }
         return out;
       }
@@ -1680,7 +1642,7 @@ var jsPlumbBrowserUI = (function (exports) {
       value: function boxIntersection(x, y, w, h) {
         var out = [];
         for (var i = 0; i < this.segments.length; i++) {
-          out.push.apply(out, this.segments[i].boxIntersection(x, y, w, h));
+          out.push.apply(out, _getHandler(this.segments[i]).boxIntersection(this.segments[i], x, y, w, h));
         }
         return out;
       }
@@ -1689,7 +1651,7 @@ var jsPlumbBrowserUI = (function (exports) {
       value: function boundingBoxIntersection(box) {
         var out = [];
         for (var i = 0; i < this.segments.length; i++) {
-          out.push.apply(out, this.segments[i].boundingBoxIntersection(box));
+          out.push.apply(out, _getHandler(this.segments[i]).boundingBoxIntersection(this.segments[i], box));
         }
         return out;
       }
@@ -1698,7 +1660,7 @@ var jsPlumbBrowserUI = (function (exports) {
       value: function _updateSegmentProportions() {
         var curLoc = 0;
         for (var i = 0; i < this.segments.length; i++) {
-          var sl = this.segments[i].getLength();
+          var sl = _getSegmentLength(this.segments[i]);
           this.segmentProportionalLengths[i] = sl / this.totalLength;
           this.segmentProportions[i] = [curLoc, curLoc += sl / this.totalLength];
         }
@@ -1747,13 +1709,14 @@ var jsPlumbBrowserUI = (function (exports) {
       }
     }, {
       key: "_addSegment",
-      value: function _addSegment(clazz, params) {
+      value: function _addSegment(segmentType, params) {
         if (params.x1 === params.x2 && params.y1 === params.y2) {
           return;
         }
-        var s = new clazz(params);
+        var handler = Segments.get(segmentType);
+        var s = handler.create(segmentType, params);
         this.segments.push(s);
-        this.totalLength += s.getLength();
+        this.totalLength += handler.getLength(s);
         this.updateBounds(s);
       }
     }, {
@@ -1859,14 +1822,14 @@ var jsPlumbBrowserUI = (function (exports) {
       value: function dumpSegmentsToConsole() {
         log("SEGMENTS:");
         for (var i = 0; i < this.segments.length; i++) {
-          log(this.segments[i].type, "" + this.segments[i].getLength(), "" + this.segmentProportions[i]);
+          log(this.segments[i].type, "" + _getSegmentLength(this.segments[i]), "" + this.segmentProportions[i]);
         }
       }
     }, {
       key: "pointOnPath",
       value: function pointOnPath(location, absolute) {
         var seg = this._findSegmentForLocation(location, absolute);
-        return seg.segment && seg.segment.pointOnPath(seg.proportion, false) || {
+        return seg.segment && _getHandler(seg.segment).pointOnPath(seg.segment, seg.proportion, false) || {
           x: 0,
           y: 0
         };
@@ -1875,13 +1838,13 @@ var jsPlumbBrowserUI = (function (exports) {
       key: "gradientAtPoint",
       value: function gradientAtPoint(location, absolute) {
         var seg = this._findSegmentForLocation(location, absolute);
-        return seg.segment && seg.segment.gradientAtPoint(seg.proportion, false) || 0;
+        return seg.segment && _getHandler(seg.segment).gradientAtPoint(seg.segment, seg.proportion, false) || 0;
       }
     }, {
       key: "pointAlongPathFrom",
       value: function pointAlongPathFrom(location, distance, absolute) {
         var seg = this._findSegmentForLocation(location, absolute);
-        return seg.segment && seg.segment.pointAlongPathFrom(seg.proportion, distance, false) || {
+        return seg.segment && Segments.get(seg.segment.type).pointAlongPathFrom(seg.segment, seg.proportion, distance, false) || {
           x: 0,
           y: 0
         };
@@ -1906,250 +1869,253 @@ var jsPlumbBrowserUI = (function (exports) {
     return AbstractConnector;
   }();
 
-  var StraightSegment = function (_AbstractSegment) {
-    _inherits$3(StraightSegment, _AbstractSegment);
-    var _super = _createSuper$3(StraightSegment);
-    function StraightSegment(params) {
-      var _this;
-      _classCallCheck$3(this, StraightSegment);
-      _this = _super.call(this, params);
-      _defineProperty$3(_assertThisInitialized$3(_this), "length", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "m", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "m2", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "type", StraightSegment.segmentType);
-      _this._setCoordinates({
-        x1: params.x1,
-        y1: params.y1,
-        x2: params.x2,
-        y2: params.y2
-      });
-      return _this;
-    }
-    _createClass$3(StraightSegment, [{
-      key: "getPath",
-      value: function getPath(isFirstSegment) {
-        return (isFirstSegment ? "M " + this.x1 + " " + this.y1 + " " : "") + "L " + this.x2 + " " + this.y2;
-      }
+  function _pointLiesBetween(q, p1, p2) {
+    return p2 > p1 ? p1 <= q && q <= p2 : p1 >= q && q >= p2;
+  }
+  function _within(a, b, c) {
+    return c >= Math.min(a, b) && c <= Math.max(a, b);
+  }
+  function _closest(a, b, c) {
+    return Math.abs(c - a) < Math.abs(c - b) ? a : b;
+  }
+  function _lineIntersection(segment, _x1, _y1, _x2, _y2) {
+    var m2 = Math.abs(gradient({
+      x: _x1,
+      y: _y1
     }, {
-      key: "_recalc",
-      value: function _recalc() {
-        this.length = Math.sqrt(Math.pow(this.x2 - this.x1, 2) + Math.pow(this.y2 - this.y1, 2));
-        this.m = gradient({
-          x: this.x1,
-          y: this.y1
-        }, {
-          x: this.x2,
-          y: this.y2
-        });
-        this.m2 = -1 / this.m;
-        this.extents = {
-          xmin: Math.min(this.x1, this.x2),
-          ymin: Math.min(this.y1, this.y2),
-          xmax: Math.max(this.x1, this.x2),
-          ymax: Math.max(this.y1, this.y2)
-        };
-      }
-    }, {
-      key: "getLength",
-      value: function getLength() {
-        return this.length;
-      }
-    }, {
-      key: "getGradient",
-      value: function getGradient() {
-        return this.m;
-      }
-    }, {
-      key: "_setCoordinates",
-      value: function _setCoordinates(coords) {
-        this.x1 = coords.x1;
-        this.y1 = coords.y1;
-        this.x2 = coords.x2;
-        this.y2 = coords.y2;
-        this._recalc();
-      }
-    }, {
-      key: "pointOnPath",
-      value: function pointOnPath(location, absolute) {
-        if (location === 0 && !absolute) {
-          return {
-            x: this.x1,
-            y: this.y1
-          };
-        } else if (location === 1 && !absolute) {
-          return {
-            x: this.x2,
-            y: this.y2
-          };
-        } else {
-          var l = absolute ? location > 0 ? location : this.length + location : location * this.length;
-          return pointOnLine({
-            x: this.x1,
-            y: this.y1
-          }, {
-            x: this.x2,
-            y: this.y2
-          }, l);
+      x: _x2,
+      y: _y2
+    })),
+        m1 = Math.abs(segment.m),
+        b = m1 === Infinity ? segment.x1 : segment.y1 - m1 * segment.x1,
+        out = [],
+        b2 = m2 === Infinity ? _x1 : _y1 - m2 * _x1;
+    if (m2 !== m1) {
+      if (m2 === Infinity && m1 === 0) {
+        if (_pointLiesBetween(_x1, segment.x1, segment.x2) && _pointLiesBetween(segment.y1, _y1, _y2)) {
+          out.push({
+            x: _x1,
+            y: segment.y1
+          });
         }
-      }
-    }, {
-      key: "gradientAtPoint",
-      value: function gradientAtPoint(location, absolute) {
-        return this.m;
-      }
-    }, {
-      key: "pointAlongPathFrom",
-      value: function pointAlongPathFrom(location, distance, absolute) {
-        var p = this.pointOnPath(location, absolute),
-            farAwayPoint = distance <= 0 ? {
-          x: this.x1,
-          y: this.y1
-        } : {
-          x: this.x2,
-          y: this.y2
-        };
-        if (distance <= 0 && Math.abs(distance) > 1) {
-          distance *= -1;
+      } else if (m2 === 0 && m1 === Infinity) {
+        if (_pointLiesBetween(_y1, segment.y1, segment.y2) && _pointLiesBetween(segment.x1, _x1, _x2)) {
+          out.push({
+            x: segment.x1,
+            y: _y1
+          });
         }
-        return pointOnLine(p, farAwayPoint, distance);
-      }
-    }, {
-      key: "within",
-      value: function within(a, b, c) {
-        return c >= Math.min(a, b) && c <= Math.max(a, b);
-      }
-    }, {
-      key: "closest",
-      value: function closest(a, b, c) {
-        return Math.abs(c - a) < Math.abs(c - b) ? a : b;
-      }
-    }, {
-      key: "findClosestPointOnPath",
-      value: function findClosestPointOnPath(x, y) {
-        var out = {
-          d: Infinity,
-          x: null,
-          y: null,
-          l: null,
-          x1: this.x1,
-          x2: this.x2,
-          y1: this.y1,
-          y2: this.y2
-        };
-        if (this.m === 0) {
-          out.y = this.y1;
-          out.x = this.within(this.x1, this.x2, x) ? x : this.closest(this.x1, this.x2, x);
-        } else if (this.m === Infinity || this.m === -Infinity) {
-          out.x = this.x1;
-          out.y = this.within(this.y1, this.y2, y) ? y : this.closest(this.y1, this.y2, y);
-        } else {
-          var b = this.y1 - this.m * this.x1,
-              b2 = y - this.m2 * x,
-          _x1 = (b2 - b) / (this.m - this.m2),
-              _y1 = this.m * _x1 + b;
-          out.x = this.within(this.x1, this.x2, _x1) ? _x1 : this.closest(this.x1, this.x2, _x1);
-          out.y = this.within(this.y1, this.y2, _y1) ? _y1 : this.closest(this.y1, this.y2, _y1);
-        }
-        var fractionInSegment = lineLength({
-          x: out.x,
-          y: out.y
-        }, {
-          x: this.x1,
-          y: this.y1
-        });
-        out.d = lineLength({
-          x: x,
-          y: y
-        }, out);
-        out.l = fractionInSegment / length;
-        return out;
-      }
-    }, {
-      key: "_pointLiesBetween",
-      value: function _pointLiesBetween(q, p1, p2) {
-        return p2 > p1 ? p1 <= q && q <= p2 : p1 >= q && q >= p2;
-      }
-    }, {
-      key: "lineIntersection",
-      value: function lineIntersection(_x1, _y1, _x2, _y2) {
-        var m2 = Math.abs(gradient({
-          x: _x1,
-          y: _y1
-        }, {
-          x: _x2,
-          y: _y2
-        })),
-            m1 = Math.abs(this.m),
-            b = m1 === Infinity ? this.x1 : this.y1 - m1 * this.x1,
-            out = [],
-            b2 = m2 === Infinity ? _x1 : _y1 - m2 * _x1;
-        if (m2 !== m1) {
-          if (m2 === Infinity && m1 === 0) {
-            if (this._pointLiesBetween(_x1, this.x1, this.x2) && this._pointLiesBetween(this.y1, _y1, _y2)) {
+      } else {
+        var X, Y;
+        if (m2 === Infinity) {
+          X = _x1;
+          if (_pointLiesBetween(X, segment.x1, segment.x2)) {
+            Y = m1 * _x1 + b;
+            if (_pointLiesBetween(Y, _y1, _y2)) {
               out.push({
-                x: _x1,
-                y: this.y1
+                x: X,
+                y: Y
               });
-            }
-          } else if (m2 === 0 && m1 === Infinity) {
-            if (this._pointLiesBetween(_y1, this.y1, this.y2) && this._pointLiesBetween(this.x1, _x1, _x2)) {
-              out.push({
-                x: this.x1,
-                y: _y1
-              });
-            }
-          } else {
-            var X, Y;
-            if (m2 === Infinity) {
-              X = _x1;
-              if (this._pointLiesBetween(X, this.x1, this.x2)) {
-                Y = m1 * _x1 + b;
-                if (this._pointLiesBetween(Y, _y1, _y2)) {
-                  out.push({
-                    x: X,
-                    y: Y
-                  });
-                }
-              }
-            } else if (m2 === 0) {
-              Y = _y1;
-              if (this._pointLiesBetween(Y, this.y1, this.y2)) {
-                X = (_y1 - b) / m1;
-                if (this._pointLiesBetween(X, _x1, _x2)) {
-                  out.push({
-                    x: X,
-                    y: Y
-                  });
-                }
-              }
-            } else {
-              X = (b2 - b) / (m1 - m2);
-              Y = m1 * X + b;
-              if (this._pointLiesBetween(X, this.x1, this.x2) && this._pointLiesBetween(Y, this.y1, this.y2)) {
-                out.push({
-                  x: X,
-                  y: Y
-                });
-              }
             }
           }
+        } else if (m2 === 0) {
+          Y = _y1;
+          if (_pointLiesBetween(Y, segment.y1, segment.y2)) {
+            X = (_y1 - b) / m1;
+            if (_pointLiesBetween(X, _x1, _x2)) {
+              out.push({
+                x: X,
+                y: Y
+              });
+            }
+          }
+        } else {
+          X = (b2 - b) / (m1 - m2);
+          Y = m1 * X + b;
+          if (_pointLiesBetween(X, segment.x1, segment.x2) && _pointLiesBetween(Y, segment.y1, segment.y2)) {
+            out.push({
+              x: X,
+              y: Y
+            });
+          }
         }
-        return out;
       }
+    }
+    return out;
+  }
+  function _boxIntersection(segment, x, y, w, h) {
+    var a = [];
+    a.push.apply(a, _lineIntersection(segment, x, y, x + w, y));
+    a.push.apply(a, _lineIntersection(segment, x + w, y, x + w, y + h));
+    a.push.apply(a, _lineIntersection(segment, x + w, y + h, x, y + h));
+    a.push.apply(a, _lineIntersection(segment, x, y + h, x, y));
+    return a;
+  }
+  function _findClosestPointOnPath(segment, x, y) {
+    var out = {
+      d: Infinity,
+      x: null,
+      y: null,
+      l: null,
+      x1: segment.x1,
+      x2: segment.x2,
+      y1: segment.y1,
+      y2: segment.y2
+    };
+    if (segment.m === 0) {
+      out.y = segment.y1;
+      out.x = _within(segment.x1, segment.x2, x) ? x : _closest(segment.x1, segment.x2, x);
+    } else if (segment.m === Infinity || segment.m === -Infinity) {
+      out.x = segment.x1;
+      out.y = _within(segment.y1, segment.y2, y) ? y : _closest(segment.y1, segment.y2, y);
+    } else {
+      var b = segment.y1 - segment.m * segment.x1,
+          b2 = y - segment.m2 * x,
+      _x1 = (b2 - b) / (segment.m - segment.m2),
+          _y1 = segment.m * _x1 + b;
+      out.x = _within(segment.x1, segment.x2, _x1) ? _x1 : _closest(segment.x1, segment.x2, _x1);
+      out.y = _within(segment.y1, segment.y2, _y1) ? _y1 : _closest(segment.y1, segment.y2, _y1);
+    }
+    var fractionInSegment = lineLength({
+      x: out.x,
+      y: out.y
     }, {
-      key: "boxIntersection",
-      value: function boxIntersection(x, y, w, h) {
-        var a = [];
-        a.push.apply(a, this.lineIntersection(x, y, x + w, y));
-        a.push.apply(a, this.lineIntersection(x + w, y, x + w, y + h));
-        a.push.apply(a, this.lineIntersection(x + w, y + h, x, y + h));
-        a.push.apply(a, this.lineIntersection(x, y + h, x, y));
-        return a;
+      x: segment.x1,
+      y: segment.y1
+    });
+    out.d = lineLength({
+      x: x,
+      y: y
+    }, out);
+    out.l = fractionInSegment / length;
+    return out;
+  }
+  function _getLength$1(segment) {
+    return segment.length;
+  }
+  function _getPath$1(segment, isFirstSegment) {
+    return (isFirstSegment ? "M " + segment.x1 + " " + segment.y1 + " " : "") + "L " + segment.x2 + " " + segment.y2;
+  }
+  function _recalc(segment) {
+    segment.length = Math.sqrt(Math.pow(segment.x2 - segment.x1, 2) + Math.pow(segment.y2 - segment.y1, 2));
+    segment.m = gradient({
+      x: segment.x1,
+      y: segment.y1
+    }, {
+      x: segment.x2,
+      y: segment.y2
+    });
+    segment.m2 = -1 / segment.m;
+    segment.extents = {
+      xmin: Math.min(segment.x1, segment.x2),
+      ymin: Math.min(segment.y1, segment.y2),
+      xmax: Math.max(segment.x1, segment.x2),
+      ymax: Math.max(segment.y1, segment.y2)
+    };
+  }
+  function _setCoordinates(segment, coords) {
+    segment.x1 = coords.x1;
+    segment.y1 = coords.y1;
+    segment.x2 = coords.x2;
+    segment.y2 = coords.y2;
+    _recalc(segment);
+  }
+  function _pointOnPath$1(segment, location, absolute) {
+    if (location === 0 && !absolute) {
+      return {
+        x: segment.x1,
+        y: segment.y1
+      };
+    } else if (location === 1 && !absolute) {
+      return {
+        x: segment.x2,
+        y: segment.y2
+      };
+    } else {
+      var l = absolute ? location > 0 ? location : segment.length + location : location * segment.length;
+      return pointOnLine({
+        x: segment.x1,
+        y: segment.y1
+      }, {
+        x: segment.x2,
+        y: segment.y2
+      }, l);
+    }
+  }
+  function _gradientAtPoint$1(segment, location, absolute) {
+    return segment.m;
+  }
+  function _pointAlongPathFrom$1(segment, location, distance, absolute) {
+    var p = _pointOnPath$1(segment, location, absolute),
+        farAwayPoint = distance <= 0 ? {
+      x: segment.x1,
+      y: segment.y1
+    } : {
+      x: segment.x2,
+      y: segment.y2
+    };
+    if (distance <= 0 && Math.abs(distance) > 1) {
+      distance *= -1;
+    }
+    return pointOnLine(p, farAwayPoint, distance);
+  }
+  function blankStraightSegment() {
+    return {
+      type: SEGMENT_TYPE_STRAIGHT,
+      m: 0,
+      length: 0,
+      m2: 0,
+      x1: 0,
+      x2: 0,
+      y1: 0,
+      y2: 0,
+      extents: {
+        xmin: 0,
+        xmax: 0,
+        ymin: 0,
+        ymax: 0
       }
-    }]);
-    return StraightSegment;
-  }(AbstractSegment);
-  _defineProperty$3(StraightSegment, "segmentType", "Straight");
+    };
+  }
+  function _createStraightSegment(params) {
+    var s = blankStraightSegment();
+    _setCoordinates(s, params);
+    return s;
+  }
+  var SEGMENT_TYPE_STRAIGHT = "Straight";
+  var StraightSegmentHandler = {
+    create: function create(segmentType, params) {
+      return _createStraightSegment(params);
+    },
+    findClosestPointOnPath: function findClosestPointOnPath(s, x, y) {
+      return _findClosestPointOnPath(s, x, y);
+    },
+    getLength: function getLength(s) {
+      return _getLength$1(s);
+    },
+    getPath: function getPath(s, isFirstSegment) {
+      return _getPath$1(s, isFirstSegment);
+    },
+    gradientAtPoint: function gradientAtPoint(s, location, absolute) {
+      return _gradientAtPoint$1(s);
+    },
+    lineIntersection: function lineIntersection(s, x1, y1, x2, y2) {
+      return _lineIntersection(s, x1, y1, x2, y2);
+    },
+    pointAlongPathFrom: function pointAlongPathFrom(s, location, distance, absolute) {
+      return _pointAlongPathFrom$1(s, location, distance, absolute);
+    },
+    pointOnPath: function pointOnPath(s, location, absolute) {
+      return _pointOnPath$1(s, location, absolute);
+    },
+    boxIntersection: function boxIntersection(s, x, y, w, h) {
+      return _boxIntersection(s, x, y, w, h);
+    },
+    boundingBoxIntersection: function boundingBoxIntersection(s, box) {
+      return _boxIntersection(s, box.x, box.y, box.w, box.h);
+    }
+  };
+  Segments.register(SEGMENT_TYPE_STRAIGHT, StraightSegmentHandler);
 
   var StraightConnector = function (_AbstractConnector) {
     _inherits$3(StraightConnector, _AbstractConnector);
@@ -2172,19 +2138,19 @@ var jsPlumbBrowserUI = (function (exports) {
     }, {
       key: "_compute",
       value: function _compute(paintInfo, p) {
-        this._addSegment(StraightSegment, {
+        this._addSegment(SEGMENT_TYPE_STRAIGHT, {
           x1: paintInfo.sx,
           y1: paintInfo.sy,
           x2: paintInfo.startStubX,
           y2: paintInfo.startStubY
         });
-        this._addSegment(StraightSegment, {
+        this._addSegment(SEGMENT_TYPE_STRAIGHT, {
           x1: paintInfo.startStubX,
           y1: paintInfo.startStubY,
           x2: paintInfo.endStubX,
           y2: paintInfo.endStubY
         });
-        this._addSegment(StraightSegment, {
+        this._addSegment(SEGMENT_TYPE_STRAIGHT, {
           x1: paintInfo.endStubX,
           y1: paintInfo.endStubY,
           x2: paintInfo.tx,
@@ -8307,7 +8273,7 @@ var jsPlumbBrowserUI = (function (exports) {
       function getPathData(connector) {
         var p = "";
         for (var i = 0; i < connector.segments.length; i++) {
-          p += connector.segments[i].getPath(i === 0);
+          p += Segments.get(connector.segments[i].type).getPath(connector.segments[i], i === 0);
           p += " ";
         }
         return p;
@@ -8327,156 +8293,178 @@ var jsPlumbBrowserUI = (function (exports) {
     }
     return n;
   }
-  var ArcSegment = function (_AbstractSegment) {
-    _inherits$3(ArcSegment, _AbstractSegment);
-    var _super = _createSuper$3(ArcSegment);
-    function ArcSegment(params) {
-      var _this;
-      _classCallCheck$3(this, ArcSegment);
-      _this = _super.call(this, params);
-      _defineProperty$3(_assertThisInitialized$3(_this), "type", ArcSegment.segmentType);
-      _defineProperty$3(_assertThisInitialized$3(_this), "cx", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "cy", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "radius", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "anticlockwise", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "startAngle", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "endAngle", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "sweep", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "length", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "circumference", void 0);
-      _defineProperty$3(_assertThisInitialized$3(_this), "frac", void 0);
-      _this.cx = params.cx;
-      _this.cy = params.cy;
-      _this.radius = params.r;
-      _this.anticlockwise = params.ac;
-      if (params.startAngle && params.endAngle) {
-        _this.startAngle = params.startAngle;
-        _this.endAngle = params.endAngle;
-        _this.x1 = _this.cx + _this.radius * Math.cos(_this.startAngle);
-        _this.y1 = _this.cy + _this.radius * Math.sin(_this.startAngle);
-        _this.x2 = _this.cx + _this.radius * Math.cos(_this.endAngle);
-        _this.y2 = _this.cy + _this.radius * Math.sin(_this.endAngle);
-      } else {
-        _this.startAngle = _this._calcAngle(_this.x1, _this.y1);
-        _this.endAngle = _this._calcAngle(_this.x2, _this.y2);
-      }
-      if (_this.endAngle < 0) {
-        _this.endAngle += TWO_PI;
-      }
-      if (_this.startAngle < 0) {
-        _this.startAngle += TWO_PI;
-      }
-      var ea = _this.endAngle < _this.startAngle ? _this.endAngle + TWO_PI : _this.endAngle;
-      _this.sweep = Math.abs(ea - _this.startAngle);
-      if (_this.anticlockwise) {
-        _this.sweep = TWO_PI - _this.sweep;
-      }
-      _this.circumference = 2 * Math.PI * _this.radius;
-      _this.frac = _this.sweep / TWO_PI;
-      _this.length = _this.circumference * _this.frac;
-      _this.extents = {
-        xmin: _this.cx - _this.radius,
-        xmax: _this.cx + _this.radius,
-        ymin: _this.cy - _this.radius,
-        ymax: _this.cy + _this.radius
-      };
-      return _this;
+  function _calcAngleForLocation(segment, location) {
+    if (segment.anticlockwise) {
+      var sa = segment.startAngle < segment.endAngle ? segment.startAngle + TWO_PI : segment.startAngle,
+          s = Math.abs(sa - segment.endAngle);
+      return sa - s * location;
+    } else {
+      var ea = segment.endAngle < segment.startAngle ? segment.endAngle + TWO_PI : segment.endAngle,
+          ss = Math.abs(ea - segment.startAngle);
+      return segment.startAngle + ss * location;
     }
-    _createClass$3(ArcSegment, [{
-      key: "_calcAngle",
-      value: function _calcAngle(_x, _y) {
-        return theta({
-          x: this.cx,
-          y: this.cy
-        }, {
-          x: _x,
-          y: _y
-        });
-      }
+  }
+  function _calcAngle(cx, cy, _x, _y) {
+    return theta({
+      x: cx,
+      y: cy
     }, {
-      key: "_calcAngleForLocation",
-      value: function _calcAngleForLocation(segment, location) {
-        if (segment.anticlockwise) {
-          var sa = segment.startAngle < segment.endAngle ? segment.startAngle + TWO_PI : segment.startAngle,
-              s = Math.abs(sa - segment.endAngle);
-          return sa - s * location;
-        } else {
-          var ea = segment.endAngle < segment.startAngle ? segment.endAngle + TWO_PI : segment.endAngle,
-              ss = Math.abs(ea - segment.startAngle);
-          return segment.startAngle + ss * location;
-        }
-      }
-    }, {
-      key: "getPath",
-      value: function getPath(isFirstSegment) {
-        var laf = this.sweep > Math.PI ? 1 : 0,
-            sf = this.anticlockwise ? 0 : 1;
-        return (isFirstSegment ? "M" + this.x1 + " " + this.y1 + " " : "") + "A " + this.radius + " " + this.radius + " 0 " + laf + "," + sf + " " + this.x2 + " " + this.y2;
-      }
-    }, {
-      key: "getLength",
-      value: function getLength() {
-        return this.length;
-      }
-    }, {
-      key: "pointOnPath",
-      value: function pointOnPath(location, absolute) {
-        if (location === 0) {
-          return {
-            x: this.x1,
-            y: this.y1,
-            theta: this.startAngle
-          };
-        } else if (location === 1) {
-          return {
-            x: this.x2,
-            y: this.y2,
-            theta: this.endAngle
-          };
-        }
-        if (absolute) {
-          location = location / length;
-        }
-        var angle = this._calcAngleForLocation(this, location),
-            _x = this.cx + this.radius * Math.cos(angle),
-            _y = this.cy + this.radius * Math.sin(angle);
-        return {
-          x: gentleRound(_x),
-          y: gentleRound(_y),
-          theta: angle
-        };
-      }
-    }, {
-      key: "gradientAtPoint",
-      value: function gradientAtPoint(location, absolute) {
-        var p = this.pointOnPath(location, absolute);
-        var m = normal({
-          x: this.cx,
-          y: this.cy
-        }, p);
-        if (!this.anticlockwise && (m === Infinity || m === -Infinity)) {
-          m *= -1;
-        }
-        return m;
-      }
-    }, {
-      key: "pointAlongPathFrom",
-      value: function pointAlongPathFrom(location, distance, absolute) {
-        var p = this.pointOnPath(location, absolute),
-            arcSpan = distance / this.circumference * 2 * Math.PI,
-            dir = this.anticlockwise ? -1 : 1,
-            startAngle = p.theta + dir * arcSpan,
-            startX = this.cx + this.radius * Math.cos(startAngle),
-            startY = this.cy + this.radius * Math.sin(startAngle);
-        return {
-          x: startX,
-          y: startY
-        };
-      }
-    }]);
-    return ArcSegment;
-  }(AbstractSegment);
-  _defineProperty$3(ArcSegment, "segmentType", "Arc");
+      x: _x,
+      y: _y
+    });
+  }
+  function _getPath(segment, isFirstSegment) {
+    var laf = segment.sweep > Math.PI ? 1 : 0,
+        sf = segment.anticlockwise ? 0 : 1;
+    return (isFirstSegment ? "M" + segment.x1 + " " + segment.y1 + " " : "") + "A " + segment.radius + " " + segment.radius + " 0 " + laf + "," + sf + " " + segment.x2 + " " + segment.y2;
+  }
+  function _getLength(segment) {
+    return segment.length;
+  }
+  function _pointOnPath$2(segment, location, absolute) {
+    if (location === 0) {
+      return {
+        x: segment.x1,
+        y: segment.y1,
+        theta: segment.startAngle
+      };
+    } else if (location === 1) {
+      return {
+        x: segment.x2,
+        y: segment.y2,
+        theta: segment.endAngle
+      };
+    }
+    if (absolute) {
+      location = location / segment.length;
+    }
+    var angle = _calcAngleForLocation(segment, location),
+        _x = segment.cx + segment.radius * Math.cos(angle),
+        _y = segment.cy + segment.radius * Math.sin(angle);
+    return {
+      x: gentleRound(_x),
+      y: gentleRound(_y),
+      theta: angle
+    };
+  }
+  function _gradientAtPoint$2(segment, location, absolute) {
+    var p = _pointOnPath$2(segment, location, absolute);
+    var m = normal({
+      x: segment.cx,
+      y: segment.cy
+    }, p);
+    if (!segment.anticlockwise && (m === Infinity || m === -Infinity)) {
+      m *= -1;
+    }
+    return m;
+  }
+  function _pointAlongPathFrom$2(segment, location, distance, absolute) {
+    var p = _pointOnPath$2(segment, location, absolute),
+        arcSpan = distance / segment.circumference * 2 * Math.PI,
+        dir = segment.anticlockwise ? -1 : 1,
+        startAngle = p.theta + dir * arcSpan,
+        startX = segment.cx + segment.radius * Math.cos(startAngle),
+        startY = segment.cy + segment.radius * Math.sin(startAngle);
+    return {
+      x: startX,
+      y: startY
+    };
+  }
+  var SEGMENT_TYPE_ARC = "Arc";
+  function _createArcSegment(params) {
+    var startAngle,
+        endAngle,
+        x1 = params.x1,
+        x2 = params.x2,
+        y1 = params.y1,
+        y2 = params.y2,
+        cx = params.cx,
+        cy = params.cy,
+        radius = params.r,
+        anticlockwise = params.ac;
+    if (params.startAngle && params.endAngle) {
+      startAngle = params.startAngle;
+      endAngle = params.endAngle;
+      x1 = cx + radius * Math.cos(startAngle);
+      y1 = cy + radius * Math.sin(startAngle);
+      x2 = cx + radius * Math.cos(endAngle);
+      y2 = cy + radius * Math.sin(endAngle);
+    } else {
+      startAngle = _calcAngle(cx, cy, x1, y1);
+      endAngle = _calcAngle(cx, cy, x2, y2);
+    }
+    if (endAngle < 0) {
+      endAngle += TWO_PI;
+    }
+    if (startAngle < 0) {
+      startAngle += TWO_PI;
+    }
+    var ea = endAngle < startAngle ? endAngle + TWO_PI : endAngle;
+    var sweep = Math.abs(ea - startAngle);
+    if (anticlockwise) {
+      sweep = TWO_PI - sweep;
+    }
+    var circumference = 2 * Math.PI * radius;
+    var frac = sweep / TWO_PI;
+    var length = circumference * frac;
+    var extents = {
+      xmin: cx - radius,
+      xmax: cx + radius,
+      ymin: cy - radius,
+      ymax: cy + radius
+    };
+    return {
+      x1: x1,
+      x2: x2,
+      y1: y1,
+      y2: y2,
+      startAngle: startAngle,
+      endAngle: endAngle,
+      cx: cx,
+      cy: cy,
+      radius: radius,
+      anticlockwise: anticlockwise,
+      sweep: sweep,
+      circumference: circumference,
+      frac: frac,
+      length: length,
+      extents: extents,
+      type: SEGMENT_TYPE_ARC
+    };
+  }
+  var ArcSegmentHandler = {
+    create: function create(segmentType, params) {
+      return _createArcSegment(params);
+    },
+    findClosestPointOnPath: function findClosestPointOnPath(s, x, y) {
+      return defaultSegmentHandler.findClosestPointOnPath(this, s, x, y);
+    },
+    getLength: function getLength(s) {
+      return _getLength(s);
+    },
+    getPath: function getPath(s, isFirstSegment) {
+      return _getPath(s, isFirstSegment);
+    },
+    gradientAtPoint: function gradientAtPoint(s, location, absolute) {
+      return _gradientAtPoint$2(s, location, absolute);
+    },
+    lineIntersection: function lineIntersection(s, x1, y1, x2, y2) {
+      return defaultSegmentHandler.lineIntersection(this, x1, y1, x2, y2);
+    },
+    pointAlongPathFrom: function pointAlongPathFrom(s, location, distance, absolute) {
+      return _pointAlongPathFrom$2(s, location, distance, absolute);
+    },
+    pointOnPath: function pointOnPath(s, location, absolute) {
+      return _pointOnPath$2(s, location, absolute);
+    },
+    boxIntersection: function boxIntersection(s, x, y, w, h) {
+      return defaultSegmentHandler.boxIntersection(this, s, x, y, w, h);
+    },
+    boundingBoxIntersection: function boundingBoxIntersection(s, box) {
+      return defaultSegmentHandler.boundingBoxIntersection(this, s, box);
+    }
+  };
+  Segments.register(SEGMENT_TYPE_ARC, ArcSegmentHandler);
 
   var DEFAULT_WIDTH = 20;
   var DEFAULT_LENGTH = 20;
@@ -8850,13 +8838,13 @@ var jsPlumbBrowserUI = (function (exports) {
                 sgnEqual = sgny === sgnx,
                 cx = sgnEqual && ac || !sgnEqual && !ac ? next[0] : current[2],
                 cy = sgnEqual && ac || !sgnEqual && !ac ? current[3] : next[1];
-            this._addSegment(StraightSegment, {
+            this._addSegment(SEGMENT_TYPE_STRAIGHT, {
               x1: current[0],
               y1: current[1],
               x2: current[2],
               y2: current[3]
             });
-            this._addSegment(ArcSegment, {
+            this._addSegment(SEGMENT_TYPE_ARC, {
               r: radiusToUse,
               x1: current[2],
               y1: current[3],
@@ -8867,7 +8855,7 @@ var jsPlumbBrowserUI = (function (exports) {
               ac: ac
             });
           } else {
-            this._addSegment(StraightSegment, {
+            this._addSegment(SEGMENT_TYPE_STRAIGHT, {
               x1: current[0],
               y1: current[1],
               x2: current[2],
@@ -8877,7 +8865,7 @@ var jsPlumbBrowserUI = (function (exports) {
           current = next;
         }
         if (next != null) {
-          this._addSegment(StraightSegment, {
+          this._addSegment(SEGMENT_TYPE_STRAIGHT, {
             x1: next[0],
             y1: next[1],
             x2: next[2],
@@ -9218,7 +9206,7 @@ var jsPlumbBrowserUI = (function (exports) {
           paintInfo.points[1] = _y;
           paintInfo.points[2] = _w;
           paintInfo.points[3] = _h;
-          this._addSegment(ArcSegment, {
+          this._addSegment(SEGMENT_TYPE_ARC, {
             loopback: true,
             x1: x1 - _x + 4,
             y1: y1 - _y,
@@ -9802,116 +9790,146 @@ var jsPlumbBrowserUI = (function (exports) {
     return t;
   }
 
-  var BezierSegment = function (_AbstractSegment) {
-    _inherits$1(BezierSegment, _AbstractSegment);
-    var _super = _createSuper$1(BezierSegment);
-    function BezierSegment(params) {
-      var _this;
-      _classCallCheck$1(this, BezierSegment);
-      _this = _super.call(this, params);
-      _defineProperty$1(_assertThisInitialized$1(_this), "curve", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "cp1x", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "cp1y", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "cp2x", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "cp2y", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "length", 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "type", BezierSegment.segmentType);
-      _this.cp1x = params.cp1x;
-      _this.cp1y = params.cp1y;
-      _this.cp2x = params.cp2x;
-      _this.cp2y = params.cp2y;
-      _this.x1 = params.x1;
-      _this.x2 = params.x2;
-      _this.y1 = params.y1;
-      _this.y2 = params.y2;
-      _this.curve = [{
-        x: _this.x1,
-        y: _this.y1
-      }, {
-        x: _this.cp1x,
-        y: _this.cp1y
-      }, {
-        x: _this.cp2x,
-        y: _this.cp2y
-      }, {
-        x: _this.x2,
-        y: _this.y2
-      }];
-      _this.extents = {
-        xmin: Math.min(_this.x1, _this.x2, _this.cp1x, _this.cp2x),
-        ymin: Math.min(_this.y1, _this.y2, _this.cp1y, _this.cp2y),
-        xmax: Math.max(_this.x1, _this.x2, _this.cp1x, _this.cp2x),
-        ymax: Math.max(_this.y1, _this.y2, _this.cp1y, _this.cp2y)
-      };
-      return _this;
+  var _this = undefined;
+  function _translateLocation(_curve, location, absolute) {
+    if (absolute) {
+      location = locationAlongCurveFrom(_curve, location > 0 ? 0 : 1, location);
     }
-    _createClass$1(BezierSegment, [{
-      key: "getPath",
-      value: function getPath(isFirstSegment) {
-        return (isFirstSegment ? "M " + this.x2 + " " + this.y2 + " " : "") + "C " + this.cp2x + " " + this.cp2y + " " + this.cp1x + " " + this.cp1y + " " + this.x1 + " " + this.y1;
+    return location;
+  }
+  function _pointOnPath(curve, location, absolute) {
+    location = _translateLocation(curve, location, absolute);
+    return pointOnCurve(curve, location);
+  }
+  function _gradientAtPoint(curve, location, absolute) {
+    location = _translateLocation(curve, location, absolute);
+    return gradientAtPoint(curve, location);
+  }
+  function _pointAlongPathFrom(curve, location, distance, absolute) {
+    location = _translateLocation(curve, location, absolute);
+    return pointAlongCurveFrom(curve, location, distance);
+  }
+  function createCubicSegment(params) {
+    return {
+      type: SEGMENT_TYPE_CUBIC_BEZIER,
+      length: 0,
+      x1: params.x1,
+      x2: params.x2,
+      y1: params.y1,
+      y2: params.y2,
+      cp1x: params.cp1x,
+      cp1y: params.cp1y,
+      cp2x: params.cp2x,
+      cp2y: params.cp2y,
+      curve: [{
+        x: params.x1,
+        y: params.y1
+      }, {
+        x: params.cp1x,
+        y: params.cp1y
+      }, {
+        x: params.cp2x,
+        y: params.cp2y
+      }, {
+        x: params.x2,
+        y: params.y2
+      }],
+      extents: {
+        xmin: Math.min(params.x1, params.x2, params.cp1x, params.cp2x),
+        ymin: Math.min(params.y1, params.y2, params.cp1y, params.cp2y),
+        xmax: Math.max(params.x1, params.x2, params.cp1x, params.cp2x),
+        ymax: Math.max(params.y1, params.y2, params.cp1y, params.cp2y)
       }
-    }, {
-      key: "pointOnPath",
-      value: function pointOnPath(location, absolute) {
-        location = BezierSegment._translateLocation(this.curve, location, absolute);
-        return pointOnCurve(this.curve, location);
+    };
+  }
+  function createQuadraticSegment(params) {
+    return {
+      type: SEGMENT_TYPE_QUADRATIC_BEZIER,
+      length: 0,
+      x1: params.x1,
+      x2: params.x2,
+      y1: params.y1,
+      y2: params.y2,
+      cpx: params.cpx,
+      cpy: params.cpy,
+      curve: [{
+        x: params.x1,
+        y: params.y1
+      }, {
+        x: params.cpx,
+        y: params.cpy
+      }, {
+        x: params.x2,
+        y: params.y2
+      }],
+      extents: {
+        xmin: Math.min(params.x1, params.x2, params.cpx),
+        ymin: Math.min(params.y1, params.y2, params.cpy),
+        xmax: Math.max(params.x1, params.x2, params.cpx),
+        ymax: Math.max(params.y1, params.y2, params.cpy)
       }
-    }, {
-      key: "gradientAtPoint",
-      value: function gradientAtPoint$1(location, absolute) {
-        location = BezierSegment._translateLocation(this.curve, location, absolute);
-        return gradientAtPoint(this.curve, location);
+    };
+  }
+  var SEGMENT_TYPE_CUBIC_BEZIER = "CubicBezier";
+  var SEGMENT_TYPE_QUADRATIC_BEZIER = "QuadraticBezier";
+  var BezierSegmentHandler = {
+    pointOnPath: function pointOnPath(segment, location, absolute) {
+      return _pointOnPath(segment.curve, location, absolute);
+    },
+    gradientAtPoint: function gradientAtPoint(segment, location, absolute) {
+      return _gradientAtPoint(segment.curve, location, absolute);
+    },
+    pointAlongPathFrom: function pointAlongPathFrom(segment, location, distance, absolute) {
+      return _pointAlongPathFrom(segment.curve, location, distance, absolute);
+    },
+    getLength: function getLength(segment) {
+      return computeBezierLength(segment.curve);
+    },
+    findClosestPointOnPath: function findClosestPointOnPath(segment, x, y) {
+      var p = nearestPointOnCurve({
+        x: x,
+        y: y
+      }, segment.curve);
+      return {
+        d: Math.sqrt(Math.pow(p.point.x - x, 2) + Math.pow(p.point.y - y, 2)),
+        x: p.point.x,
+        y: p.point.y,
+        l: 1 - p.location,
+        s: _this,
+        x1: null,
+        y1: null,
+        x2: null,
+        y2: null
+      };
+    },
+    lineIntersection: function lineIntersection(segment, x1, y1, x2, y2) {
+      return bezierLineIntersection(x1, y1, x2, y2, segment.curve);
+    },
+    getPath: function getPath(segment, isFirstSegment) {
+      if (segment.type === SEGMENT_TYPE_CUBIC_BEZIER) {
+        var cb = segment;
+        return (isFirstSegment ? "M " + cb.x2 + " " + cb.y2 + " " : "") + "C " + cb.cp2x + " " + cb.cp2y + " " + cb.cp1x + " " + cb.cp1y + " " + cb.x1 + " " + cb.y1;
+      } else if (segment.type === SEGMENT_TYPE_QUADRATIC_BEZIER) {
+        var qb = segment;
+        return (isFirstSegment ? "M " + qb.x2 + " " + qb.y2 + " " : "") + "Q " + qb.cpx + " " + qb.cpy + " " + qb.x1 + " " + qb.y1;
       }
-    }, {
-      key: "pointAlongPathFrom",
-      value: function pointAlongPathFrom(location, distance, absolute) {
-        location = BezierSegment._translateLocation(this.curve, location, absolute);
-        return pointAlongCurveFrom(this.curve, location, distance);
+    },
+    create: function create(segmentType, params) {
+      if (segmentType === SEGMENT_TYPE_CUBIC_BEZIER) {
+        return createCubicSegment(params);
+      } else if (segmentType === SEGMENT_TYPE_QUADRATIC_BEZIER) {
+        return createQuadraticSegment(params);
       }
-    }, {
-      key: "getLength",
-      value: function getLength() {
-        if (this.length == null || this.length === 0) {
-          this.length = computeBezierLength(this.curve);
-        }
-        return this.length;
-      }
-    }, {
-      key: "findClosestPointOnPath",
-      value: function findClosestPointOnPath(x, y) {
-        var p = nearestPointOnCurve({
-          x: x,
-          y: y
-        }, this.curve);
-        return {
-          d: Math.sqrt(Math.pow(p.point.x - x, 2) + Math.pow(p.point.y - y, 2)),
-          x: p.point.x,
-          y: p.point.y,
-          l: 1 - p.location,
-          s: this,
-          x1: null,
-          y1: null,
-          x2: null,
-          y2: null
-        };
-      }
-    }, {
-      key: "lineIntersection",
-      value: function lineIntersection(x1, y1, x2, y2) {
-        return bezierLineIntersection(x1, y1, x2, y2, this.curve);
-      }
-    }], [{
-      key: "_translateLocation",
-      value: function _translateLocation(_curve, location, absolute) {
-        if (absolute) {
-          location = locationAlongCurveFrom(_curve, location > 0 ? 0 : 1, location);
-        }
-        return location;
-      }
-    }]);
-    return BezierSegment;
-  }(AbstractSegment);
-  _defineProperty$1(BezierSegment, "segmentType", "Bezier");
+    },
+    boundingBoxIntersection: function boundingBoxIntersection(segment, box) {
+      return defaultSegmentHandler.boundingBoxIntersection(this, segment, box);
+    },
+    boxIntersection: function boxIntersection(s, x, y, w, h) {
+      return defaultSegmentHandler.boxIntersection(this, s, x, y, w, h);
+    }
+  };
+  Segments.register(SEGMENT_TYPE_CUBIC_BEZIER, BezierSegmentHandler);
+  Segments.register(SEGMENT_TYPE_QUADRATIC_BEZIER, BezierSegmentHandler);
 
   var BezierConnector = function (_AbstractBezierConnec) {
     _inherits$1(BezierConnector, _AbstractBezierConnec);
@@ -9994,7 +10012,7 @@ var jsPlumbBrowserUI = (function (exports) {
           source: p.sourcePos,
           target: p.targetPos
         };
-        this._addSegment(BezierSegment, {
+        this._addSegment(SEGMENT_TYPE_CUBIC_BEZIER, {
           x1: _sx,
           y1: _sy,
           x2: _tx,
@@ -10153,25 +10171,21 @@ var jsPlumbBrowserUI = (function (exports) {
         } else {
           this._controlPoint = this.geometry.controlPoints[0];
         }
-        var cp1x, cp2x, cp1y, cp2y;
-        cp1x = this._controlPoint.x;
-        cp2x = this._controlPoint.x;
-        cp1y = this._controlPoint.y;
-        cp2y = this._controlPoint.y;
+        var cpx, cpy;
+        cpx = this._controlPoint.x;
+        cpy = this._controlPoint.y;
         this.geometry = {
           controlPoints: [this._controlPoint, this._controlPoint],
           source: params.sourcePos,
           target: params.targetPos
         };
-        this._addSegment(BezierSegment, {
+        this._addSegment(SEGMENT_TYPE_QUADRATIC_BEZIER, {
           x1: _tx,
           y1: _ty,
           x2: _sx,
           y2: _sy,
-          cp1x: cp1x,
-          cp1y: cp1y,
-          cp2x: cp2x,
-          cp2y: cp2y
+          cpx: cpx,
+          cpy: cpy
         });
       }
     }]);
@@ -15762,13 +15776,10 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.ATTRIBUTE_TABINDEX = ATTRIBUTE_TABINDEX;
   exports.AbstractBezierConnector = AbstractBezierConnector;
   exports.AbstractConnector = AbstractConnector;
-  exports.AbstractSegment = AbstractSegment;
-  exports.ArcSegment = ArcSegment;
   exports.ArrowOverlay = ArrowOverlay;
   exports.BLOCK = BLOCK;
   exports.BOTTOM = BOTTOM;
   exports.BezierConnector = BezierConnector;
-  exports.BezierSegment = BezierSegment;
   exports.BlankEndpoint = BlankEndpoint;
   exports.BlankEndpointHandler = BlankEndpointHandler;
   exports.BrowserJsPlumbInstance = BrowserJsPlumbInstance;
@@ -15951,6 +15962,10 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.RIGHT = RIGHT;
   exports.RectangleEndpoint = RectangleEndpoint;
   exports.RectangleEndpointHandler = RectangleEndpointHandler;
+  exports.SEGMENT_TYPE_ARC = SEGMENT_TYPE_ARC;
+  exports.SEGMENT_TYPE_CUBIC_BEZIER = SEGMENT_TYPE_CUBIC_BEZIER;
+  exports.SEGMENT_TYPE_QUADRATIC_BEZIER = SEGMENT_TYPE_QUADRATIC_BEZIER;
+  exports.SEGMENT_TYPE_STRAIGHT = SEGMENT_TYPE_STRAIGHT;
   exports.SELECTOR_CONNECTOR = SELECTOR_CONNECTOR;
   exports.SELECTOR_ENDPOINT = SELECTOR_ENDPOINT;
   exports.SELECTOR_GROUP = SELECTOR_GROUP;
@@ -15960,9 +15975,9 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.SOURCE = SOURCE;
   exports.SOURCE_INDEX = SOURCE_INDEX;
   exports.STATIC = STATIC;
+  exports.Segments = Segments;
   exports.StateMachineConnector = StateMachineConnector;
   exports.StraightConnector = StraightConnector;
-  exports.StraightSegment = StraightSegment;
   exports.TARGET = TARGET;
   exports.TARGET_INDEX = TARGET_INDEX;
   exports.TOP = TOP;
@@ -15998,6 +16013,7 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.createElement = createElement;
   exports.createElementNS = createElementNS;
   exports.createFloatingAnchor = createFloatingAnchor;
+  exports.defaultSegmentHandler = defaultSegmentHandler;
   exports.dist = dist;
   exports.distanceFromCurve = distanceFromCurve;
   exports.each = each;

@@ -1,4 +1,4 @@
-import { StraightSegment, ArcSegment, AbstractConnector, Connectors } from '@jsplumb/core';
+import { SEGMENT_TYPE_STRAIGHT, SEGMENT_TYPE_ARC, AbstractConnector, Connectors } from '@jsplumb/core';
 
 function _classCallCheck(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -201,13 +201,13 @@ var FlowchartConnector = function (_AbstractConnector) {
               sgnEqual = sgny === sgnx,
               cx = sgnEqual && ac || !sgnEqual && !ac ? next[0] : current[2],
               cy = sgnEqual && ac || !sgnEqual && !ac ? current[3] : next[1];
-          this._addSegment(StraightSegment.segmentType, {
+          this._addSegment(SEGMENT_TYPE_STRAIGHT, {
             x1: current[0],
             y1: current[1],
             x2: current[2],
             y2: current[3]
           });
-          this._addSegment(ArcSegment.segmentType, {
+          this._addSegment(SEGMENT_TYPE_ARC, {
             r: radiusToUse,
             x1: current[2],
             y1: current[3],
@@ -218,7 +218,7 @@ var FlowchartConnector = function (_AbstractConnector) {
             ac: ac
           });
         } else {
-          this._addSegment(StraightSegment.segmentType, {
+          this._addSegment(SEGMENT_TYPE_STRAIGHT, {
             x1: current[0],
             y1: current[1],
             x2: current[2],
@@ -228,7 +228,7 @@ var FlowchartConnector = function (_AbstractConnector) {
         current = next;
       }
       if (next != null) {
-        this._addSegment(StraightSegment.segmentType, {
+        this._addSegment(SEGMENT_TYPE_STRAIGHT, {
           x1: next[0],
           y1: next[1],
           x2: next[2],

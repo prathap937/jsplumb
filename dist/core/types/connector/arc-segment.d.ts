@@ -1,4 +1,4 @@
-import { AbstractSegment, SegmentParams } from "@jsplumb/common";
+import { Segment, SegmentParams } from "@jsplumb/common";
 /**
  * @internal
  */
@@ -11,11 +11,14 @@ export interface ArcSegmentParams extends SegmentParams {
     endAngle?: number;
 }
 /**
+ * Identifer for arc segments.
+ * @public
+ */
+export declare const SEGMENT_TYPE_ARC = "Arc";
+/**
  * @internal
  */
-export declare class ArcSegment extends AbstractSegment {
-    static segmentType: string;
-    type: string;
+export interface ArcSegment extends Segment {
     cx: number;
     cy: number;
     radius: number;
@@ -26,6 +29,5 @@ export declare class ArcSegment extends AbstractSegment {
     length: number;
     circumference: number;
     frac: number;
-    constructor(params: ArcSegmentParams);
 }
 //# sourceMappingURL=arc-segment.d.ts.map

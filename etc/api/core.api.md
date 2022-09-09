@@ -4,11 +4,11 @@
 
 ```ts
 
-import { AbstractSegment } from '@jsplumb/common';
 import { AnchorPlacement } from '@jsplumb/common';
 import { AnchorSpec } from '@jsplumb/common';
 import { ArrowOverlayOptions } from '@jsplumb/common';
 import { BlankEndpointParams } from '@jsplumb/common';
+import { BoundingBox } from '@jsplumb/util';
 import { Connector } from '@jsplumb/common';
 import { ConnectorOptions } from '@jsplumb/common';
 import { ConnectorSpec } from '@jsplumb/common';
@@ -46,7 +46,7 @@ export const ABSOLUTE = "absolute";
 export abstract class AbstractConnector implements Connector {
     constructor(connection: Connection, params: ConnectorOptions);
     // (undocumented)
-    _addSegment(clazz: Constructable<Segment>, params: any): void;
+    _addSegment<T extends SegmentParams>(segmentType: string, params: T): void;
     // (undocumented)
     boundingBoxIntersection(box: any): Array<PointXY>;
     // (undocumented)
@@ -220,8 +220,7 @@ export interface AnchorRecord {
 // Warning: (ae-internal-missing-underscore) The name "ArcSegment" should be prefixed with an underscore because the declaration is marked as @internal
 //
 // @internal (undocumented)
-export class ArcSegment extends AbstractSegment {
-    constructor(params: ArcSegmentParams);
+export interface ArcSegment extends Segment {
     // (undocumented)
     anticlockwise: boolean;
     // (undocumented)
@@ -235,25 +234,13 @@ export class ArcSegment extends AbstractSegment {
     // (undocumented)
     frac: number;
     // (undocumented)
-    getLength(): number;
-    // (undocumented)
-    getPath(isFirstSegment: boolean): string;
-    gradientAtPoint(location: number, absolute?: boolean): number;
-    // (undocumented)
     length: number;
     // (undocumented)
-    pointAlongPathFrom(location: number, distance: number, absolute?: boolean): PointXY;
-    pointOnPath(location: number, absolute?: boolean): PointXY;
-    // (undocumented)
     radius: number;
-    // (undocumented)
-    static segmentType: string;
     // (undocumented)
     startAngle: number;
     // (undocumented)
     sweep: number;
-    // (undocumented)
-    type: string;
 }
 
 // Warning: (ae-internal-missing-underscore) The name "ArcSegmentParams" should be prefixed with an underscore because the declaration is marked as @internal
@@ -2409,6 +2396,44 @@ export interface Router<T extends {
     unlock(a: A): void;
 }
 
+// @public
+export const SEGMENT_TYPE_ARC = "Arc";
+
+// @public
+export const SEGMENT_TYPE_STRAIGHT = "Straight";
+
+// @public (undocumented)
+export interface SegmentHandler<T extends Segment> {
+    // (undocumented)
+    boundingBoxIntersection(segment: T, box: BoundingBox): Array<PointXY>;
+    // (undocumented)
+    boxIntersection(s: T, x: number, y: number, w: number, h: number): Array<PointXY>;
+    // (undocumented)
+    create(segmentType: string, params: any): T;
+    // (undocumented)
+    findClosestPointOnPath(s: T, x: number, y: number): PointNearPath;
+    // (undocumented)
+    getLength(s: T): number;
+    // (undocumented)
+    getPath(s: T, isFirstSegment: boolean): string;
+    // (undocumented)
+    gradientAtPoint(s: T, location: number, absolute?: boolean): number;
+    // (undocumented)
+    gradientAtPoint(s: T, location: number, absolute?: boolean): number;
+    // (undocumented)
+    lineIntersection(s: T, x1: number, y1: number, x2: number, y2: number): Array<PointXY>;
+    // (undocumented)
+    pointAlongPathFrom(s: T, location: number, distance: number, absolute?: boolean): PointXY;
+    // (undocumented)
+    pointOnPath(s: T, location: number, absolute?: boolean): PointXY;
+}
+
+// @public (undocumented)
+export const Segments: {
+    register: (segmentType: string, segmentHandler: SegmentHandler<any>) => void;
+    get: (segmentType: string) => SegmentHandler<any>;
+};
+
 // @public (undocumented)
 export interface SelectEndpointOptions<E> extends AbstractSelectOptions<E> {
     // (undocumented)
@@ -2480,33 +2505,14 @@ export interface StraightConnectorGeometry {
     target: AnchorPlacement;
 }
 
-// Warning: (ae-internal-missing-underscore) The name "StraightSegment" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal (undocumented)
-export class StraightSegment extends AbstractSegment {
-    constructor(params: StraightSegmentParams);
-    boxIntersection(x: number, y: number, w: number, h: number): Array<PointXY>;
-    findClosestPointOnPath(x: number, y: number): PointNearPath;
-    // (undocumented)
-    getGradient(): number;
-    // (undocumented)
-    getLength(): number;
-    // (undocumented)
-    getPath(isFirstSegment: boolean): string;
-    gradientAtPoint(location: number, absolute?: boolean): number;
+// @public
+export interface StraightSegment extends Segment {
     // (undocumented)
     length: number;
-    lineIntersection(_x1: number, _y1: number, _x2: number, _y2: number): Array<PointXY>;
     // (undocumented)
     m: number;
     // (undocumented)
     m2: number;
-    pointAlongPathFrom(location: number, distance: number, absolute?: boolean): PointXY;
-    pointOnPath(location: number, absolute?: boolean): PointXY;
-    // (undocumented)
-    static segmentType: string;
-    // (undocumented)
-    type: string;
 }
 
 // Warning: (ae-internal-missing-underscore) The name "StraightSegmentCoordinates" should be prefixed with an underscore because the declaration is marked as @internal

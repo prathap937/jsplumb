@@ -178,7 +178,7 @@ var AbstractBezierConnector = function (_AbstractConnector) {
         paintInfo.points[1] = _y;
         paintInfo.points[2] = _w;
         paintInfo.points[3] = _h;
-        this._addSegment(core.ArcSegment.segmentType, {
+        this._addSegment(core.SEGMENT_TYPE_ARC, {
           loopback: true,
           x1: x1 - _x + 4,
           y1: y1 - _y,
@@ -762,7 +762,7 @@ function _cubicRoots(a, b, c, d) {
   return t;
 }
 
-var _this4 = undefined;
+var _this = undefined;
 function _translateLocation(_curve, location, absolute) {
   if (absolute) {
     location = locationAlongCurveFrom(_curve, location > 0 ? 0 : 1, location);
@@ -781,152 +781,69 @@ function _pointAlongPathFrom(curve, location, distance, absolute) {
   location = _translateLocation(curve, location, absolute);
   return pointAlongCurveFrom(curve, location, distance);
 }
-var BezierSegment = function (_AbstractSegment) {
-  _inherits(BezierSegment, _AbstractSegment);
-  var _super = _createSuper(BezierSegment);
-  function BezierSegment(params) {
-    var _this;
-    _classCallCheck(this, BezierSegment);
-    _this = _super.call(this, params);
-    _defineProperty(_assertThisInitialized(_this), "curve", void 0);
-    _defineProperty(_assertThisInitialized(_this), "cp1x", void 0);
-    _defineProperty(_assertThisInitialized(_this), "cp1y", void 0);
-    _defineProperty(_assertThisInitialized(_this), "length", 0);
-    _this.cp1x = params.cp1x;
-    _this.cp1y = params.cp1y;
-    _this.x1 = params.x1;
-    _this.x2 = params.x2;
-    _this.y1 = params.y1;
-    _this.y2 = params.y2;
-    return _this;
-  }
-  _createClass(BezierSegment, [{
-    key: "pointOnPath",
-    value: function pointOnPath(location, absolute) {
-      return _pointOnPath(this.curve, location, absolute);
-    }
-  }, {
-    key: "gradientAtPoint",
-    value: function gradientAtPoint(location, absolute) {
-      return _gradientAtPoint(this.curve, location, absolute);
-    }
-  }, {
-    key: "pointAlongPathFrom",
-    value: function pointAlongPathFrom(location, distance, absolute) {
-      return _pointAlongPathFrom(this.curve, location, distance, absolute);
-    }
-  }, {
-    key: "getLength",
-    value: function getLength() {
-      if (this.length == null || this.length === 0) {
-        this.length = computeBezierLength(this.curve);
-      }
-      return this.length;
-    }
-  }, {
-    key: "findClosestPointOnPath",
-    value: function findClosestPointOnPath(x, y) {
-      var p = nearestPointOnCurve({
-        x: x,
-        y: y
-      }, this.curve);
-      return {
-        d: Math.sqrt(Math.pow(p.point.x - x, 2) + Math.pow(p.point.y - y, 2)),
-        x: p.point.x,
-        y: p.point.y,
-        l: 1 - p.location,
-        s: this,
-        x1: null,
-        y1: null,
-        x2: null,
-        y2: null
-      };
-    }
-  }, {
-    key: "lineIntersection",
-    value: function lineIntersection(x1, y1, x2, y2) {
-      return bezierLineIntersection(x1, y1, x2, y2, this.curve);
-    }
-  }]);
-  return BezierSegment;
-}(common.AbstractSegment);
-var QuadraticBezierSegment = function (_BezierSegment) {
-  _inherits(QuadraticBezierSegment, _BezierSegment);
-  var _super2 = _createSuper(QuadraticBezierSegment);
-  function QuadraticBezierSegment(params) {
-    var _this2;
-    _classCallCheck(this, QuadraticBezierSegment);
-    _this2 = _super2.call(this, params);
-    _defineProperty(_assertThisInitialized(_this2), "type", QuadraticBezierSegment.segmentType);
-    _this2.curve = [{
-      x: _this2.x1,
-      y: _this2.y1
+function createCubicSegment(params) {
+  return {
+    type: SEGMENT_TYPE_CUBIC_BEZIER,
+    length: 0,
+    x1: params.x1,
+    x2: params.x2,
+    y1: params.y1,
+    y2: params.y2,
+    cp1x: params.cp1x,
+    cp1y: params.cp1y,
+    cp2x: params.cp2x,
+    cp2y: params.cp2y,
+    curve: [{
+      x: params.x1,
+      y: params.y1
     }, {
-      x: _this2.cp1x,
-      y: _this2.cp1y
+      x: params.cp1x,
+      y: params.cp1y
     }, {
-      x: _this2.x2,
-      y: _this2.y2
-    }];
-    _this2.extents = {
-      xmin: Math.min(_this2.x1, _this2.x2, _this2.cp1x),
-      ymin: Math.min(_this2.y1, _this2.y2, _this2.cp1y),
-      xmax: Math.max(_this2.x1, _this2.x2, _this2.cp1x),
-      ymax: Math.max(_this2.y1, _this2.y2, _this2.cp1y)
-    };
-    return _this2;
-  }
-  _createClass(QuadraticBezierSegment, [{
-    key: "getPath",
-    value: function getPath(isFirstSegment) {
-      return (isFirstSegment ? "M " + this.x2 + " " + this.y2 + " " : "") + "Q " + this.cp1x + " " + this.cp1y + " " + this.x1 + " " + this.y1;
+      x: params.cp2x,
+      y: params.cp2y
+    }, {
+      x: params.x2,
+      y: params.y2
+    }],
+    extents: {
+      xmin: Math.min(params.x1, params.x2, params.cp1x, params.cp2x),
+      ymin: Math.min(params.y1, params.y2, params.cp1y, params.cp2y),
+      xmax: Math.max(params.x1, params.x2, params.cp1x, params.cp2x),
+      ymax: Math.max(params.y1, params.y2, params.cp1y, params.cp2y)
     }
-  }]);
-  return QuadraticBezierSegment;
-}(BezierSegment);
-_defineProperty(QuadraticBezierSegment, "segmentType", "QuadraticBezier");
-var CubicBezierSegment = function (_BezierSegment2) {
-  _inherits(CubicBezierSegment, _BezierSegment2);
-  var _super3 = _createSuper(CubicBezierSegment);
-  function CubicBezierSegment(params) {
-    var _this3;
-    _classCallCheck(this, CubicBezierSegment);
-    _this3 = _super3.call(this, params);
-    _defineProperty(_assertThisInitialized(_this3), "cp2x", void 0);
-    _defineProperty(_assertThisInitialized(_this3), "cp2y", void 0);
-    _defineProperty(_assertThisInitialized(_this3), "type", CubicBezierSegment.segmentType);
-    _this3.cp2x = params.cp2x;
-    _this3.cp2y = params.cp2y;
-    _this3.curve = [{
-      x: _this3.x1,
-      y: _this3.y1
+  };
+}
+function createQuadraticSegment(params) {
+  return {
+    type: SEGMENT_TYPE_QUADRATIC_BEZIER,
+    length: 0,
+    x1: params.x1,
+    x2: params.x2,
+    y1: params.y1,
+    y2: params.y2,
+    cpx: params.cpx,
+    cpy: params.cpy,
+    curve: [{
+      x: params.x1,
+      y: params.y1
     }, {
-      x: _this3.cp1x,
-      y: _this3.cp1y
+      x: params.cpx,
+      y: params.cpy
     }, {
-      x: _this3.cp2x,
-      y: _this3.cp2y
-    }, {
-      x: _this3.x2,
-      y: _this3.y2
-    }];
-    _this3.extents = {
-      xmin: Math.min(_this3.x1, _this3.x2, _this3.cp1x, _this3.cp2x),
-      ymin: Math.min(_this3.y1, _this3.y2, _this3.cp1y, _this3.cp2y),
-      xmax: Math.max(_this3.x1, _this3.x2, _this3.cp1x, _this3.cp2x),
-      ymax: Math.max(_this3.y1, _this3.y2, _this3.cp1y, _this3.cp2y)
-    };
-    return _this3;
-  }
-  _createClass(CubicBezierSegment, [{
-    key: "getPath",
-    value: function getPath(isFirstSegment) {
-      return (isFirstSegment ? "M " + this.x2 + " " + this.y2 + " " : "") + "C " + this.cp2x + " " + this.cp2y + " " + this.cp1x + " " + this.cp1y + " " + this.x1 + " " + this.y1;
+      x: params.x2,
+      y: params.y2
+    }],
+    extents: {
+      xmin: Math.min(params.x1, params.x2, params.cpx),
+      ymin: Math.min(params.y1, params.y2, params.cpy),
+      xmax: Math.max(params.x1, params.x2, params.cpx),
+      ymax: Math.max(params.y1, params.y2, params.cpy)
     }
-  }]);
-  return CubicBezierSegment;
-}(BezierSegment);
-_defineProperty(CubicBezierSegment, "segmentType", "CubicBezier");
+  };
+}
+var SEGMENT_TYPE_CUBIC_BEZIER = "CubicBezier";
+var SEGMENT_TYPE_QUADRATIC_BEZIER = "QuadraticBezier";
 var BezierSegmentHandler = {
   pointOnPath: function pointOnPath(segment, location, absolute) {
     return _pointOnPath(segment.curve, location, absolute);
@@ -938,7 +855,7 @@ var BezierSegmentHandler = {
     return _pointAlongPathFrom(segment.curve, location, distance, absolute);
   },
   getLength: function getLength(segment) {
-    return segment.length;
+    return computeBezierLength(segment.curve);
   },
   findClosestPointOnPath: function findClosestPointOnPath(segment, x, y) {
     var p = nearestPointOnCurve({
@@ -950,7 +867,7 @@ var BezierSegmentHandler = {
       x: p.point.x,
       y: p.point.y,
       l: 1 - p.location,
-      s: _this4,
+      s: _this,
       x1: null,
       y1: null,
       x2: null,
@@ -961,19 +878,19 @@ var BezierSegmentHandler = {
     return bezierLineIntersection(x1, y1, x2, y2, segment.curve);
   },
   getPath: function getPath(segment, isFirstSegment) {
-    if (segment.type === CubicBezierSegment.segmentType) {
+    if (segment.type === SEGMENT_TYPE_CUBIC_BEZIER) {
       var cb = segment;
       return (isFirstSegment ? "M " + cb.x2 + " " + cb.y2 + " " : "") + "C " + cb.cp2x + " " + cb.cp2y + " " + cb.cp1x + " " + cb.cp1y + " " + cb.x1 + " " + cb.y1;
-    } else if (segment.type === QuadraticBezierSegment.segmentType) {
+    } else if (segment.type === SEGMENT_TYPE_QUADRATIC_BEZIER) {
       var qb = segment;
-      return (isFirstSegment ? "M " + qb.x2 + " " + qb.y2 + " " : "") + "Q " + qb.cp1x + " " + qb.cp1y + " " + qb.x1 + " " + qb.y1;
+      return (isFirstSegment ? "M " + qb.x2 + " " + qb.y2 + " " : "") + "Q " + qb.cpx + " " + qb.cpy + " " + qb.x1 + " " + qb.y1;
     }
   },
   create: function create(segmentType, params) {
-    if (segmentType === CubicBezierSegment.segmentType) {
-      return new CubicBezierSegment(params);
-    } else if (segmentType === QuadraticBezierSegment.segmentType) {
-      return new QuadraticBezierSegment(params);
+    if (segmentType === SEGMENT_TYPE_CUBIC_BEZIER) {
+      return createCubicSegment(params);
+    } else if (segmentType === SEGMENT_TYPE_QUADRATIC_BEZIER) {
+      return createQuadraticSegment(params);
     }
   },
   boundingBoxIntersection: function boundingBoxIntersection(segment, box) {
@@ -983,8 +900,8 @@ var BezierSegmentHandler = {
     return common.defaultSegmentHandler.boxIntersection(this, s, x, y, w, h);
   }
 };
-core.Segments.register(QuadraticBezierSegment.segmentType, BezierSegmentHandler);
-core.Segments.register(CubicBezierSegment.segmentType, BezierSegmentHandler);
+core.Segments.register(SEGMENT_TYPE_CUBIC_BEZIER, BezierSegmentHandler);
+core.Segments.register(SEGMENT_TYPE_QUADRATIC_BEZIER, BezierSegmentHandler);
 
 var BezierConnector = function (_AbstractBezierConnec) {
   _inherits(BezierConnector, _AbstractBezierConnec);
@@ -1067,7 +984,7 @@ var BezierConnector = function (_AbstractBezierConnec) {
         source: p.sourcePos,
         target: p.targetPos
       };
-      this._addSegment(CubicBezierSegment.segmentType, {
+      this._addSegment(SEGMENT_TYPE_CUBIC_BEZIER, {
         x1: _sx,
         y1: _sy,
         x2: _tx,
@@ -1226,21 +1143,21 @@ var StateMachineConnector = function (_AbstractBezierConnec) {
       } else {
         this._controlPoint = this.geometry.controlPoints[0];
       }
-      var cp1x, cp1y;
-      cp1x = this._controlPoint.x;
-      cp1y = this._controlPoint.y;
+      var cpx, cpy;
+      cpx = this._controlPoint.x;
+      cpy = this._controlPoint.y;
       this.geometry = {
         controlPoints: [this._controlPoint, this._controlPoint],
         source: params.sourcePos,
         target: params.targetPos
       };
-      this._addSegment(QuadraticBezierSegment.segmentType, {
+      this._addSegment(SEGMENT_TYPE_QUADRATIC_BEZIER, {
         x1: _tx,
         y1: _ty,
         x2: _sx,
         y2: _sy,
-        cp1x: cp1x,
-        cp1y: cp1y
+        cpx: cpx,
+        cpy: cpy
       });
     }
   }]);
@@ -1253,9 +1170,8 @@ core.Connectors.register(StateMachineConnector.type, StateMachineConnector);
 
 exports.AbstractBezierConnector = AbstractBezierConnector;
 exports.BezierConnector = BezierConnector;
-exports.BezierSegment = BezierSegment;
-exports.CubicBezierSegment = CubicBezierSegment;
-exports.QuadraticBezierSegment = QuadraticBezierSegment;
+exports.SEGMENT_TYPE_CUBIC_BEZIER = SEGMENT_TYPE_CUBIC_BEZIER;
+exports.SEGMENT_TYPE_QUADRATIC_BEZIER = SEGMENT_TYPE_QUADRATIC_BEZIER;
 exports.StateMachineConnector = StateMachineConnector;
 exports.bezierLineIntersection = bezierLineIntersection;
 exports.boundingBoxIntersection = boundingBoxIntersection;

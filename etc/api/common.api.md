@@ -8,40 +8,7 @@ import { AnchorOrientationHint } from '@jsplumb/core';
 import { BoundingBox } from '@jsplumb/util';
 import { Extents } from '@jsplumb/util';
 import { PointXY } from '@jsplumb/util';
-
-// Warning: (ae-internal-missing-underscore) The name "AbstractSegment" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal
-export abstract class AbstractSegment implements Segment {
-    constructor(params: SegmentParams);
-    boundingBoxIntersection(box: BoundingBox): Array<PointXY>;
-    boxIntersection(x: number, y: number, w: number, h: number): Array<PointXY>;
-    // (undocumented)
-    extents: Extents;
-    findClosestPointOnPath(x: number, y: number): PointNearPath;
-    abstract getLength(): number;
-    // (undocumented)
-    abstract getPath(isFirstSegment: boolean): string;
-    // (undocumented)
-    abstract gradientAtPoint(location: number, absolute?: boolean): number;
-    lineIntersection(x1: number, y1: number, x2: number, y2: number): Array<PointXY>;
-    // (undocumented)
-    protected params: SegmentParams;
-    // (undocumented)
-    abstract pointAlongPathFrom(location: number, distance: number, absolute?: boolean): PointXY;
-    // (undocumented)
-    abstract pointOnPath(location: number, absolute?: boolean): PointXY;
-    // (undocumented)
-    abstract type: string;
-    // (undocumented)
-    x1: number;
-    // (undocumented)
-    x2: number;
-    // (undocumented)
-    y1: number;
-    // (undocumented)
-    y2: number;
-}
+import { SegmentHandler } from '@jsplumb/core';
 
 // @public
 export type AnchorId = keyof typeof AnchorLocations;
@@ -138,6 +105,16 @@ export type ConnectorWithOptions = {
 
 // @public
 export const DEFAULT = "default";
+
+// Warning: (ae-internal-missing-underscore) The name "defaultSegmentHandler" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export const defaultSegmentHandler: {
+    boxIntersection(handler: SegmentHandler<any>, segment: Segment, x: number, y: number, w: number, h: number): Array<PointXY>;
+    boundingBoxIntersection(handler: SegmentHandler<any>, segment: Segment, box: BoundingBox): Array<PointXY>;
+    lineIntersection(handler: SegmentHandler<any>, x1: number, y1: number, x2: number, y2: number): Array<PointXY>;
+    findClosestPointOnPath(handler: SegmentHandler<any>, segment: Segment, x: number, y: number): PointNearPath;
+};
 
 // @public (undocumented)
 export interface DotEndpointParams extends EndpointRepresentationParams {
@@ -298,25 +275,7 @@ export interface RectangleEndpointParams extends EndpointRepresentationParams {
 // @internal
 export interface Segment {
     // (undocumented)
-    boundingBoxIntersection(box: BoundingBox): Array<PointXY>;
-    // (undocumented)
-    boxIntersection(x: number, y: number, w: number, h: number): Array<PointXY>;
-    // (undocumented)
     extents: Extents;
-    // (undocumented)
-    findClosestPointOnPath(x: number, y: number): PointNearPath;
-    // (undocumented)
-    getLength(): number;
-    // (undocumented)
-    getPath(isFirstSegment: boolean): string;
-    // (undocumented)
-    gradientAtPoint(location: number, absolute?: boolean): number;
-    // (undocumented)
-    lineIntersection(x1: number, y1: number, x2: number, y2: number): Array<PointXY>;
-    // (undocumented)
-    pointAlongPathFrom(location: number, distance: number, absolute?: boolean): PointXY;
-    // (undocumented)
-    pointOnPath(location: number, absolute?: boolean): PointXY;
     // (undocumented)
     type: string;
     // (undocumented)

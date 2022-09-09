@@ -30,27 +30,6 @@ var AnchorLocations;
   AnchorLocations["TopRight"] = "TopRight";
 })(AnchorLocations || (AnchorLocations = {}));
 
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-}
-
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-}
-
 function noSuchPoint() {
   return {
     d: Infinity,
@@ -90,22 +69,6 @@ var defaultSegmentHandler = {
     return noSuchPoint();
   }
 };
-var AbstractSegment =
-function AbstractSegment(params) {
-  _classCallCheck(this, AbstractSegment);
-  this.params = params;
-  _defineProperty(this, "x1", void 0);
-  _defineProperty(this, "x2", void 0);
-  _defineProperty(this, "y1", void 0);
-  _defineProperty(this, "y2", void 0);
-  _defineProperty(this, "extents", EMPTY_BOUNDS());
-  _defineProperty(this, "type", void 0);
-  this.x1 = params.x1;
-  this.y1 = params.y1;
-  this.x2 = params.x2;
-  this.y2 = params.y2;
-}
-;
 
 var UNDEFINED = "undefined";
 var DEFAULT = "default";
@@ -113,4 +76,4 @@ var TRUE = "true";
 var FALSE = "false";
 var WILDCARD = "*";
 
-export { AbstractSegment, AnchorLocations, DEFAULT, EMPTY_BOUNDS, FALSE, PerimeterAnchorShapes, TRUE, UNDEFINED, WILDCARD, defaultSegmentHandler };
+export { AnchorLocations, DEFAULT, EMPTY_BOUNDS, FALSE, PerimeterAnchorShapes, TRUE, UNDEFINED, WILDCARD, defaultSegmentHandler };

@@ -3,7 +3,7 @@ import { Connection } from './connection-impl';
 import { Orientation } from '../factory/anchor-record-factory';
 import { Endpoint } from '../endpoint/endpoint';
 import { ViewportElement } from "../viewport";
-import { AnchorPlacement, ConnectorOptions, PaintAxis, Segment, Connector, Geometry } from "@jsplumb/common";
+import { AnchorPlacement, ConnectorOptions, PaintAxis, Segment, Connector, Geometry, SegmentParams } from "@jsplumb/common";
 /**
  * @internal
  */
@@ -154,7 +154,7 @@ export declare abstract class AbstractConnector implements Connector {
         proportion: number;
         index: number;
     };
-    _addSegment(segmentType: string, params: any): void;
+    _addSegment<T extends SegmentParams>(segmentType: string, params: T): void;
     _clearSegments(): void;
     getLength(): number;
     private _prepareCompute;

@@ -844,7 +844,7 @@ function _lineIntersection(segment, _x1, _y1, _x2, _y2) {
     x: _x2,
     y: _y2
   })),
-      m1 = Math.abs(this.m),
+      m1 = Math.abs(segment.m),
       b = m1 === Infinity ? segment.x1 : segment.y1 - m1 * segment.x1,
       out = [],
       b2 = m2 === Infinity ? _x1 : _y1 - m2 * _x1;
@@ -890,7 +890,7 @@ function _lineIntersection(segment, _x1, _y1, _x2, _y2) {
       } else {
         X = (b2 - b) / (m1 - m2);
         Y = m1 * X + b;
-        if (_pointLiesBetween(X, segment.x1, segment.x2) && this._pointLiesBetween(Y, segment.y1, segment.y2)) {
+        if (_pointLiesBetween(X, segment.x1, segment.x2) && _pointLiesBetween(Y, segment.y1, segment.y2)) {
           out.push({
             x: X,
             y: Y
@@ -903,10 +903,10 @@ function _lineIntersection(segment, _x1, _y1, _x2, _y2) {
 }
 function _boxIntersection(segment, x, y, w, h) {
   var a = [];
-  a.push.apply(a, this.lineIntersection(x, y, x + w, y));
-  a.push.apply(a, this.lineIntersection(x + w, y, x + w, y + h));
-  a.push.apply(a, this.lineIntersection(x + w, y + h, x, y + h));
-  a.push.apply(a, this.lineIntersection(x, y + h, x, y));
+  a.push.apply(a, _lineIntersection(segment, x, y, x + w, y));
+  a.push.apply(a, _lineIntersection(segment, x + w, y, x + w, y + h));
+  a.push.apply(a, _lineIntersection(segment, x + w, y + h, x, y + h));
+  a.push.apply(a, _lineIntersection(segment, x, y + h, x, y));
   return a;
 }
 function _findClosestPointOnPath(segment, x, y) {
@@ -1017,31 +1017,33 @@ function _pointAlongPathFrom$1(segment, location, distance, absolute) {
   }
   return util.pointOnLine(p, farAwayPoint, distance);
 }
-var StraightSegment = function (_AbstractSegment) {
-  _inherits(StraightSegment, _AbstractSegment);
-  var _super = _createSuper(StraightSegment);
-  function StraightSegment(params) {
-    var _this;
-    _classCallCheck(this, StraightSegment);
-    _this = _super.call(this, params);
-    _defineProperty(_assertThisInitialized(_this), "length", void 0);
-    _defineProperty(_assertThisInitialized(_this), "m", void 0);
-    _defineProperty(_assertThisInitialized(_this), "m2", void 0);
-    _defineProperty(_assertThisInitialized(_this), "type", StraightSegment.segmentType);
-    _setCoordinates(_assertThisInitialized(_this), {
-      x1: params.x1,
-      y1: params.y1,
-      x2: params.x2,
-      y2: params.y2
-    });
-    return _this;
-  }
-  return StraightSegment;
-}(common.AbstractSegment);
-_defineProperty(StraightSegment, "segmentType", "Straight");
+function blankStraightSegment() {
+  return {
+    type: SEGMENT_TYPE_STRAIGHT,
+    m: 0,
+    length: 0,
+    m2: 0,
+    x1: 0,
+    x2: 0,
+    y1: 0,
+    y2: 0,
+    extents: {
+      xmin: 0,
+      xmax: 0,
+      ymin: 0,
+      ymax: 0
+    }
+  };
+}
+function _createStraightSegment(params) {
+  var s = blankStraightSegment();
+  _setCoordinates(s, params);
+  return s;
+}
+var SEGMENT_TYPE_STRAIGHT = "Straight";
 var StraightSegmentHandler = {
   create: function create(segmentType, params) {
-    return new StraightSegment(params);
+    return _createStraightSegment(params);
   },
   findClosestPointOnPath: function findClosestPointOnPath(s, x, y) {
     return _findClosestPointOnPath(s, x, y);
@@ -1071,7 +1073,7 @@ var StraightSegmentHandler = {
     return _boxIntersection(s, box.x, box.y, box.w, box.h);
   }
 };
-Segments.register(StraightSegment.segmentType, StraightSegmentHandler);
+Segments.register(SEGMENT_TYPE_STRAIGHT, StraightSegmentHandler);
 
 var StraightConnector = function (_AbstractConnector) {
   _inherits(StraightConnector, _AbstractConnector);
@@ -1094,19 +1096,19 @@ var StraightConnector = function (_AbstractConnector) {
   }, {
     key: "_compute",
     value: function _compute(paintInfo, p) {
-      this._addSegment(StraightSegment.segmentType, {
+      this._addSegment(SEGMENT_TYPE_STRAIGHT, {
         x1: paintInfo.sx,
         y1: paintInfo.sy,
         x2: paintInfo.startStubX,
         y2: paintInfo.startStubY
       });
-      this._addSegment(StraightSegment.segmentType, {
+      this._addSegment(SEGMENT_TYPE_STRAIGHT, {
         x1: paintInfo.startStubX,
         y1: paintInfo.startStubY,
         x2: paintInfo.endStubX,
         y2: paintInfo.endStubY
       });
-      this._addSegment(StraightSegment.segmentType, {
+      this._addSegment(SEGMENT_TYPE_STRAIGHT, {
         x1: paintInfo.endStubX,
         y1: paintInfo.endStubY,
         x2: paintInfo.tx,
@@ -7260,10 +7262,10 @@ function _calcAngleForLocation(segment, location) {
     return segment.startAngle + ss * location;
   }
 }
-function _calcAngle(segment, _x, _y) {
+function _calcAngle(cx, cy, _x, _y) {
   return util.theta({
-    x: segment.cx,
-    y: segment.cy
+    x: cx,
+    y: cy
   }, {
     x: _x,
     y: _y
@@ -7326,67 +7328,71 @@ function _pointAlongPathFrom(segment, location, distance, absolute) {
     y: startY
   };
 }
-var ArcSegment = function (_AbstractSegment) {
-  _inherits(ArcSegment, _AbstractSegment);
-  var _super = _createSuper(ArcSegment);
-  function ArcSegment(params) {
-    var _this;
-    _classCallCheck(this, ArcSegment);
-    _this = _super.call(this, params);
-    _defineProperty(_assertThisInitialized(_this), "type", ArcSegment.segmentType);
-    _defineProperty(_assertThisInitialized(_this), "cx", void 0);
-    _defineProperty(_assertThisInitialized(_this), "cy", void 0);
-    _defineProperty(_assertThisInitialized(_this), "radius", void 0);
-    _defineProperty(_assertThisInitialized(_this), "anticlockwise", void 0);
-    _defineProperty(_assertThisInitialized(_this), "startAngle", void 0);
-    _defineProperty(_assertThisInitialized(_this), "endAngle", void 0);
-    _defineProperty(_assertThisInitialized(_this), "sweep", void 0);
-    _defineProperty(_assertThisInitialized(_this), "length", void 0);
-    _defineProperty(_assertThisInitialized(_this), "circumference", void 0);
-    _defineProperty(_assertThisInitialized(_this), "frac", void 0);
-    _this.cx = params.cx;
-    _this.cy = params.cy;
-    _this.radius = params.r;
-    _this.anticlockwise = params.ac;
-    if (params.startAngle && params.endAngle) {
-      _this.startAngle = params.startAngle;
-      _this.endAngle = params.endAngle;
-      _this.x1 = _this.cx + _this.radius * Math.cos(_this.startAngle);
-      _this.y1 = _this.cy + _this.radius * Math.sin(_this.startAngle);
-      _this.x2 = _this.cx + _this.radius * Math.cos(_this.endAngle);
-      _this.y2 = _this.cy + _this.radius * Math.sin(_this.endAngle);
-    } else {
-      _this.startAngle = _calcAngle(_assertThisInitialized(_this), _this.x1, _this.y1);
-      _this.endAngle = _calcAngle(_assertThisInitialized(_this), _this.x2, _this.y2);
-    }
-    if (_this.endAngle < 0) {
-      _this.endAngle += util.TWO_PI;
-    }
-    if (_this.startAngle < 0) {
-      _this.startAngle += util.TWO_PI;
-    }
-    var ea = _this.endAngle < _this.startAngle ? _this.endAngle + util.TWO_PI : _this.endAngle;
-    _this.sweep = Math.abs(ea - _this.startAngle);
-    if (_this.anticlockwise) {
-      _this.sweep = util.TWO_PI - _this.sweep;
-    }
-    _this.circumference = 2 * Math.PI * _this.radius;
-    _this.frac = _this.sweep / util.TWO_PI;
-    _this.length = _this.circumference * _this.frac;
-    _this.extents = {
-      xmin: _this.cx - _this.radius,
-      xmax: _this.cx + _this.radius,
-      ymin: _this.cy - _this.radius,
-      ymax: _this.cy + _this.radius
-    };
-    return _this;
+var SEGMENT_TYPE_ARC = "Arc";
+function _createArcSegment(params) {
+  var startAngle,
+      endAngle,
+      x1 = params.x1,
+      x2 = params.x2,
+      y1 = params.y1,
+      y2 = params.y2,
+      cx = params.cx,
+      cy = params.cy,
+      radius = params.r,
+      anticlockwise = params.ac;
+  if (params.startAngle && params.endAngle) {
+    startAngle = params.startAngle;
+    endAngle = params.endAngle;
+    x1 = cx + radius * Math.cos(startAngle);
+    y1 = cy + radius * Math.sin(startAngle);
+    x2 = cx + radius * Math.cos(endAngle);
+    y2 = cy + radius * Math.sin(endAngle);
+  } else {
+    startAngle = _calcAngle(cx, cy, x1, y1);
+    endAngle = _calcAngle(cx, cy, x2, y2);
   }
-  return ArcSegment;
-}(common.AbstractSegment);
-_defineProperty(ArcSegment, "segmentType", "Arc");
+  if (endAngle < 0) {
+    endAngle += util.TWO_PI;
+  }
+  if (startAngle < 0) {
+    startAngle += util.TWO_PI;
+  }
+  var ea = endAngle < startAngle ? endAngle + util.TWO_PI : endAngle;
+  var sweep = Math.abs(ea - startAngle);
+  if (anticlockwise) {
+    sweep = util.TWO_PI - sweep;
+  }
+  var circumference = 2 * Math.PI * radius;
+  var frac = sweep / util.TWO_PI;
+  var length = circumference * frac;
+  var extents = {
+    xmin: cx - radius,
+    xmax: cx + radius,
+    ymin: cy - radius,
+    ymax: cy + radius
+  };
+  return {
+    x1: x1,
+    x2: x2,
+    y1: y1,
+    y2: y2,
+    startAngle: startAngle,
+    endAngle: endAngle,
+    cx: cx,
+    cy: cy,
+    radius: radius,
+    anticlockwise: anticlockwise,
+    sweep: sweep,
+    circumference: circumference,
+    frac: frac,
+    length: length,
+    extents: extents,
+    type: SEGMENT_TYPE_ARC
+  };
+}
 var ArcSegmentHandler = {
   create: function create(segmentType, params) {
-    return new ArcSegment(params);
+    return _createArcSegment(params);
   },
   findClosestPointOnPath: function findClosestPointOnPath(s, x, y) {
     return common.defaultSegmentHandler.findClosestPointOnPath(this, s, x, y);
@@ -7416,7 +7422,7 @@ var ArcSegmentHandler = {
     return common.defaultSegmentHandler.boundingBoxIntersection(this, s, box);
   }
 };
-Segments.register(ArcSegment.segmentType, ArcSegmentHandler);
+Segments.register(SEGMENT_TYPE_ARC, ArcSegmentHandler);
 
 var DEFAULT_WIDTH = 20;
 var DEFAULT_LENGTH = 20;
@@ -7598,7 +7604,6 @@ exports.ATTRIBUTE_SCOPE = ATTRIBUTE_SCOPE;
 exports.ATTRIBUTE_SCOPE_PREFIX = ATTRIBUTE_SCOPE_PREFIX;
 exports.ATTRIBUTE_TABINDEX = ATTRIBUTE_TABINDEX;
 exports.AbstractConnector = AbstractConnector;
-exports.ArcSegment = ArcSegment;
 exports.ArrowOverlay = ArrowOverlay;
 exports.BLOCK = BLOCK;
 exports.BOTTOM = BOTTOM;
@@ -7704,13 +7709,14 @@ exports.REMOVE_CLASS_ACTION = REMOVE_CLASS_ACTION;
 exports.RIGHT = RIGHT;
 exports.RectangleEndpoint = RectangleEndpoint;
 exports.RectangleEndpointHandler = RectangleEndpointHandler;
+exports.SEGMENT_TYPE_ARC = SEGMENT_TYPE_ARC;
+exports.SEGMENT_TYPE_STRAIGHT = SEGMENT_TYPE_STRAIGHT;
 exports.SELECTOR_MANAGED_ELEMENT = SELECTOR_MANAGED_ELEMENT;
 exports.SOURCE = SOURCE;
 exports.SOURCE_INDEX = SOURCE_INDEX;
 exports.STATIC = STATIC;
 exports.Segments = Segments;
 exports.StraightConnector = StraightConnector;
-exports.StraightSegment = StraightSegment;
 exports.TARGET = TARGET;
 exports.TARGET_INDEX = TARGET_INDEX;
 exports.TOP = TOP;

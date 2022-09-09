@@ -1,4 +1,4 @@
-import { AbstractSegment, SegmentParams } from "@jsplumb/common";
+import { Segment, SegmentParams } from "@jsplumb/common";
 /**
  * @internal
  */
@@ -14,14 +14,17 @@ export declare type StraightSegmentCoordinates = {
 export interface StraightSegmentParams extends SegmentParams {
 }
 /**
- * @internal
+ * Identifier for straight segments.
+ * @public
  */
-export declare class StraightSegment extends AbstractSegment {
+export declare const SEGMENT_TYPE_STRAIGHT = "Straight";
+/**
+ * Defines a straight segment.
+ * @interna;
+ */
+export interface StraightSegment extends Segment {
     length: number;
     m: number;
     m2: number;
-    constructor(params: StraightSegmentParams);
-    static segmentType: string;
-    type: string;
 }
 //# sourceMappingURL=straight-segment.d.ts.map

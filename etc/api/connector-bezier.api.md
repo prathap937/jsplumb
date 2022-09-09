@@ -5,7 +5,6 @@
 ```ts
 
 import { AbstractConnector } from '@jsplumb/core';
-import { AbstractSegment } from '@jsplumb/common';
 import { AnchorPlacement } from '@jsplumb/common';
 import { BoundingBox } from '@jsplumb/util';
 import { Connection } from '@jsplumb/core';
@@ -14,8 +13,8 @@ import { ConnectorOptions } from '@jsplumb/common';
 import { Geometry } from '@jsplumb/common';
 import { LineXY } from '@jsplumb/util';
 import { PaintGeometry } from '@jsplumb/core';
-import { PointNearPath } from '@jsplumb/common';
 import { PointXY } from '@jsplumb/util';
+import { Segment } from '@jsplumb/common';
 import { SegmentParams } from '@jsplumb/common';
 
 // Warning: (ae-internal-missing-underscore) The name "AbstractBezierConnector" should be prefixed with an underscore because the declaration is marked as @internal
@@ -118,48 +117,11 @@ export interface BezierOptions extends AbstractBezierOptions {
 }
 
 // @public (undocumented)
-export class BezierSegment extends AbstractSegment {
-    constructor(params: BezierSegmentParams);
-    // (undocumented)
-    cp1x: number;
-    // (undocumented)
-    cp1y: number;
-    // (undocumented)
-    cp2x: number;
-    // (undocumented)
-    cp2y: number;
+export interface BezierSegment extends Segment {
     // (undocumented)
     curve: Curve;
     // (undocumented)
-    findClosestPointOnPath(x: number, y: number): PointNearPath;
-    // (undocumented)
-    getLength(): number;
-    // (undocumented)
-    getPath(isFirstSegment: boolean): string;
-    gradientAtPoint(location: number, absolute?: boolean): number;
-    // (undocumented)
     length: number;
-    // (undocumented)
-    lineIntersection(x1: number, y1: number, x2: number, y2: number): Array<PointXY>;
-    // (undocumented)
-    pointAlongPathFrom(location: number, distance: number, absolute?: boolean): PointXY;
-    pointOnPath(location: number, absolute?: boolean): PointXY;
-    // (undocumented)
-    static segmentType: string;
-    // (undocumented)
-    type: string;
-}
-
-// @public (undocumented)
-export interface BezierSegmentParams extends SegmentParams {
-    // (undocumented)
-    cp1x: number;
-    // (undocumented)
-    cp1y: number;
-    // (undocumented)
-    cp2x: number;
-    // (undocumented)
-    cp2y: number;
 }
 
 // @public
@@ -170,6 +132,30 @@ export function boxIntersection(x: number, y: number, w: number, h: number, curv
 
 // @public (undocumented)
 export function computeBezierLength(curve: Curve): number;
+
+// @public (undocumented)
+export interface CubicBezierSegment extends BezierSegment {
+    // (undocumented)
+    cp1x: number;
+    // (undocumented)
+    cp1y: number;
+    // (undocumented)
+    cp2x: number;
+    // (undocumented)
+    cp2y: number;
+}
+
+// @public (undocumented)
+export interface CubicBezierSegmentParams extends SegmentParams {
+    // (undocumented)
+    cp1x: number;
+    // (undocumented)
+    cp1y: number;
+    // (undocumented)
+    cp2x: number;
+    // (undocumented)
+    cp2y: number;
+}
 
 // @public (undocumented)
 export type Curve = Array<PointXY>;
@@ -221,6 +207,28 @@ export type PointOnPath = {
     point: PointXY;
     location: number;
 };
+
+// @public (undocumented)
+export interface QuadraticBezierSegment extends BezierSegment {
+    // (undocumented)
+    cpx: number;
+    // (undocumented)
+    cpy: number;
+}
+
+// @public (undocumented)
+export interface QuadraticBezierSegmentParams extends SegmentParams {
+    // (undocumented)
+    cpx: number;
+    // (undocumented)
+    cpy: number;
+}
+
+// @public (undocumented)
+export const SEGMENT_TYPE_CUBIC_BEZIER = "CubicBezier";
+
+// @public (undocumented)
+export const SEGMENT_TYPE_QUADRATIC_BEZIER = "QuadraticBezier";
 
 // Warning: (ae-incompatible-release-tags) The symbol "StateMachineConnector" is marked as @public, but its signature references "AbstractBezierConnector" which is marked as @internal
 //
