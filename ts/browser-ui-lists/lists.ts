@@ -206,7 +206,7 @@ export class JsPlumbList {
      * @param conn - the connection that is being proxied
      */
     private deriveEndpoint(edge:SupportedEdge, index:number, ep:Endpoint, conn:Connection):EndpointSpec {
-        return this.options.deriveEndpoint ? this.options.deriveEndpoint(edge, index, ep, conn) : this.options.endpoint ? this.options.endpoint : ep.endpoint.type
+        return this.options.deriveEndpoint ? this.options.deriveEndpoint(edge, index, ep, conn) : this.options.endpoint ? this.options.endpoint : ep.representation.type
     }
 
     /**
