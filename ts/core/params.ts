@@ -141,8 +141,8 @@ export interface ConnectParams<E> {
  * Internal extension of ConnectParams containing a few extra things needed to establish a connection.
  */
 export interface InternalConnectParams<E> extends ConnectParams<E> {
-    sourceEndpoint?:Endpoint<E>
-    targetEndpoint?:Endpoint<E>
+    sourceEndpoint?:Endpoint
+    targetEndpoint?:Endpoint
     scope?:string
     type?:string
     newConnection?:(p:any) => Connection

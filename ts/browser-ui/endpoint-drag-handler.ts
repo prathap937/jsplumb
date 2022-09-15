@@ -50,7 +50,8 @@ import {
     REDROP_POLICY_ANY_SOURCE,
     REDROP_POLICY_ANY_TARGET,
     REDROP_POLICY_ANY_SOURCE_OR_TARGET,
-    CLASS_ENDPOINT_FLOATING
+    CLASS_ENDPOINT_FLOATING,
+    Endpoints, Connections, Components
 } from "@jsplumb/core"
 
 import { FALSE,
@@ -72,7 +73,9 @@ import {
 } from "@jsplumb/util"
 import {ATTRIBUTE_JTK_ENABLED, ELEMENT_DIV} from "./constants"
 
-function _makeFloatingEndpoint (ep:Endpoint<Element>,
+
+
+function _makeFloatingEndpoint (ep:Endpoint,
                                 endpoint:EndpointSpec | EndpointRepresentation<any>,
                                 referenceCanvas:Element,
                                 sourceElement:jsPlumbDOMElement,
@@ -82,7 +85,7 @@ function _makeFloatingEndpoint (ep:Endpoint<Element>,
     let floatingAnchor = createFloatingAnchor(instance, sourceElement, sourceElementId)
 
     const p:InternalEndpointOptions<any> = {
-        paintStyle: ep.getPaintStyle(),
+        paintStyle: ep.paintStyle,
         preparedAnchor: floatingAnchor,
         element: sourceElement,
         scope: ep.scope,
@@ -122,6 +125,10 @@ const SOURCE_SELECTOR_UNIQUE_ENDPOINT_DATA = "sourceSelectorEndpoint"
 
 type EndpointDropTarget = {el:jsPlumbDOMElement, endpoint:Endpoint, r:BoundingBox, def?:SourceOrTargetDefinition, targetEl:jsPlumbDOMElement, rank?:number}
 
+// export interface FloatingEndpoint extends Endpoint {
+//     referenceEndpoint:Endpoint
+// }
+
 /**
  * Handles dragging of connections between endpoints.
  * @internal
@@ -132,7 +139,7 @@ export class EndpointDragHandler implements DragHandler {
     existingJpc:boolean
 
     private _originalAnchorSpec:AnchorSpec
-    ep:Endpoint<Element>
+    ep:Endpoint
     endpointRepresentation:EndpointRepresentation<any>
     canvasElement:Element
     private _activeDefinition:ConnectionDragSelector
@@ -325,7 +332,7 @@ export class EndpointDragHandler implements DragHandler {
                         }
                     }
 
-                    this.ep.mergeParameters(payload)
+                    Components.mergeParameters(this.ep, payload)
                 }
 
                 // if unique endpoint and it's already been created, push it onto the endpoint we create. at the end
@@ -349,7 +356,7 @@ export class EndpointDragHandler implements DragHandler {
 
                 // and then trigger its mousedown event, which will kick off a drag, which will start dragging
                 // a new connection from this endpoint. The entry point is the `onStart` method in this class.
-                this.instance.trigger((this.ep.endpoint as any).canvas, EVENT_MOUSEDOWN, e, payload)
+                this.instance.trigger((this.ep.representation as any).canvas, EVENT_MOUSEDOWN, e, payload)
             }
         }
     }
@@ -464,8 +471,8 @@ export class EndpointDragHandler implements DragHandler {
             data
         })
         this.jpc.pending = true
-        this.jpc.addClass(this.instance.draggingClass)
-        this.ep.addClass(this.instance.draggingClass)
+        Connections.addClass(this.jpc, this.instance.draggingClass)
+        Endpoints.addClass(this.ep, this.instance.draggingClass)
         // fire an event that informs that a connection is being dragged
         this.instance.fire<Connection>(EVENT_CONNECTION_DRAG, this.jpc)
     }
@@ -483,10 +490,10 @@ export class EndpointDragHandler implements DragHandler {
 
         // detach from the connection while dragging is occurring. mark as a 'transient' detach, ie. dont delete
         // the endpoint if there are no other connections and it would otherwise have been cleaned up.
-        this.ep.detachFromConnection(this.jpc, null, true)
+        Endpoints.detachFromConnection(this.ep, this.jpc, null, true)
 
         // attach the connection to the floating endpoint.
-        this.floatingEndpoint.addConnection(this.jpc)
+        Endpoints.addConnection(this.floatingEndpoint, this.jpc)
 
         // fire an event that informs that a connection is being dragged. we do this before
         // replacing the original target with the floating element info.
@@ -506,10 +513,10 @@ export class EndpointDragHandler implements DragHandler {
         this.instance.setHover(this.jpc.suspendedEndpoint, false)
 
         this.floatingEndpoint.referenceEndpoint = this.jpc.suspendedEndpoint
-        this.floatingEndpoint.mergeParameters(this.jpc.suspendedEndpoint.parameters)
+        Components.mergeParameters(this.floatingEndpoint, this.jpc.suspendedEndpoint.parameters)
         this.jpc.endpoints[anchorIdx] = this.floatingEndpoint
 
-        this.jpc.addClass(this.instance.draggingClass)
+        Connections.addClass(this.jpc, this.instance.draggingClass)
 
         this.floatingId = this.placeholderInfo.id
         this.floatingIndex = anchorIdx
@@ -532,15 +539,15 @@ export class EndpointDragHandler implements DragHandler {
             _continue = false
         }
         // otherwise if we're full and not allowed to drag, also return false.
-        if (this.ep.isSource && this.ep.isFull() && !(this.jpc != null && this.ep.dragAllowedWhenFull)) {
+        if (this.ep.isSource && Endpoints.isFull(this.ep) && !(this.jpc != null && this.ep.dragAllowedWhenFull)) {
             _continue = false
         }
         // if the connection was setup as not detachable or one of its endpoints
         // was setup as connectionsDetachable = false, or Defaults.connectionsDetachable
         // is set to false...
-        if (this.jpc != null && !this.jpc.isDetachable(this.ep)) {
+        if (this.jpc != null && !Connections.isDetachable(this.jpc, this.ep)) {
             // .. and the endpoint is full
-            if (this.ep.isFull()) {
+            if (Endpoints.isFull(this.ep)) {
                 _continue = false
             } else {
                 // otherwise, if not full, set the connection to null, and we will now proceed
@@ -579,7 +586,7 @@ export class EndpointDragHandler implements DragHandler {
      * @internal
      */
     private _createFloatingEndpoint(canvasElement:Element) {
-        let endpointToFloat:EndpointSpec|EndpointRepresentation<any> = this.ep.endpoint
+        let endpointToFloat:EndpointSpec|EndpointRepresentation<any> = this.ep.representation
         if (this.ep.edgeType != null) {
             const aae = this.instance._deriveEndpointAndAnchorSpec(this.ep.edgeType)
             endpointToFloat = aae.endpoints[1]
@@ -589,7 +596,7 @@ export class EndpointDragHandler implements DragHandler {
         this.floatingAnchor = this.floatingEndpoint._anchor as LightweightFloatingAnchor
 
         this.floatingEndpoint.deleteOnEmpty = true
-        this.floatingElement = (this.floatingEndpoint.endpoint as any).canvas
+        this.floatingElement = (this.floatingEndpoint.representation as any).canvas
         this.floatingId = this.instance.getId(this.floatingElement)
     }
 
@@ -611,7 +618,7 @@ export class EndpointDragHandler implements DragHandler {
         const matchingEndpoints = this.instance.getContainer().querySelectorAll([".", CLASS_ENDPOINT, "[", ATTRIBUTE_SCOPE_PREFIX, this.ep.scope, "]:not(.", CLASS_ENDPOINT_FLOATING, ")" ].join(""))
         forEach(matchingEndpoints, (candidate:any) => {
 
-            if ((this.jpc != null || candidate !== canvasElement) && candidate !== this.floatingElement && (this.jpc != null || !candidate.jtk.endpoint.isFull())) {
+            if ((this.jpc != null || candidate !== canvasElement) && candidate !== this.floatingElement && (this.jpc != null || !Endpoints.isFull(candidate.jtk.endpoint))) {
                 if ( (isSourceDrag && candidate.jtk.endpoint.isSource) || (!isSourceDrag && candidate.jtk.endpoint.isTarget) ) {
                     const o = getElementPosition(candidate, this.instance), s = getElementSize(candidate, this.instance)
                     boundingRect = {x: o.x, y: o.y, w: s.w, h: s.h}
@@ -802,7 +809,7 @@ export class EndpointDragHandler implements DragHandler {
             return false
         }
 
-        this.endpointRepresentation = this.ep.endpoint
+        this.endpointRepresentation = this.ep.representation
         this.canvasElement = (<unknown>(this.endpointRepresentation as any).canvas) as jsPlumbDOMElement
         
         this.jpc = this.ep.connectorSelector()
@@ -822,9 +829,10 @@ export class EndpointDragHandler implements DragHandler {
         this.instance.isConnectionBeingDragged = true
         
         // if our endpoint is not full but there was a connection, make it null. we'll create a new one.
-        if (this.jpc && !this.ep.isFull() && this.ep.isSource) {
+        if (this.jpc && !Endpoints.isFull(this.ep) && this.ep.isSource) {
             this.jpc = null
         }
+
 
         // create the endpoint we will drag around
         this._createFloatingEndpoint(this.canvasElement)
@@ -893,16 +901,16 @@ export class EndpointDragHandler implements DragHandler {
                     if (_cont) {
                         let bb = this.instance.checkCondition(CHECK_DROP_ALLOWED, {
                             sourceEndpoint: this.jpc.endpoints[idx],
-                            targetEndpoint: newDropTarget.endpoint.endpoint,
+                            targetEndpoint: newDropTarget.endpoint.representation,
                             connection: this.jpc
                         })
 
                         if (bb) {
-                            newDropTarget.endpoint.endpoint.addClass(this.instance.endpointDropAllowedClass)
-                            newDropTarget.endpoint.endpoint.removeClass(this.instance.endpointDropForbiddenClass)
+                            newDropTarget.endpoint.representation.addClass(this.instance.endpointDropAllowedClass)
+                            newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropForbiddenClass)
                         } else {
-                            newDropTarget.endpoint.endpoint.removeClass(this.instance.endpointDropAllowedClass)
-                            newDropTarget.endpoint.endpoint.addClass(this.instance.endpointDropForbiddenClass)
+                            newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropAllowedClass)
+                            newDropTarget.endpoint.representation.addClass(this.instance.endpointDropForbiddenClass)
                         }
 
                         this.floatingAnchor.over(newDropTarget.endpoint)
@@ -992,13 +1000,14 @@ export class EndpointDragHandler implements DragHandler {
                         if (!dropEndpoint.enabled) {
                             // if endpoint disabled, either reattach or discard
                             this._reattachOrDiscard(p.e)
-                        } else if (dropEndpoint.isFull()) {
+                        } else if (Endpoints.isFull(dropEndpoint)) {
                             // if endpoint full, fire an event, then either reattach or discard
-                            dropEndpoint.fire(EVENT_MAX_CONNECTIONS, {
-                                endpoint: this,
-                                connection: this.jpc,
-                                maxConnections: this.instance.defaults.maxConnections
-                            }, originalEvent)
+                            // TODO endpoint bind event
+                            // dropEndpoint.fire(EVENT_MAX_CONNECTIONS, {
+                            //     endpoint: this,
+                            //     connection: this.jpc,
+                            //     maxConnections: this.instance.defaults.maxConnections
+                            // }, originalEvent)
                             this._reattachOrDiscard(p.e)
                         } else {
                             if (idx === 0) {
@@ -1014,7 +1023,7 @@ export class EndpointDragHandler implements DragHandler {
                             // if this is an existing connection and detach is not allowed we won't continue. The connection's
                             // endpoints have been reinstated; everything is back to how it was.
                             if (existingConnection && this.jpc.suspendedEndpoint.id !== dropEndpoint.id) {
-                                if (!this.jpc.isDetachAllowed(this.jpc) || !this.jpc.endpoints[idx].isDetachAllowed(this.jpc) || !this.jpc.suspendedEndpoint.isDetachAllowed(this.jpc) || !this.instance.checkCondition("beforeDetach", this.jpc)) {
+                                if (!Components.isDetachAllowed(this.jpc, this.jpc) || !Components.isDetachAllowed(this.jpc.endpoints[idx], this.jpc) || !Components.isDetachAllowed(this.jpc.suspendedEndpoint, this.jpc) || !this.instance.checkCondition("beforeDetach", this.jpc)) {
                                     _doContinue = false
                                 }
                             }
@@ -1023,7 +1032,7 @@ export class EndpointDragHandler implements DragHandler {
                             // have a beforeDrop condition (although, secretly, under the hood all Endpoints and
                             // the Connection have them, because they are on jsPlumbUIComponent.  shhh!), because
                             // it only makes sense to have it on a target endpoint.
-                            _doContinue = _doContinue && dropEndpoint.isDropAllowed(this.jpc.sourceId, this.jpc.targetId, this.jpc.scope, this.jpc, dropEndpoint)
+                            _doContinue = _doContinue && Components.isDropAllowed(dropEndpoint, this.jpc.sourceId, this.jpc.targetId, this.jpc.scope, this.jpc, dropEndpoint)
 
                             if (_doContinue) {
                                 this._drop(dropEndpoint, idx, originalEvent, _doContinue)
@@ -1041,14 +1050,14 @@ export class EndpointDragHandler implements DragHandler {
 
             // refresh the appearance of the endpoint, if necessary
             this.instance._refreshEndpoint(this.ep)
-            this.ep.removeClass(this.instance.draggingClass)
+            Endpoints.removeClass(this.ep, this.instance.draggingClass)
 
             // common clean up
 
             this._cleanupDraggablePlaceholder()
 
             // TODO if the connection has been deleted then we dont want to update overlays.
-            this.jpc.removeClass(this.instance.draggingClass)
+            Connections.removeClass(this.jpc, this.instance.draggingClass)
 
             delete this.jpc.suspendedEndpoint
             delete this.jpc.suspendedElement
@@ -1115,7 +1124,7 @@ export class EndpointDragHandler implements DragHandler {
 
             // if no cached endpoint, or there was one but it has been cleaned up
             // (ie. detached), create a new one
-            let eps = this.instance._deriveEndpointAndAnchorSpec(jpc.getType().join(" "), true)
+            let eps = this.instance._deriveEndpointAndAnchorSpec(Components.getType(jpc).join(" "), true)
 
             let pp:any = eps.endpoints ? extend(p as any, {
                 endpoint:targetDefinition.def.endpoint || eps.endpoints[1],
@@ -1152,7 +1161,7 @@ export class EndpointDragHandler implements DragHandler {
             dropEndpoint.deleteOnEmpty = true
 
             if (targetDefinition.def.parameters) {
-                dropEndpoint.mergeParameters(targetDefinition.def.parameters)
+                Components.mergeParameters(dropEndpoint, targetDefinition.def.parameters)
             }
 
             // if `extract` defined, read out attributes values and write to the drop endpoint's parameters
@@ -1165,7 +1174,7 @@ export class EndpointDragHandler implements DragHandler {
                     }
                 }
 
-                dropEndpoint.mergeParameters(tpayload)
+                Components.mergeParameters(dropEndpoint, tpayload)
             }
 
         } else {
@@ -1173,8 +1182,8 @@ export class EndpointDragHandler implements DragHandler {
         }
 
         if (dropEndpoint) {
-            dropEndpoint.removeClass(this.instance.endpointDropAllowedClass)
-            dropEndpoint.removeClass(this.instance.endpointDropForbiddenClass)
+            Endpoints.removeClass(dropEndpoint, this.instance.endpointDropAllowedClass)
+            Endpoints.removeClass(dropEndpoint,this.instance.endpointDropForbiddenClass)
         }
 
         return dropEndpoint
@@ -1183,14 +1192,14 @@ export class EndpointDragHandler implements DragHandler {
     private _doForceReattach(idx:number):void {
 
         // TODO check this logic. why in this case is this a transient detach?
-        this.floatingEndpoint.detachFromConnection(this.jpc, null, true)
+        Endpoints.detachFromConnection(this.floatingEndpoint, this.jpc, null, true)
 
         this.jpc.endpoints[idx] = this.jpc.suspendedEndpoint
         this.instance.setHover(this.jpc, false)
 
         this.jpc._forceDetach = true
 
-        this.jpc.suspendedEndpoint.addConnection(this.jpc)
+        Endpoints.addConnection(this.jpc.suspendedEndpoint, this.jpc)
         this.instance.sourceOrTargetChanged(this.floatingId, this.jpc.suspendedEndpoint.elementId, this.jpc, this.jpc.suspendedEndpoint.element, idx)
 
         this.instance.deleteEndpoint(this.floatingEndpoint)
@@ -1201,17 +1210,25 @@ export class EndpointDragHandler implements DragHandler {
     }
 
     private _shouldReattach():boolean {
-        if (this.jpc.isReattach() || this.jpc._forceReattach) {
+        if (Connections.isReattach(this.jpc, true)) {
             return true
         } else {
             const suspendedEndpoint = this.jpc.suspendedEndpoint,
                   otherEndpointIdx = this.jpc.suspendedElementType == SOURCE ? 1 : 0,
-                otherEndpoint = this.jpc.endpoints[otherEndpointIdx]
+                otherEndpoint = this.jpc.endpoints[otherEndpointIdx],
+                connection = this.jpc
+
+            // return !functionChain(true, false, [
+            //     [ suspendedEndpoint, IS_DETACH_ALLOWED, [ this.jpc ] ],
+            //     [ otherEndpoint, IS_DETACH_ALLOWED, [ this.jpc ] ],
+            //     [ this.jpc, IS_DETACH_ALLOWED, [ this.jpc ] ],
+            //     [ this.instance, CHECK_CONDITION, [ INTERCEPT_BEFORE_DETACH, this.jpc ] ]
+            // ])
 
             return !functionChain(true, false, [
-                [ suspendedEndpoint, IS_DETACH_ALLOWED, [ this.jpc ] ],
-                [ otherEndpoint, IS_DETACH_ALLOWED, [ this.jpc ] ],
-                [ this.jpc, IS_DETACH_ALLOWED, [ this.jpc ] ],
+                [ Components, IS_DETACH_ALLOWED, [ suspendedEndpoint, this.jpc ] ],
+                [ Components, IS_DETACH_ALLOWED, [ otherEndpoint, this.jpc ] ],
+                [ Components, IS_DETACH_ALLOWED, [ this.jpc ] ],
                 [ this.instance, CHECK_CONDITION, [ INTERCEPT_BEFORE_DETACH, this.jpc ] ]
             ])
         }
@@ -1234,7 +1251,7 @@ export class EndpointDragHandler implements DragHandler {
         }
 
         if (this.floatingEndpoint) {
-            this.floatingEndpoint.detachFromConnection(this.jpc)
+            Endpoints.detachFromConnection(this.floatingEndpoint, this.jpc)
         }
 
         this.instance.deleteConnection(this.jpc, {originalEvent:originalEvent, force:true})
@@ -1246,15 +1263,15 @@ export class EndpointDragHandler implements DragHandler {
     private  _drop(dropEndpoint:Endpoint, idx:number, originalEvent:Event, optionalData?:any):void {
         // remove this jpc from the current endpoint, which is a floating endpoint that we will
         // subsequently discard.
-        this.jpc.endpoints[idx].detachFromConnection(this.jpc)
+        Endpoints.detachFromConnection(this.jpc.endpoints[idx], this.jpc)
 
         // if there's a suspended endpoint, detach it from the connection.
         if (this.jpc.suspendedEndpoint) {
-            this.jpc.suspendedEndpoint.detachFromConnection(this.jpc)
+            Endpoints.detachFromConnection(this.jpc.suspendedEndpoint, this.jpc)
         }
 
         this.jpc.endpoints[idx] = dropEndpoint
-        dropEndpoint.addConnection(this.jpc)
+        Endpoints.addConnection(dropEndpoint, this.jpc)
 
         if (this.jpc.suspendedEndpoint) {
             let suspendedElementId = this.jpc.suspendedEndpoint.elementId
@@ -1283,18 +1300,18 @@ export class EndpointDragHandler implements DragHandler {
         // temporary endpoint being cleaned up.
         if (this.jpc.endpoints[0].finalEndpoint) {
             let _toDelete = this.jpc.endpoints[0]
-            _toDelete.detachFromConnection(this.jpc)
+            Endpoints.detachFromConnection(_toDelete, this.jpc)
             this.jpc.endpoints[0] = this.jpc.endpoints[0].finalEndpoint
-            this.jpc.endpoints[0].addConnection(this.jpc)
+            Endpoints.addConnection(this.jpc.endpoints[0], this.jpc)
         }
 
         // if optionalData was given, merge it onto the connection's data.
         if (isObject(optionalData)) {
-            this.jpc.mergeData(optionalData)
+            Components.mergeData(this.jpc, optionalData)
         }
 
         if (this._originalAnchorSpec) {
-            this.jpc.endpoints[0].setAnchor(this._originalAnchorSpec)
+            Endpoints.setAnchor(this.jpc.endpoints[0], this._originalAnchorSpec)
             this._originalAnchorSpec = null
         }
 

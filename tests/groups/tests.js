@@ -1067,8 +1067,8 @@ var testSuite = function () {
         equal(_jsPlumb.select({target:container3}).length, 0, "no connections for container3");
         c3_1conns = _jsPlumb.select({source:c3_1});
         equal(c3_1conns.length, 2, "still 2 source connections yet for c3_1");
-        ok(c3_1conns.get(0).isVisible(), "first c3_1 connection is visible");
-        ok(c3_1conns.get(1).isVisible(), "second c3_1 connection is visible");
+        ok(c3_1conns.get(0).visible, "first c3_1 connection is visible");
+        ok(c3_1conns.get(1).visible, "second c3_1 connection is visible");
         ok(!_jsPlumb.hasClass(c3, "jtk-group-collapsed"), "group doesnt have collapsed class");
 
     });
@@ -1103,10 +1103,10 @@ var testSuite = function () {
         equal(c6_1conns.length, 1, "still 1 source connection for c6_1");
         equal(_jsPlumb.select({target:c6_2}).length, 1, "still 1 target connection for c6_2");
         equal(c6_1conns.get(0).endpoints[0].element.id, "c6_1", "source endpoint unchanged for connection");
-        ok(!c6_1conns.get(0).isVisible(), "source connection is not visible.");
+        ok(!c6_1conns.get(0).visible, "source connection is not visible.");
 
         _jsPlumb.expandGroup("six");
-        ok(c6_1conns.get(0).isVisible(), "source connection is visible.");
+        ok(c6_1conns.get(0).visible, "source connection is visible.");
 
     });
 
@@ -1119,7 +1119,7 @@ var testSuite = function () {
         equal(c3_1_source.length, 2, "still 2 source connections for c3_1");
         equal(c3_1_source.get(0).proxies[0].originalEp.element.id, "c3_1", "proxy configured correctly");
         equal(c3_1_source.get(1).proxies.length, 0, "second source connection from c3_1 not proxied as it goes to c3_2");
-        ok(!c3_1_source.get(1).isVisible(), "second source connection from c3_1 not visible as it goes to c3_2");
+        ok(!c3_1_source.get(1).visible, "second source connection from c3_1 not visible as it goes to c3_2");
 
         _jsPlumb.collapseGroup("five");
 
@@ -1162,7 +1162,7 @@ var testSuite = function () {
 
         // dragging c4_2 to group 3 means that its connection to c3_1 is now internal to the group,
         // and since the group is collapsed, it should not be visible.
-        equal(false, c.isVisible(), "original connection now between two members of collapsed group and is invisible.");
+        equal(false, c.visible, "original connection now between two members of collapsed group and is invisible.");
         equal(c.proxies.length, 0, "source and target connection proxy removed now that the connection is internal");
         //ok(c.proxies[1] == null, "target connection proxy removed now that the connection is internal");
 
@@ -1800,15 +1800,15 @@ var testSuite = function () {
         var conn = _jsPlumb.connect({source:c1_1_1, target:c1_1_2});
         //equal(g1.connections.source.length, 1, "1 connection in group source connections");
 
-        equal(true, conn.isVisible(), "connection is visible");
+        equal(true, conn.visible, "connection is visible");
 
         _jsPlumb.toggleGroup(g1);
 
-        equal(false, conn.isVisible(), "connection is not visible after group collapse");
+        equal(false, conn.visible, "connection is not visible after group collapse");
 
         _jsPlumb.toggleGroup(g1);
 
-        equal(true, conn.isVisible(), "connection is visible once more");
+        equal(true, conn.visible, "connection is visible once more");
 
 
 
@@ -1843,11 +1843,11 @@ var testSuite = function () {
         var conn = _jsPlumb.connect({source:c1_1_1, target:c2_1_1});
         equal(g1.connections.source.length, 1, "1 connection in group source connections");
 
-        equal(true, conn.isVisible(), "connection is visible");
+        equal(true, conn.visible, "connection is visible");
 
         _jsPlumb.toggleGroup(g1);
 
-        equal(true, conn.isVisible(), "connection is visible after group collapse, because the group shows proxies.");
+        equal(true, conn.visible, "connection is visible after group collapse, because the group shows proxies.");
 
         // make sure that the child's connection is removed from the group when the element is removed.
         _jsPlumb.removeFromGroup(g1, c1_1);
@@ -1875,11 +1875,11 @@ var testSuite = function () {
 
         equal(g2.connections.target.length, 1, "1 connection in group target connections");
 
-        equal(true, conn.isVisible(), "connection is visible");
+        equal(true, conn.visible, "connection is visible");
 
         _jsPlumb.toggleGroup(g2);
 
-        equal(true, conn.isVisible(), "connection is visible after group collapse, because the group shows proxies.");
+        equal(true, conn.visible, "connection is visible after group collapse, because the group shows proxies.");
 
         // make sure that the child's connection is removed from the group when the element is removed.
         _jsPlumb.removeFromGroup(g2, c2_1);
@@ -1908,11 +1908,11 @@ var testSuite = function () {
 
         equal(1, g2.connections.target.length, "1 connection in group target connections");
 
-        equal(true, conn.isVisible(), "connection is visible");
+        equal(true, conn.visible, "connection is visible");
 
         _jsPlumb.toggleGroup(g2);
 
-        equal(true, conn.isVisible(), "connection is visible after group collapse, because the group shows proxies.");
+        equal(true, conn.visible, "connection is visible after group collapse, because the group shows proxies.");
 
         // make sure that the child's connection is removed from the group when the element is removed.
         _jsPlumb.removeFromGroup(g2, c2_1);
@@ -1922,7 +1922,7 @@ var testSuite = function () {
         var groupConns = _jsPlumb.getConnections({target:c2, scope:'*'});
         equal(0, groupConns.length, "no connections registered for the group element");
 
-        equal(true, conn.isVisible(), "connection is visible ");
+        equal(true, conn.visible, "connection is visible ");
 
         equal(conn.source, c1_1_1, "c1_1_1 is connection source after removal from group");
         equal(conn.target, c2_1_1, "c2_1_1 is connection target after removal from group");
@@ -2164,15 +2164,15 @@ var testSuite = function () {
         _jsPlumb.revalidate(g1.el);
 
         var c = _jsPlumb.connect({source:n1_1, target:n2_1, connector:"StateMachine", anchor:"Continuous"}); // connect node in group 3 to node 4, which is standalone.
-        equal(c.isVisible(), true, "connection initially visible");
+        equal(c.visible, true, "connection initially visible");
 
         var c2 = _jsPlumb.connect({source:n2_1, target:n1_1, connector:"StateMachine", anchor:"Continuous"}); // connect node in group 3 to node 4, which is standalone.
-        equal(c2.isVisible(), true, "connection 2 initially visible");
+        equal(c2.visible, true, "connection 2 initially visible");
 
         _jsPlumb.collapseGroup(g2);
 
-        equal(c.isVisible(), false, "connection is not visible after group collapse");
-        equal(c2.isVisible(), false, "connection 2 is not visible after group collapse");
+        equal(c.visible, false, "connection is not visible after group collapse");
+        equal(c2.visible, false, "connection 2 is not visible after group collapse");
 
     });
 
@@ -2572,13 +2572,13 @@ var testSuite = function () {
         // STATE 0
         // sanity check to start.
         function state0(msg) {
-            ok(c1_c2.isVisible(), msg + " : internal connection in groupC is visible");
-            ok(b1_b2.isVisible(), msg + " : internal connection in groupB is visible");
-            ok(a1_a2.isVisible(), msg + " : internal connection in groupA is visible");
+            ok(c1_c2.visible, msg + " : internal connection in groupC is visible");
+            ok(b1_b2.visible, msg + " : internal connection in groupB is visible");
+            ok(a1_a2.visible, msg + " : internal connection in groupA is visible");
 
-            ok(a1_group.isVisible(), msg + " : internal connection to group in groupA is visible");
-            ok(b1_group.isVisible(), msg + " : internal connection to group in groupB is visible");
-            ok(c1_group.isVisible(), msg + " : internal connection to group in groupC is visible");
+            ok(a1_group.visible, msg + " : internal connection to group in groupA is visible");
+            ok(b1_group.visible, msg + " : internal connection to group in groupB is visible");
+            ok(c1_group.visible, msg + " : internal connection to group in groupC is visible");
 
             equal(a1_1, a1_a2.endpoints[0].element, msg + " : a1_1 is source element for a1_1-a1_2");
             equal(a1_2, a1_a2.endpoints[1].element, msg + " : a1_2 is target element for a1_1-a1_2");
@@ -2602,12 +2602,12 @@ var testSuite = function () {
         state0("initial setup");
 
         function state1(msg) {
-            ok(!c1_c2.isVisible(), msg + " : internal connection in groupC is not visible");
-            ok(b1_b2.isVisible(), msg + " : internal connection in groupB is visible");
-            ok(a1_a2.isVisible(), msg + " : internal connection in groupA is visible");
-            ok(a1_group.isVisible(), msg + " : internal connection to group in groupA is visible");
-            ok(b1_group.isVisible(), msg + " : internal connection to group in groupB is visible");
-            ok(!c1_group.isVisible(), msg + " : internal connection to group in groupC is not visible");
+            ok(!c1_c2.visible, msg + " : internal connection in groupC is not visible");
+            ok(b1_b2.visible, msg + " : internal connection in groupB is visible");
+            ok(a1_a2.visible, msg + " : internal connection in groupA is visible");
+            ok(a1_group.visible, msg + " : internal connection to group in groupA is visible");
+            ok(b1_group.visible, msg + " : internal connection to group in groupB is visible");
+            ok(!c1_group.visible, msg + " : internal connection to group in groupC is not visible");
 
             equal(a1_1, a1_a2.endpoints[0].element, msg + " : a1_1 is source element for a1_1-a1_2");
             equal(a1_2, a1_a2.endpoints[1].element, msg + " : a1_2 is target element for a1_1-a1_2");
@@ -2651,13 +2651,13 @@ var testSuite = function () {
             equal(groupB.el, c1_node.endpoints[0].element, msg + " : groupB is the source of group C's external connection (the proxy)");
             equal(node, c1_node.endpoints[1].element, msg + " : node is target element for c1_1-node");
 
-            ok(!c1_c2.isVisible(), msg + " : internal connection in groupC is not visible");
-            ok(!b1_b2.isVisible(), msg + " : internal connection in groupB is not visible");
-            ok(a1_a2.isVisible(), msg + " : internal connection in groupA is visible");
+            ok(!c1_c2.visible, msg + " : internal connection in groupC is not visible");
+            ok(!b1_b2.visible, msg + " : internal connection in groupB is not visible");
+            ok(a1_a2.visible, msg + " : internal connection in groupA is visible");
 
-            ok(a1_group.isVisible(), msg + " : internal connection to group in groupA is visible");
-            ok(!b1_group.isVisible(), msg + " : internal connection to group in groupB is not visible");
-            ok(!c1_group.isVisible(), msg + " : internal connection to group in groupC is not visible");
+            ok(a1_group.visible, msg + " : internal connection to group in groupA is visible");
+            ok(!b1_group.visible, msg + " : internal connection to group in groupB is not visible");
+            ok(!c1_group.visible, msg + " : internal connection to group in groupC is not visible");
         }
 
         state2("after collapse B");
@@ -2666,13 +2666,13 @@ var testSuite = function () {
         _jsPlumb.collapseGroup(groupA);
 
         function state3(msg) {
-            ok(!c1_c2.isVisible(), " : internal connection in groupC is not visible");
-            ok(!b1_b2.isVisible(), " : internal connection in groupB is not visible");
-            ok(!a1_a2.isVisible(), " : internal connection in groupA is not visible");
+            ok(!c1_c2.visible, " : internal connection in groupC is not visible");
+            ok(!b1_b2.visible, " : internal connection in groupB is not visible");
+            ok(!a1_a2.visible, " : internal connection in groupA is not visible");
 
-            ok(!a1_group.isVisible(), msg + " : internal connection to group in groupA is not visible");
-            ok(!b1_group.isVisible(), msg + " : internal connection to group in groupB is not visible");
-            ok(!c1_group.isVisible(), msg + " : internal connection to group in groupC is not visible");
+            ok(!a1_group.visible, msg + " : internal connection to group in groupA is not visible");
+            ok(!b1_group.visible, msg + " : internal connection to group in groupB is not visible");
+            ok(!c1_group.visible, msg + " : internal connection to group in groupC is not visible");
 
             equal(a1_1, a1_a2.endpoints[0].element, msg + " : a1_1 is source element for a1_1-a1_2");
             equal(a1_2, a1_a2.endpoints[1].element, msg + " : a1_2 is target element for a1_1-a1_2");

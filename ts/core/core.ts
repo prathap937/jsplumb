@@ -1,7 +1,7 @@
 import {DEFAULT_KEY_ALLOW_NESTED_GROUPS, DEFAULT_KEY_PAINT_STYLE, DEFAULT_KEY_SCOPE, JsPlumbDefaults} from "./defaults"
 
-import {Connection, ConnectionOptions} from "./connector/connection-impl"
-import {Endpoint} from "./endpoint/endpoint"
+import {Connection, ConnectionOptions, createConnection} from "./connector/connection-impl"
+import {createEndpoint, Endpoint} from "./endpoint/endpoint"
 import { DotEndpoint } from './endpoint/dot-endpoint'
 import {convertToFullOverlaySpec} from "./overlay/overlay"
 import {RedrawResult} from "./router/router"
@@ -51,10 +51,11 @@ import {EndpointSelection} from "./selection/endpoint-selection"
 import {ConnectionSelection} from "./selection/connection-selection"
 import {Viewport, ViewportElement} from "./viewport"
 
-import { Component } from './component/component'
+import {Component, Components} from './component/component'
 import { Overlay } from './overlay/overlay'
 import { LabelOverlay } from './overlay/label-overlay'
-import { AbstractConnector } from './connector/abstract-connector'
+import {ConnectorBase} from './connector/abstract-connector'
+import { Connections } from './connector/connections'
 import {
     PaintStyle,
     FullOverlaySpec,
@@ -83,11 +84,11 @@ import {
 } from "./constants"
 import {InternalEndpointOptions} from "./endpoint/endpoint-options"
 import {LightweightRouter} from "./router/lightweight-router"
-import {Connectors} from "./connector/connectors"
 
-import {StraightConnector} from "./connector/straight-connector"
+import {CONNECTOR_TYPE_STRAIGHT} from "./connector/straight-connector"
 import {ConnectionDragSelector} from "./source-selector"
 import {Segments} from "./connector/segments"
+import { Endpoints } from './endpoint/endpoints'
 
 export interface jsPlumbElement<E> {
     _jsPlumbGroup: UIGroup<E>
@@ -319,7 +320,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
             anchors: [ null, null ],
             connectionsDetachable: true,
             connectionOverlays: [ ],
-            connector: StraightConnector.type,
+            connector: CONNECTOR_TYPE_STRAIGHT,
             container: null,
             endpoint: DotEndpoint.type,
             endpointOverlays: [ ],
@@ -527,7 +528,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
             { el: "target", elId: "targetId" }
         ]
 
-        let ep,
+        let ep:Endpoint,
             _st = stTypes[idx],
             cId = c[_st.elId],
             sid, sep,
@@ -544,9 +545,9 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
             newEndpoint:oldEndpoint
         }
 
-        if (el instanceof Endpoint) {
-            ep = el;
-            (<Endpoint>ep).addConnection(c)
+        if (Endpoints.isEndpoint(el)) {
+            ep = el
+            Endpoints.addConnection((<Endpoint>ep), c)
         }
         else {
             sid = this.getId(el)
@@ -555,13 +556,13 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                 ep = null; // dont change source/target if the element is already the one given.
             }
             else {
-                ep = c.makeEndpoint(idx === 0, el, sid)
+                ep = Connections.makeEndpoint(c, idx === 0, el, sid)
             }
         }
 
         if (ep != null) {
             evtParams.newEndpoint = ep
-            oldEndpoint.detachFromConnection(c)
+            Endpoints.detachFromConnection(oldEndpoint, c)
             c.endpoints[idx] = ep
             c[_st.el] = ep.element
             c[_st.elId] = ep.elementId
@@ -603,7 +604,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @param type
      */
     setConnectionType(connection:Connection, type:string, params?:any):void {
-        connection.setType(type, params)
+        Components.setType(connection, type, params)
         this._paintConnection(connection)
     }
 
@@ -704,12 +705,18 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         if (connection != null && connection.deleted !== true) {
             params = params || {}
 
+            // if (params.force || functionChain(true, false, [
+            //         [ connection.endpoints[0], Constants.IS_DETACH_ALLOWED, [ connection ] ],
+            //         [ connection.endpoints[1], Constants.IS_DETACH_ALLOWED, [ connection ] ],
+            //         [ connection, Constants.IS_DETACH_ALLOWED, [ connection ] ],
+            //         [ this, Constants.CHECK_CONDITION, [ Constants.INTERCEPT_BEFORE_DETACH, connection ] ]
+            //     ])) {
             if (params.force || functionChain(true, false, [
-                    [ connection.endpoints[0], Constants.IS_DETACH_ALLOWED, [ connection ] ],
-                    [ connection.endpoints[1], Constants.IS_DETACH_ALLOWED, [ connection ] ],
-                    [ connection, Constants.IS_DETACH_ALLOWED, [ connection ] ],
-                    [ this, Constants.CHECK_CONDITION, [ Constants.INTERCEPT_BEFORE_DETACH, connection ] ]
-                ])) {
+                [ Components, Constants.IS_DETACH_ALLOWED, [ connection.endpoints[0], connection ] ],
+                [ Components, Constants.IS_DETACH_ALLOWED, [ connection.endpoints[1], connection ] ],
+                [ Components, Constants.IS_DETACH_ALLOWED, [ connection, connection ] ],
+                [ this, Constants.CHECK_CONDITION, [ Constants.INTERCEPT_BEFORE_DETACH, connection ] ]
+            ])) {
 
                 // ---------------------------
                 // remove from the array in the managed element record
@@ -721,18 +728,18 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                 const targetEndpoint = connection.endpoints[1]
 
                 if (sourceEndpoint !== params.endpointToIgnore) {
-                    sourceEndpoint.detachFromConnection(connection, null, true)
+                    Endpoints.detachFromConnection(sourceEndpoint, connection, null, true)
                 }
 
                 if (targetEndpoint !== params.endpointToIgnore) {
-                    targetEndpoint.detachFromConnection(connection, null, true)
+                    Endpoints.detachFromConnection(targetEndpoint, connection, null, true)
                 }
 
                 removeWithFunction(this.connections, (_c:Connection) => {
                     return connection.id === _c.id
                 })
 
-                connection.destroy()
+                Connections.destroy(connection)
 
                 if (sourceEndpoint !== params.endpointToIgnore && sourceEndpoint.deleteOnEmpty && sourceEndpoint.connections.length === 0) {
                     this.deleteEndpoint(sourceEndpoint)
@@ -1039,7 +1046,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         const managedElement = this.manage(_p.element)
         _p.elementId = this.getId(_p.element)
         _p.id = "ep_" + this._idstamp()
-        let ep = new Endpoint(this, _p)
+        let ep = createEndpoint(this, _p)
         addManagedEndpoint(managedElement, ep)
 
         if (params.uuid) {
@@ -1197,7 +1204,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @param endpoint
      */
     private unregisterEndpoint(endpoint:Endpoint) {
-        const uuid = endpoint.getUuid()
+        const uuid = endpoint.uuid
         if (uuid) {
             this.endpointsByUUID.delete(uuid)
         }
@@ -1245,12 +1252,12 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
             const connectionsToDelete = endpoint.connections.slice()
             forEach(connectionsToDelete,(connection) => {
                 // detach this endpoint from each of these connections.
-                endpoint.detachFromConnection(connection, null, true)
+                Endpoints.detachFromConnection(endpoint, connection, null, true)
             })
 
             // delete the endpoint
             this.unregisterEndpoint(endpoint)
-            endpoint.destroy()
+            Endpoints.destroy(endpoint)
 
             // then delete the connections. each of these connections only has one endpoint at the moment
             forEach(connectionsToDelete,(connection) => {
@@ -1397,12 +1404,12 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
 
         // If endpoints were passed as source and/or target, set them as sourceEndpoint/targetEndpoint, respectively.
         if (_p.source) {
-            if ((_p.source as Endpoint).endpoint) {
+            if ((_p.source as Endpoint).representation) {
                 _p.sourceEndpoint = (_p.source as Endpoint)
             }
         }
         if (_p.target) {
-            if ((_p.target as Endpoint).endpoint) {
+            if ((_p.target as Endpoint).representation) {
                 _p.targetEndpoint = (_p.target as Endpoint)
             }
         }
@@ -1415,7 +1422,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
 
         // ensure that if we do have Endpoints already, they're not full, and that we have a source of some type.
         if (_p.sourceEndpoint != null) {
-            if (_p.sourceEndpoint.isFull()) {
+            if (Endpoints.isFull(_p.sourceEndpoint)) {
                 throw ERROR_SOURCE_ENDPOINT_FULL
             }
 
@@ -1439,7 +1446,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         }
 
         if (_p.targetEndpoint != null) {
-            if (_p.targetEndpoint.isFull()) {
+            if (Endpoints.isFull(_p.targetEndpoint)) {
                 throw ERROR_TARGET_ENDPOINT_FULL
             }
         } else {
@@ -1465,7 +1472,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      */
     _newConnection (params:ConnectionOptions<T["E"]>):Connection {
         params.id = "con_" + this._idstamp()
-        const c = new Connection(this, params)
+        const c = createConnection(this, params)
 
         addManagedConnection(c, this._managedElements[c.sourceId], this._managedElements[c.targetId])
 
@@ -1648,7 +1655,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         let endpointFunc = null
         if (alsoChangeEndpoints) {
             endpointFunc = (ep:Endpoint) => {
-                ep.setVisible(visible, true, true)
+                Endpoints.setVisible(ep, visible, true, true)
             }
         }
         let id = this.getId(el)
@@ -1657,12 +1664,12 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                 // this test is necessary because this functionality is new, and i wanted to maintain backwards compatibility.
                 // this block will only set a connection to be visible if the other endpoint in the connection is also visible.
                 let oidx = jpc.sourceId === id ? 1 : 0
-                if (jpc.endpoints[oidx].isVisible()) {
-                    jpc.setVisible(true)
+                if (jpc.endpoints[oidx].visible) {
+                    Connections.setVisible(jpc, true)
                 }
             }
             else { // the default behaviour for show, and what always happens for hide, is to just set the visibility without getting clever.
-                jpc.setVisible(visible)
+                Connections.setVisible(jpc, visible)
             }
         }, endpointFunc)
 
@@ -1676,13 +1683,13 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         let endpointFunc = null
         if (changeEndpoints) {
             endpointFunc = (ep:Endpoint) => {
-                let state = ep.isVisible()
-                ep.setVisible(!state)
+                let state = ep.visible
+                Endpoints.setVisible(ep, !state)
             }
         }
         this._operation(el,  (jpc:Connection) => {
-            let state = jpc.isVisible()
-            jpc.setVisible(!state)
+            let state = jpc.visible
+            Connections.setVisible(jpc, !state)
         }, endpointFunc)
     }
 
@@ -1858,7 +1865,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                 proxyEp = connection.proxies[index].ep
             } else {
                 // otherwise detach that previous endpoint; it will delete itself
-                connection.proxies[index].ep.detachFromConnection(connection, index)
+                Endpoints.detachFromConnection(connection.proxies[index].ep, connection, index)
                 proxyEp = this._internal_newEndpoint({
                     element:proxyEl,
                     endpoint:endpointGenerator(connection, index),
@@ -1887,16 +1894,16 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         this.sourceOrTargetChanged(originalElementId, proxyElId, connection, proxyEl, index)
 
         // detach the original EP from the connection, but mark as a transient detach.
-        originalEndpoint.detachFromConnection(connection, null, true)
+        Endpoints.detachFromConnection(originalEndpoint, connection, null, true)
 
         // set the proxy as the new ep
         proxyEp.connections = [ connection ]
         connection.endpoints[index] = proxyEp
 
         originalEndpoint.proxiedBy = proxyEp
-        originalEndpoint.setVisible(false)
+        Endpoints.setVisible(originalEndpoint, false)
 
-        connection.setVisible(true)
+        Connections.setVisible(connection, true)
 
         this.revalidate(proxyEl)
     }
@@ -1922,11 +1929,11 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         this.sourceOrTargetChanged(proxyElId, originalElementId, connection, originalElement, index)
 
         // detach the proxy EP from the connection (which will cause it to be removed as we no longer need it)
-        connection.proxies[index].ep.detachFromConnection(connection, null)
+        Endpoints.detachFromConnection(connection.proxies[index].ep, connection, null)
 
-        connection.proxies[index].originalEp.addConnection(connection)
-        if(connection.isVisible()) {
-            connection.proxies[index].originalEp.setVisible(true)
+        Endpoints.addConnection(connection.proxies[index].originalEp, connection)
+        if(connection.visible) {
+            Endpoints.setVisible(connection.proxies[index].originalEp, true)
         }
 
         // cleanup
@@ -2113,7 +2120,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                     ap = this.router.computeAnchorLocation(endpoint._anchor, anchorParams)
                 }
 
-                endpoint.endpoint.compute(ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse)
+                endpoint.representation.compute(ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse)
                 this.renderEndpoint(endpoint, endpoint.paintStyleInUse)
                 endpoint.timestamp = timestamp
 
@@ -2122,7 +2129,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                     if (endpoint.overlays.hasOwnProperty(i)) {
                         let o = endpoint.overlays[i]
                         if (o.isVisible()) {
-                            endpoint.overlayPlacements[i] = this.drawOverlay(o, endpoint.endpoint, endpoint.paintStyleInUse, endpoint.getAbsoluteOverlayPosition(o))
+                            endpoint.overlayPlacements[i] = this.drawOverlay(o, endpoint.representation, endpoint.paintStyleInUse, Components.getAbsoluteOverlayPosition(endpoint, o))
                             this._paintOverlay(o, endpoint.overlayPlacements[i], {xmin:0, ymin:0})
                         }
                     }
@@ -2161,7 +2168,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                         let o:Overlay = connection.overlays[i]
                         if (o.isVisible()) {
 
-                            connection.overlayPlacements[i] = this.drawOverlay(o, connection.connector, connection.paintStyleInUse, connection.getAbsoluteOverlayPosition(o))
+                            connection.overlayPlacements[i] = this.drawOverlay(o, connection.connector, connection.paintStyleInUse, Components.getAbsoluteOverlayPosition(connection, o))
 
                             overlayExtents.xmin = Math.min(overlayExtents.xmin, connection.overlayPlacements[i].xmin)
                             overlayExtents.xmax = Math.max(overlayExtents.xmax, connection.overlayPlacements[i].xmax)
@@ -2209,23 +2216,12 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                 this.removeEndpointClass(endpoint, this.endpointConnectedClass)
             }
 
-            if (endpoint.isFull()) {
+            if (Endpoints.isFull(endpoint)) {
                 this.addEndpointClass(endpoint, this.endpointFullClass)
             } else {
                 this.removeEndpointClass(endpoint, this.endpointFullClass)
             }
         }
-    }
-
-    /**
-     * Prepare a connector using the given name and args.
-     * @internal
-     * @param connection
-     * @param name
-     * @param args
-     */
-    _makeConnector(connection:Connection<T["E"]>, name:string, args:any):AbstractConnector {
-        return Connectors.get(connection, name, args)
     }
 
     /**
@@ -2237,9 +2233,9 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @public
      */
     addOverlay(component:Component, overlay:OverlaySpec, doNotRevalidate?:boolean) {
-        const o = component.addOverlay(overlay)
+        const o = Components.addOverlay(component, overlay)
         if (!doNotRevalidate) {
-            const relatedElement = component instanceof Endpoint ? (component as Endpoint).element : (component as Connection).source
+            const relatedElement = Endpoints.isEndpoint(component) ? (component as Endpoint).element : (component as Connection).source
             this.revalidate(relatedElement)
         }
     }
@@ -2251,8 +2247,8 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @public
      */
     removeOverlay(component:Component, overlayId:string) {
-        component.removeOverlay(overlayId)
-        const relatedElement = component instanceof Endpoint ? (component as Endpoint).element : (component as Connection).source
+        Components.removeOverlay(component, overlayId)
+        const relatedElement = Endpoints.isEndpoint(component)? (component as Endpoint).element : (component as Connection).source
         this.revalidate(relatedElement)
     }
 
@@ -2370,7 +2366,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @internal
      * @param connector
      */
-    getPathData (connector:AbstractConnector):any {
+    getPathData (connector:ConnectorBase):any {
         let p = ""
         for (let i = 0; i < connector.segments.length; i++) {
             p += Segments.get(connector.segments[i].type).getPath(connector.segments[i], i === 0)
@@ -2404,7 +2400,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @param paintStyle
      * @param extents
      */
-    abstract paintConnector(connector:AbstractConnector, paintStyle:PaintStyle, extents?:Extents):void
+    abstract paintConnector(connector:ConnectorBase, paintStyle:PaintStyle, extents?:Extents):void
 
     /**
      * @internal
@@ -2419,26 +2415,26 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @param h
      * @param sourceEndpoint
      */
-    abstract setConnectorHover(connector:AbstractConnector, h:boolean, sourceEndpoint?:Endpoint):void
+    abstract setConnectorHover(connector:ConnectorBase, h:boolean, sourceEndpoint?:Endpoint):void
 
     /**
      * @internal
      * @param connector
      * @param clazz
      */
-    abstract addConnectorClass(connector:AbstractConnector, clazz:string):void
-    abstract removeConnectorClass(connector:AbstractConnector, clazz:string):void
-    abstract getConnectorClass(connector:AbstractConnector):string
-    abstract setConnectorVisible(connector:AbstractConnector, v:boolean):void
-    abstract applyConnectorType(connector:AbstractConnector, t:TypeDescriptor):void
+    abstract addConnectorClass(connector:ConnectorBase, clazz:string):void
+    abstract removeConnectorClass(connector:ConnectorBase, clazz:string):void
+    abstract getConnectorClass(connector:ConnectorBase):string
+    abstract setConnectorVisible(connector:ConnectorBase, v:boolean):void
+    abstract applyConnectorType(connector:ConnectorBase, t:TypeDescriptor):void
 
-    abstract applyEndpointType(ep:Endpoint<T>, t:TypeDescriptor):void
-    abstract setEndpointVisible(ep:Endpoint<T>, v:boolean):void
-    abstract destroyEndpoint(ep:Endpoint<T>):void
-    abstract renderEndpoint(ep:Endpoint<T>, paintStyle:PaintStyle):void
-    abstract addEndpointClass(ep:Endpoint<T>, c:string):void
-    abstract removeEndpointClass(ep:Endpoint<T>, c:string):void
-    abstract getEndpointClass(ep:Endpoint<T>):string
-    abstract setEndpointHover(endpoint: Endpoint<T>, h: boolean, endpointIndex:number, doNotCascade?:boolean): void
+    abstract applyEndpointType(ep:Endpoint, t:TypeDescriptor):void
+    abstract setEndpointVisible(ep:Endpoint, v:boolean):void
+    abstract destroyEndpoint(ep:Endpoint):void
+    abstract renderEndpoint(ep:Endpoint, paintStyle:PaintStyle):void
+    abstract addEndpointClass(ep:Endpoint, c:string):void
+    abstract removeEndpointClass(ep:Endpoint, c:string):void
+    abstract getEndpointClass(ep:Endpoint):string
+    abstract setEndpointHover(endpoint: Endpoint, h: boolean, endpointIndex:number, doNotCascade?:boolean): void
 
 }

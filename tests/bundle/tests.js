@@ -327,7 +327,7 @@ var testSuite = function () {
             _addDiv("d2");
             var c = _jsPlumb.connect({source: d1, target: d2, connector: "FOO"});
             equal(c, null, "connection is null because of unknown endpoint type")
-            equal(consoleOutput, "jsPlumb: unknown connector type 'FOO'", "error message was logged to console")
+            equal(consoleOutput, "jsPlumb: no connector handler found for connector type 'FOO'", "error message was logged to console")
         })
     });
 

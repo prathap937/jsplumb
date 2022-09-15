@@ -46,12 +46,12 @@ var testSuite = function () {
             ]
         });
         equal(support.length(connection1.overlays), 2);
-        equal("Label", connection1.getOverlays()["l"].type);
+        equal("Label", connection1.overlays["l"].type);
 
-        equal("Arrow", connection1.getOverlays()["a"].type);
-        equal(0.7, connection1.getOverlays()["a"].location);
-        equal(40, connection1.getOverlays()["a"].width);
-        equal(40, connection1.getOverlays()["a"].length);
+        equal("Arrow", connection1.overlays["a"].type);
+        equal(0.7, connection1.overlays["a"].location);
+        equal(40, connection1.overlays["a"].width);
+        equal(40, connection1.overlays["a"].length);
     });
 
     test(": _jsPlumb.connect (overlays, long-hand version, diamond and arrow)", function () {
@@ -69,9 +69,9 @@ var testSuite = function () {
             ]
         });
         equal(support.length(connection1.overlays), 2);
-        equal("Diamond", connection1.getOverlays()["d"].type);
+        equal("Diamond", connection1.overlays["d"].type);
 
-        equal("PlainArrow", connection1.getOverlays()["a"].type);
+        equal("PlainArrow", connection1.overlays["a"].type);
     });
 
     test(": _jsPlumb.connect (overlays, long-hand version, IDs specified)", function () {
@@ -96,13 +96,13 @@ var testSuite = function () {
             ]
         });
         equal(2, support.length(connection1.overlays));
-        equal("Label", connection1.getOverlays()["aLabel"].type);
-        equal("aLabel", connection1.getOverlays()["aLabel"].id);
+        equal("Label", connection1.overlays["aLabel"].type);
+        equal("aLabel", connection1.overlays["aLabel"].id);
 
-        equal("aLabel", _jsPlumb.getAttribute(connection1.getOverlays()["aLabel"].canvas, "jtk-overlay-id"), "label id set on element of label overlay as jtk-overlay-id attribute")
-        equal("anArrow", _jsPlumb.getAttribute(connection1.getOverlays()["anArrow"].path, "jtk-overlay-id"), "arrow id set on element of arrow overlay as jtk-overlay-id attribute")
+        equal("aLabel", _jsPlumb.getAttribute(connection1.overlays["aLabel"].canvas, "jtk-overlay-id"), "label id set on element of label overlay as jtk-overlay-id attribute")
+        equal("anArrow", _jsPlumb.getAttribute(connection1.overlays["anArrow"].path, "jtk-overlay-id"), "arrow id set on element of arrow overlay as jtk-overlay-id attribute")
 
-        equal("Arrow", connection1.getOverlays()["anArrow"].type);
+        equal("Arrow", connection1.overlays["anArrow"].type);
         equal(0.7, connection1.overlays["anArrow"].location);
         equal(40, connection1.overlays["anArrow"].width);
         equal(40, connection1.overlays["anArrow"].length);
@@ -116,7 +116,7 @@ var testSuite = function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
 
-        ok(c.getOverlay("arrow") != null, "Arrow overlay created from defaults");
+        ok(c.overlays["arrow"] != null, "Arrow overlay created from defaults");
     });
 
     test(": _jsPlumb.connect (default overlays + overlays specified in connect call)", function () {
@@ -128,8 +128,8 @@ var testSuite = function () {
                     { type:"Label", options:{id: "label"}}
             ]});
 
-        ok(c.getOverlay("arrow") != null, "Arrow overlay created from defaults");
-        ok(c.getOverlay("label") != null, "Label overlay created from connect call");
+        ok(c.overlays["arrow"] != null, "Arrow overlay created from defaults");
+        ok(c.overlays["label"] != null, "Label overlay created from connect call");
     });
 
     test(": _jsPlumb.connect (default connection overlays)", function () {
@@ -139,7 +139,7 @@ var testSuite = function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
 
-        ok(c.getOverlay("arrow") != null, "Arrow overlay created from defaults");
+        ok(c.overlays["arrow"] != null, "Arrow overlay created from defaults");
     });
 
     test(": _jsPlumb.connect (default connection overlays + overlays specified in connect call)", function () {
@@ -151,8 +151,8 @@ var testSuite = function () {
                     { type:"Label", options:{id: "label"}}
             ]});
 
-        ok(c.getOverlay("arrow") != null, "Arrow overlay created from defaults");
-        ok(c.getOverlay("label") != null, "Label overlay created from connect call");
+        ok(c.overlays["arrow"] != null, "Arrow overlay created from defaults");
+        ok(c.overlays["label"] != null, "Label overlay created from connect call");
     });
 
     test(": _jsPlumb.connect (default overlays + default connection overlays)", function () {
@@ -163,8 +163,8 @@ var testSuite = function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
 
-        ok(c.getOverlay("arrow") != null, "Arrow overlay created from defaults");
-        ok(c.getOverlay("arrow2") != null, "Arrow overlay created from connection defaults");
+        ok(c.overlays["arrow"] != null, "Arrow overlay created from defaults");
+        ok(c.overlays["arrow2"] != null, "Arrow overlay created from connection defaults");
     });
 
     test("overlay visible tests", function() {
@@ -177,8 +177,8 @@ var testSuite = function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
 
-        var a1 = c.getOverlay("arrow");
-        var l = c.getOverlay("label");
+        var a1 = c.overlays["arrow"];
+        var l = c.overlays["label"];
 
         equal(c.connector.canvas, a1.path.parentNode, "arrow's parent is the connector");
         equal(_jsPlumb.getContainer(), l.canvas.parentNode, "label's parent is the container");
@@ -208,9 +208,9 @@ var testSuite = function () {
                     { type:"Label", options:{id: "label"}}
             ]});
 
-        ok(c.getOverlay("arrow") != null, "Arrow overlay created from defaults");
-        ok(c.getOverlay("arrow2") != null, "Arrow overlay created from connection defaults");
-        ok(c.getOverlay("label") != null, "Label overlay created from connect call");
+        ok(c.overlays["arrow"] != null, "Arrow overlay created from defaults");
+        ok(c.overlays["arrow2"] != null, "Arrow overlay created from connection defaults");
+        ok(c.overlays["label"] != null, "Label overlay created from connect call");
     });
 
     test(": _jsPlumb.connect (label overlay set using 'label')", function () {
@@ -221,8 +221,8 @@ var testSuite = function () {
                 label: "FOO"
             });
 
-        equal(support.length(c.getOverlays()), 1, "one overlay set");
-        equal(c.getLabel(), "FOO", "label is set correctly");
+        equal(support.length(c.overlays), 1, "one overlay set");
+        equal(jsPlumb.Components.getLabel(c), "FOO", "label is set correctly");
     });
 
     test(": _jsPlumb.connect (set label after construction, with string)", function () {
@@ -231,8 +231,8 @@ var testSuite = function () {
                 source: d1,
                 target: d2});
 
-        c.setLabel("FOO");
-        equal(c.getLabel(), "FOO", "label is set correctly");
+        jsPlumb.Components.setLabel(c, "FOO");
+        equal(jsPlumb.Components.getLabel(c), "FOO", "label is set correctly");
     });
 
     test(": _jsPlumb.connect (set label after construction, with function)", function () {
@@ -241,10 +241,10 @@ var testSuite = function () {
                 source: d1,
                 target: d2});
 
-        c.setLabel(function () {
+        jsPlumb.Components.setLabel(c, function () {
             return "BAR";
         });
-        equal(c.getLabel(), "BAR", "label is set correctly");
+        equal(jsPlumb.Components.getLabel(c), "BAR", "label is set correctly");
     });
 
     test(": _jsPlumb.connect (set label after construction, with params object)", function () {
@@ -253,12 +253,12 @@ var testSuite = function () {
                 source: d1,
                 target: d2});
 
-        c.setLabel({
+        jsPlumb.Components.setLabel(c, {
             label: "BAZ",
             cssClass: "CLASSY",
             location: 0.9
         });
-        var lo = c.getLabelOverlay();
+        var lo = jsPlumb.Components.getLabelOverlay(c);
         ok(lo != null, "label overlay exists");
         equal(lo.getLabel(), "BAZ", "label overlay has correct value");
         equal(lo.location, 0.9, "label overlay has correct location");
@@ -273,10 +273,10 @@ var testSuite = function () {
                 labelLocation: 0.2
             });
 
-        var lo = c.getLabelOverlay();
+        var lo = jsPlumb.Components.getLabelOverlay(c);
         equal(lo.location, 0.2, "label overlay has correct location");
 
-        c.setLabel({
+        jsPlumb.Components.setLabel(c, {
             label: "BAZ",
             cssClass: "CLASSY",
             location: 0.9
@@ -296,7 +296,7 @@ var testSuite = function () {
                 labelLocation: 0.2
             });
 
-        var lo = c.getLabelOverlay();
+        var lo = jsPlumb.Components.getLabelOverlay(c);
         equal(lo.location, 0.2, "label overlay has correct location");
 
         lo.updateFrom({
@@ -319,7 +319,7 @@ var testSuite = function () {
                 labelLocation: 0.2
             });
 
-        var lo = c.getLabelOverlay();
+        var lo = jsPlumb.Components.getLabelOverlay(c);
         equal(lo.location, 0.2, "label overlay has correct location");
 
         lo.updateFrom({
@@ -356,7 +356,7 @@ var testSuite = function () {
                 labelLocation: "not a number"
             });
 
-        var lo = c.getLabelOverlay();
+        var lo = jsPlumb.Components.getLabelOverlay(c);
         equal(lo.location, 0.5, "label overlay has default location because the one passed in is not valid");
 
     });
@@ -368,7 +368,7 @@ var testSuite = function () {
                 target: d2,
                 label: "FOO"
             }),
-            lo = c.getLabelOverlay();
+            lo = jsPlumb.Components.getLabelOverlay(c);
 
         ok(lo != null, "label overlay exists");
         equal(lo.getLabel(), "FOO", "label overlay has correct value");
@@ -383,7 +383,7 @@ var testSuite = function () {
                 label: "FOO",
                 labelLocation: 0.2
             }),
-            lo = c.getLabelOverlay();
+            lo = jsPlumb.Components.getLabelOverlay(c);
 
         ok(lo != null, "label overlay exists");
         equal(lo.getLabel(), "FOO", "label overlay has correct value");
@@ -411,10 +411,10 @@ var testSuite = function () {
         });
         equal(2, support.length(connection1.overlays));
 
-        var labelOverlay = connection1.getOverlay("aLabel");
-        var arrowOverlay = connection1.getOverlay("anArrow");
+        var labelOverlay = connection1.overlays["aLabel"];
+        var arrowOverlay = connection1.overlays["anArrow"];
 
-        connection1.removeOverlay("aLabel");
+        jsPlumb.Components.removeOverlay(connection1, "aLabel");
 
         equal(null, connection1.overlays["aLabel"], "not registered in overlays map");
         equal(null, connection1.overlayPositions["aLabel"], "not registered in overlay positions map");
@@ -426,7 +426,7 @@ var testSuite = function () {
         equal(labelOverlay.canvas, null, "the label overlay was actually removed from the DOM");
 
         // remove the arrow
-        connection1.removeOverlay("anArrow");
+        jsPlumb.Components.removeOverlay(connection1, "anArrow");
 
         equal(null, connection1.overlays["anArrow"], "anArrow not registered in overlays map");
         equal(null, connection1.overlayPositions["anArrow"], "anArrow not registered in overlay positions map");
@@ -459,7 +459,7 @@ var testSuite = function () {
             ]
         });
         equal(2, support.length(connection1.overlays));
-        connection1.removeOverlays("aLabel", "anArrow");
+        jsPlumb.Components.removeOverlays(connection1, "aLabel", "anArrow");
         equal(0, support.length(connection1.overlays));
     });
 
@@ -478,9 +478,9 @@ var testSuite = function () {
             ]
         });
         equal(2, support.length(connection1.overlays));
-        equal("Label", connection1.getOverlays()["l"].type);
+        equal("Label", connection1.overlays["l"].type);
 
-        equal("Arrow", connection1.getOverlays()["a"].type);
+        equal("Arrow", connection1.overlays["a"].type);
         equal(0.7, connection1.overlays["a"].location);
         equal(40, connection1.overlays["a"].width);
         equal(40, connection1.overlays["a"].length);
@@ -499,21 +499,21 @@ var testSuite = function () {
             ]
         });
 
-        ok(!isNaN(parseInt(connection.getOverlay("l").canvas.style.left, 10)), "left position set for overlay")
+        ok(!isNaN(parseInt(connection.overlays["l"].canvas.style.left, 10)), "left position set for overlay")
 
-        connection.addOverlay({
+        jsPlumb.Components.addOverlay(connection, {
             type: "Label",
             options: { label: "bar", id: "barlabel", location: 0.75 }
         });
 
-        ok(isNaN(parseInt(connection.getOverlay("barlabel").canvas.style.left, 10)), "left position not set for overlay added via connection.addOverlay")
+        ok(isNaN(parseInt(connection.overlays["barlabel"].canvas.style.left, 10)), "left position not set for overlay added via connection.addOverlay")
 
         _jsPlumb.addOverlay(connection, {
             type: "Label",
             options: { label: "bar", id: "barlabel2", location: 0.75 }
         });
 
-        ok(!isNaN(parseInt(connection.getOverlay("barlabel2").canvas.style.left, 10)), "left position set for overlay added via _jsPlumb.addOverlay")
+        ok(!isNaN(parseInt(connection.overlays["barlabel2"].canvas.style.left, 10)), "left position set for overlay added via _jsPlumb.addOverlay")
 
     })
 
@@ -533,9 +533,9 @@ var testSuite = function () {
             ]
         });
         equal(2, support.length(connection1.overlays));
-        equal("Label", connection1.getOverlays()["l"].type);
+        equal("Label", connection1.overlays["l"].type);
 
-        equal("Arrow", connection1.getOverlays()["a"].type);
+        equal("Arrow", connection1.overlays["a"].type);
         equal(0.7, connection1.overlays["a"].location);
         equal(40, connection1.overlays["a"].width);
         equal(40, connection1.overlays["a"].length);
@@ -551,7 +551,7 @@ var testSuite = function () {
     test(": _jsPlumb.connect, specify arrow overlay using string identifier only", function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"), d3 = support.addDiv("d3");
         var conn = _jsPlumb.connect({source: d1, target: d2, overlays: ["Arrow"]});
-        equal("Arrow", support.head(conn.getOverlays()).type);
+        equal("Arrow", support.head(conn.overlays).type);
     });
 
     test(": Connection.getOverlay method, existing overlay", function () {
@@ -559,7 +559,7 @@ var testSuite = function () {
         var conn = _jsPlumb.connect({source: d1, target: d2, overlays: [
                 { type: "Arrow", options:{ id: "arrowOverlay" } }
         ] });
-        var overlay = conn.getOverlay("arrowOverlay");
+        var overlay = conn.overlays["arrowOverlay"];
         ok(overlay != null);
     });
 
@@ -568,7 +568,7 @@ var testSuite = function () {
         var conn = _jsPlumb.connect({source: d1, target: d2, overlays: [
                 { type: "Arrow", options:{ id: "arrowOverlay" } }
         ] });
-        var overlay = conn.getOverlay("IDONTEXIST");
+        var overlay = conn.overlays["IDONTEXIST"];
         ok(overlay == null);
     });
 
@@ -577,7 +577,7 @@ var testSuite = function () {
         var conn = _jsPlumb.connect({source: d1, target: d2, overlays: [
                 { type: "Arrow", options:{ id: "arrowOverlay" } }
         ] });
-        var overlay = conn.getOverlay("arrowOverlay");
+        var overlay = conn.overlays["arrowOverlay"];
         ok(overlay.isVisible());
         overlay.setVisible(false);
         ok(!overlay.isVisible());
@@ -604,7 +604,7 @@ var testSuite = function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
 
-        var o = c.getOverlay("custom");
+        var o = c.overlays["custom"];
         equal(o.canvas.getAttribute("custom"), "true", "custom overlay created correctly");
         equal(o.canvas.innerHTML, c.id, "custom overlay has correct value");
     });
@@ -625,7 +625,7 @@ var testSuite = function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
 
-        var o = c.getOverlay("custom");
+        var o = c.overlays["custom"];
         equal(o.canvas.getAttribute("custom"), "true", "custom overlay created correctly");
         equal(o.canvas.innerHTML, c.id, "custom overlay has correct value");
     });
@@ -649,7 +649,7 @@ var testSuite = function () {
                 }}
             ]
         });
-        var l = connection1.getOverlay("label");
+        var l = connection1.overlays["label"];
         l.fire("click", l);
         equal(clicked, 1, "click event was fired once");
     });
@@ -659,12 +659,12 @@ var testSuite = function () {
                 { type: "Label", options:{ "id":"lbl" } }
         ]});
 
-        equal(c.getOverlay("lbl").isVisible(), true, "overlay is visible");
-        c.hideOverlays();
-        //equal(c.getOverlay("lbl").canvas.style.display, "none", "overlay not visible");
-        equal(c.getOverlay("lbl").isVisible(), false, "overlay is not visible");
-        c.showOverlays();
-        equal(c.getOverlay("lbl").isVisible(), true, "overlay is visible");
+        equal(c.overlays["lbl"].isVisible(), true, "overlay is visible");
+        jsPlumb.Components.hideOverlays(c);
+        //equal(c.overlays["lbl"].canvas.style.display, "none", "overlay not visible");
+        equal(c.overlays["lbl"].isVisible(), false, "overlay is not visible");
+        jsPlumb.Components.showOverlays(c);
+        equal(c.overlays["lbl"].isVisible(), true, "overlay is visible");
     });
 
     test("show/hide Overlays, supply ids to hide/show", function() {
@@ -673,13 +673,13 @@ var testSuite = function () {
                 { type: "Label", options:{ "id":"lbl2" } }
             ]});
 
-        equal(c.getOverlay("lbl").isVisible(), true, "overlay is visible");
-        c.hideOverlays("lbl");
-        equal(c.getOverlay("lbl").isVisible(), false, "overlay is not visible");
-        equal(c.getOverlay("lbl2").isVisible(), true, "overlay 2 is visible");
-        c.showOverlays("lbl");
-        equal(c.getOverlay("lbl").isVisible(), true, "overlay is visible");
-        equal(c.getOverlay("lbl2").isVisible(), true, "overlay 2 is visible");
+        equal(c.overlays["lbl"].isVisible(), true, "overlay is visible");
+        jsPlumb.Components.hideOverlays(c, "lbl");
+        equal(c.overlays["lbl"].isVisible(), false, "overlay is not visible");
+        equal(c.overlays["lbl2"].isVisible(), true, "overlay 2 is visible");
+        jsPlumb.Components.showOverlays(c, "lbl");
+        equal(c.overlays["lbl"].isVisible(), true, "overlay is visible");
+        equal(c.overlays["lbl2"].isVisible(), true, "overlay 2 is visible");
     });
 
     //
@@ -692,8 +692,8 @@ var testSuite = function () {
                 { type: "Label",options: {id: "label", cssClass: "foo"}}
         ]});
         ok(document.querySelectorAll(".foo").length == 1, "label element exists in DOM");
-        c.removeOverlay("label");
-        ok(support.length(c.getOverlays()) == 0, "no overlays left on component");
+        jsPlumb.Components.removeOverlay(c, "label");
+        ok(support.length(c.overlays) == 0, "no overlays left on component");
         ok(document.querySelectorAll(".foo").length == 0 , "label element does not exist in DOM");
     });
 
@@ -703,9 +703,9 @@ var testSuite = function () {
         var c = _jsPlumb.connect({source: d1, target: d2, overlays: [
                 { type: "Arrow", options:{id: "arrow"}}
         ]});
-        ok(c.getOverlay("arrow") != null, "arrow overlay exists");
-        c.removeOverlay("arrow");
-        ok(c.getOverlay("arrow") == null, "arrow overlay has been removed");
+        ok(c.overlays["arrow"] != null, "arrow overlay exists");
+        jsPlumb.Components.removeOverlay(c, "arrow");
+        ok(c.overlays["arrow"] == null, "arrow overlay has been removed");
     });
 
 
@@ -714,7 +714,7 @@ var testSuite = function () {
         var c = _jsPlumb.connect({source: d1, target: d2, overlays: [
                 { type: "Label", options:{id: "label", label: "foo"}}
         ]});
-        var o = c.getOverlay("label"), e = o.canvas;
+        var o = c.overlays["label"], e = o.canvas;
         equal(e.innerHTML, "foo", "label text is set to original value");
         o.setLabel("baz");
         equal(e.innerHTML, "baz", "label text is set to new value 'baz'");
@@ -736,7 +736,7 @@ var testSuite = function () {
                 cssClass: "foo"
             }}
         ]});
-        var o = c.getOverlay("label");
+        var o = c.overlays["label"];
         ok(_jsPlumb.hasClass(o.canvas, "foo"), "label overlay has custom css class");
     });
 
@@ -750,7 +750,7 @@ var testSuite = function () {
                         length:10
                     }}
             ]});
-        var o = c.getOverlay("arrow");
+        var o = c.overlays["arrow"];
         ok(_jsPlumb.hasClass(o.path, "foo"), "arrow overlay has custom css class");
     });
 
@@ -763,7 +763,7 @@ var testSuite = function () {
                         cssClass: "foo"
                     }}
             ]});
-        var o = c.getOverlay("label");
+        var o = c.overlays["label"];
         ok(_jsPlumb.hasClass(o.canvas, "foo"), "custom overlay has custom css class");
     });
 
@@ -791,11 +791,11 @@ var testSuite = function () {
                     }
                 }
             ]});
-        var o = c.getOverlay("label");
+        var o = c.overlays["label"];
         ok(_jsPlumb.hasClass(o.canvas, "foo"), "label overlay has custom css class");
         equal(o.canvas.getAttribute("att1"), "att1", "label overlay has custom attribute");
 
-        var a = c.getOverlay("arrow");
+        var a = c.overlays["arrow"];
         equal(a.path.getAttribute("att1"), "arrowAtt1", "arrow overlay has custom attribute");
     });
 
@@ -808,7 +808,7 @@ var testSuite = function () {
             e1 = _jsPlumb.addEndpoint(d16),
             e2 = _jsPlumb.addEndpoint(d17);
 
-        ok(e1.getOverlay("label") != null, "endpoint 1 has overlay from defaults");
+        ok(e1.overlays["label"] != null, "endpoint 1 has overlay from defaults");
     });
 
 
@@ -825,8 +825,8 @@ var testSuite = function () {
             }),
             e2 = _jsPlumb.addEndpoint(d17);
 
-        ok(e1.getOverlay("label") != null, "endpoint 1 has overlay from defaults");
-        ok(e1.getOverlay("label2") != null, "endpoint 1 has overlay from addEndpoint call");
+        ok(e1.overlays["label"] != null, "endpoint 1 has overlay from defaults");
+        ok(e1.overlays["label2"] != null, "endpoint 1 has overlay from addEndpoint call");
     });
 
     test("label overlay click, bind to connection:click on instance", function() {
@@ -834,7 +834,7 @@ var testSuite = function () {
             conn = _jsPlumb.connect({source:d, target:d2, overlays:[
                     { type: "Label", options:{ id:"lbl" }}
             ]}),
-            lbl = conn.getOverlay("lbl"),
+            lbl = conn.overlays["lbl"],
             c = 0;
 
         _jsPlumb.bind("connection:click", function() {
@@ -858,7 +858,7 @@ var testSuite = function () {
             conn = _jsPlumb.connect({source:d, target:d2, overlays:[
                     { type: "Arrow", options:{ id:"lbl" }}
                 ]}),
-            lbl = conn.getOverlay("lbl"),
+            lbl = conn.overlays["lbl"],
             c = 0;
 
         _jsPlumb.bind("connection:click", function() {
@@ -882,7 +882,7 @@ var testSuite = function () {
             conn = _jsPlumb.connect({source:d, target:d2, overlays:[
                     { type: "Arrow", options:{ id:"lbl" }}
             ]}),
-            lbl = conn.getOverlay("lbl"),
+            lbl = conn.overlays["lbl"],
             c = 0;
 
         _jsPlumb.bind("connection:dblclick", function() {
@@ -935,7 +935,7 @@ var testSuite = function () {
                         }
                     }
                 }
-            ]}), o = c.getOverlay("label"), o2 = c.getOverlay("arrow");
+            ]}), o = c.overlays["label"], o2 = c.overlays["arrow"];
 
         _jsPlumb.trigger(o.canvas, "click");
         equal(count, 1, "click event was triggered on label overlay");

@@ -1,5 +1,5 @@
 
-import {ABSOLUTE, AbstractConnector, NONE} from "@jsplumb/core"
+import {ABSOLUTE, ConnectorBase, NONE} from "@jsplumb/core"
 import {extend, Extents} from "@jsplumb/util"
 import { PaintStyle } from "@jsplumb/common"
 
@@ -8,7 +8,7 @@ import {_appendAtIndex, _applyStyles, _attr, _node, ELEMENT_PATH, ELEMENT_SVG} f
 import {BrowserJsPlumbInstance} from "./browser-jsplumb-instance"
 
 
-export function paintSvgConnector(instance:BrowserJsPlumbInstance, connector:AbstractConnector, paintStyle:PaintStyle, extents?:Extents) {
+export function paintSvgConnector(instance:BrowserJsPlumbInstance, connector:ConnectorBase, paintStyle:PaintStyle, extents?:Extents) {
 
     getConnectorElement(instance, connector)
 
@@ -71,7 +71,7 @@ export function paintSvgConnector(instance:BrowserJsPlumbInstance, connector:Abs
     }
 }
 
-export function getConnectorElement(instance:BrowserJsPlumbInstance, c:AbstractConnector):SVGElement {
+export function getConnectorElement(instance:BrowserJsPlumbInstance, c:ConnectorBase):SVGElement {
     if ((c as any).canvas != null) {
         return (c as any).canvas
     } else {

@@ -1,21 +1,22 @@
 import {SelectionBase} from "./common"
 import {Connection} from "../connector/connection-impl"
 import {ConnectorSpec} from "@jsplumb/common"
+import {Connections} from "../connector/connections"
 
 export class ConnectionSelection extends SelectionBase<Connection> {
 
     setDetachable(d:boolean):ConnectionSelection {
-        this.each((c:Connection) => c.setDetachable(d))
+        this.each((c:Connection) => Connections.setDetachable(c, d))
         return this
     }
 
     setReattach(d:boolean):ConnectionSelection {
-        this.each((c:Connection) => c.setReattach(d))
+        this.each((c:Connection) => Connections.setReattach(c, d))
         return this
     }
 
     setConnector(spec:ConnectorSpec):ConnectionSelection {
-        this.each((c:Connection) => c._setConnector(spec))
+        this.each((c:Connection) => Connections.setConnector(c, spec))
         return this
     }
 

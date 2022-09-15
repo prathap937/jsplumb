@@ -1,3 +1,35 @@
+
+## 6.0.0
+
+
+### BREAKING
+
+The internal structure of the code has been significantly altered in 6.x, to remove the use of classes to represent the core data structures. 
+
+Where previously there were classes for Endpoint, Connection and Connector, there is now a corresponding "global" handler for instances of that class, and the classes themselves have been switched to interfaces. This means that in the majority of cases, where you would call a method on some class, say:
+
+```javascript
+someEndpoint.addClass("some-class")
+```
+
+you'd now say
+
+```javascript
+import { Endpoints } from "@jsplumb/core"
+Endpoints.addClass(someEndpoint, "some-class")
+```
+
+For users of ES5, these companion objects are scoped globally like this:
+
+```
+jsPlumb.Endpoints.addClass(someEndpoint, "some-class")
+```
+
+- Event can no longer be bound (using `bind`) on Endpoints
+
+- `getOverlay` method on Endpoint/Connection has been replaced with direct access to `overlays` record.
+- `getUuid()` method on Endpoint changed to direct access to `uuid` member 
+
 ## 5.11.3
 
 August 23rd 2022

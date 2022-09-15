@@ -21,12 +21,12 @@ export const EndpointFactory = {
         }
     },
 
-    clone:<C>(epr:EndpointRepresentation<C>):EndpointRepresentation<C> => {
+    clone:<C, ElementType>(epr:EndpointRepresentation<C>):EndpointRepresentation<C> => {
         const handler = handlers[epr.type]
         return EndpointFactory.get(epr.endpoint, epr.type, handler.getParams(epr))
     },
 
-    compute:<T>(endpoint:EndpointRepresentation<T>, anchorPoint:AnchorPlacement, orientation:Orientation, endpointStyle:any):T => {
+    compute:<T, ElementType>(endpoint:EndpointRepresentation<T>, anchorPoint:AnchorPlacement, orientation:Orientation, endpointStyle:any):T => {
       const c = endpointComputers[endpoint.type]
       if (c != null) {
           return c(endpoint, anchorPoint, orientation, endpointStyle)
@@ -42,9 +42,9 @@ export const EndpointFactory = {
     }
 }
 
-export interface EndpointHandler<E, T> {
+export interface EndpointHandler<EndpointClass, T> {
     type:string
     compute:EndpointComputeFunction<T>
-    getParams(endpoint:E):Record<string, any>
+    getParams(endpoint:EndpointClass):Record<string, any>
     cls:Constructable<EndpointRepresentation<T>>
 }

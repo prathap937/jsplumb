@@ -2,7 +2,6 @@ import {
     JsPlumbDefaults,
     TypeDescriptor,
     JsPlumbInstance,
-    AbstractConnector,
     Endpoint,
     Overlay,
     RedrawResult,
@@ -28,7 +27,13 @@ import {
     OverlayMouseEventParams,
     UIGroup,
     CLASS_CONNECTOR,
-    CLASS_ENDPOINT, ManagedElement, ConnectionDragSelector
+    CLASS_ENDPOINT,
+    ManagedElement,
+    ConnectionDragSelector,
+    pointOnComponentPath,
+    ConnectorBase,
+    Connections,
+    Endpoints
 } from '@jsplumb/core'
 
 import {
@@ -223,7 +228,7 @@ export interface BrowserJsPlumbDefaults extends JsPlumbDefaults<Element> {
  * @internal
  */
 export interface jsPlumbDOMInformation {
-    connector?:AbstractConnector
+    connector?:ConnectorBase
     endpoint?:Endpoint
     overlay?:Overlay
 }
@@ -472,7 +477,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param e
      */
     private fireOverlayMethod(overlay:Overlay, event:string, e:MouseEvent) {
-        const stem = overlay.component instanceof Connection ? CONNECTION : ENDPOINT
+        const stem = Connections.isConnection(overlay.component) ? CONNECTION : ENDPOINT
         const mappedEvent = compoundEvent(stem, event)
 
         // set the overlay on the event so that connection/endpoint handlers will know this event has already been fired, and
@@ -1457,10 +1462,10 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
 
             getLabelElement(o)
 
-            const XY = o.component.getXY();
+            const XY = o.component.getXY()
 
-            (o as any).canvas.style.left = XY.x + params.d.minx + "px";
-            (o as any).canvas.style.top = XY.y + params.d.miny + "px"
+            ;(o as any).canvas.style.left = XY.x + params.d.minx + "px"
+            ;(o as any).canvas.style.top = XY.y + params.d.miny + "px"
 
         } else if (isSVGElementOverlay(o)) {
 
@@ -1581,7 +1586,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param paintStyle
      * @param absolutePosition
      */
-    drawOverlay(o: Overlay, component: any, paintStyle: PaintStyle, absolutePosition?: PointXY): any {
+    drawOverlay(o: Overlay, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any {
         if (isLabelOverlay(o) || isCustomOverlay(o)) {
 
             //  TO DO - move to a static method, or a shared method, etc.  (? future me doesnt know what that means.)
@@ -1604,7 +1609,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
                         loc = parseInt("" + o.location, 10)
                         absolute = true
                     }
-                    cxy = (<any>component).pointOnPath(loc as number, absolute);  // a connection
+                    cxy = pointOnComponentPath(component as unknown as ConnectorBase, loc as number, absolute);  // a connection
                 }
 
                 let minx = cxy.x - (td.w / 2),
@@ -1663,9 +1668,9 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      */
     setHover(component: Component, hover: boolean): void {
         component._hover = hover
-        if (component instanceof Endpoint && (component as Endpoint).endpoint != null) {
+        if (Endpoints.isEndpoint(component) && component.representation != null) {
             this.setEndpointHover((component as Endpoint), hover, -1)
-        } else if (component instanceof Connection && (component as Connection).connector != null) {
+        } else if (Connections.isConnection(component) && component.connector != null) {
             this.setConnectorHover((component as Connection).connector, hover)
         }
     }
@@ -1678,7 +1683,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param paintStyle
      * @param extents
      */
-    paintConnector(connector:AbstractConnector, paintStyle:PaintStyle, extents?:Extents):void {
+    paintConnector(connector:ConnectorBase, paintStyle:PaintStyle, extents?:Extents):void {
         paintSvgConnector(this, connector, paintStyle, extents)
     }
 
@@ -1688,7 +1693,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param hover
      * @param sourceEndpoint
      */
-    setConnectorHover(connector:AbstractConnector, hover:boolean, sourceEndpoint?:Endpoint):void {
+    setConnectorHover(connector:ConnectorBase, hover:boolean, sourceEndpoint?:Endpoint):void {
         if (hover === false || (!this.currentlyDragging && !this.isHoverSuspended())) {
 
             const canvas = (connector as any).canvas
@@ -1740,7 +1745,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param connector
      * @param clazz
      */
-    addConnectorClass(connector:AbstractConnector, clazz:string):void {
+    addConnectorClass(connector:ConnectorBase, clazz:string):void {
         if ((connector as any).canvas) {
             this.addClass((connector as any).canvas, clazz)
         }
@@ -1751,7 +1756,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param connector
      * @param clazz
      */
-    removeConnectorClass(connector:AbstractConnector, clazz:string):void {
+    removeConnectorClass(connector:ConnectorBase, clazz:string):void {
         if ((connector as any).canvas) {
             this.removeClass((connector as any).canvas, clazz)
         }
@@ -1761,7 +1766,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @internal
      * @param connector
      */
-    getConnectorClass(connector: AbstractConnector): string {
+    getConnectorClass(connector: ConnectorBase): string {
         if ((connector as any).canvas) {
             return (connector as any).canvas.className.baseVal
         } else {
@@ -1774,7 +1779,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param connector
      * @param v
      */
-    setConnectorVisible(connector:AbstractConnector, v:boolean):void {
+    setConnectorVisible(connector:ConnectorBase, v:boolean):void {
         setVisible(connector as any, v)
     }
 
@@ -1783,7 +1788,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param connector
      * @param t
      */
-    applyConnectorType(connector:AbstractConnector, t:TypeDescriptor):void {
+    applyConnectorType(connector:ConnectorBase, t:TypeDescriptor):void {
         if ((connector as any).canvas && t.cssClass) {
             const classes = Array.isArray(t.cssClass) ? t.cssClass as Array<string> : [ t.cssClass ]
             this.addClass((connector as any).canvas, classes.join(" "))
@@ -1796,7 +1801,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param c
      */
     addEndpointClass(ep: Endpoint, c: string): void {
-        const canvas = getEndpointCanvas(ep.endpoint)
+        const canvas = getEndpointCanvas(ep.representation)
         if (canvas != null) {
             this.addClass(canvas, c)
         }
@@ -1809,7 +1814,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      */
     applyEndpointType<C>(ep: Endpoint, t: TypeDescriptor): void {
         if(t.cssClass) {
-            const canvas = getEndpointCanvas(ep.endpoint)
+            const canvas = getEndpointCanvas(ep.representation)
             if (canvas) {
                 const classes = Array.isArray(t.cssClass) ? t.cssClass as Array<string> : [t.cssClass]
                 this.addClass(canvas, classes.join(" "))
@@ -1824,7 +1829,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
     destroyEndpoint(ep: Endpoint): void {
         let anchorClass = this.endpointAnchorClassPrefix + (ep.currentAnchorClass ? "-" + ep.currentAnchorClass : "")
         this.removeClass(ep.element, anchorClass)
-        cleanup(ep.endpoint as any)
+        cleanup(ep.representation as any)
     }
 
     /**
@@ -1833,11 +1838,11 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param paintStyle
      */
     renderEndpoint(ep: Endpoint, paintStyle: PaintStyle): void {
-        const renderer = endpointMap[ep.endpoint.type]
+        const renderer = endpointMap[ep.representation.type]
         if (renderer != null) {
-            SvgEndpoint.paint(ep.endpoint, renderer, paintStyle)
+            SvgEndpoint.paint(ep.representation, renderer, paintStyle)
         } else {
-            log("jsPlumb: no endpoint renderer found for type [" + ep.endpoint.type + "]")
+            log("jsPlumb: no endpoint renderer found for type [" + ep.representation.type + "]")
         }
     }
 
@@ -1847,7 +1852,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param c
      */
     removeEndpointClass(ep: Endpoint, c: string): void {
-        const canvas = getEndpointCanvas(ep.endpoint)
+        const canvas = getEndpointCanvas(ep.representation)
         if (canvas != null) {
             this.removeClass(canvas, c)
         }
@@ -1858,7 +1863,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param ep
      */
     getEndpointClass(ep: Endpoint): string {
-        const canvas = getEndpointCanvas(ep.endpoint)
+        const canvas = getEndpointCanvas(ep.representation)
         if (canvas != null) {
             return canvas.className
         } else {
@@ -1878,7 +1883,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
 
         if (endpoint != null && (hover === false || (!this.currentlyDragging && !this.isHoverSuspended()))) {
 
-            const canvas = getEndpointCanvas(endpoint.endpoint)
+            const canvas = getEndpointCanvas(endpoint.representation)
 
             if (canvas != null) {
                 if (endpoint.hoverClass != null) {
@@ -1921,7 +1926,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param v
      */
     setEndpointVisible(ep: Endpoint, v: boolean): void {
-        setVisible(ep.endpoint as any, v)
+        setVisible(ep.representation as any, v)
     }
 
     /**

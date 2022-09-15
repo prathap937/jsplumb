@@ -6,12 +6,12 @@ import { Connection } from "./connector/connection-impl"
  * @public
  */
 export interface ConnectionEstablishedParams<E = any> {
-    connection:Connection<E>
+    connection:Connection
     source:E
-    sourceEndpoint:Endpoint<E>
+    sourceEndpoint:Endpoint
     sourceId:string
     target:E
-    targetEndpoint:Endpoint<E>
+    targetEndpoint:Endpoint
     targetId:string
 }
 
@@ -32,8 +32,8 @@ export interface ConnectionMovedParams<E = any>  {
     newSourceId:string
     originalTargetId:string
     newTargetId:string
-    originalEndpoint:Endpoint<E>
-    newEndpoint:Endpoint<E>
+    originalEndpoint:Endpoint
+    newEndpoint:Endpoint
 }
 
 /**

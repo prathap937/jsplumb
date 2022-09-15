@@ -13,6 +13,8 @@ import { WILDCARD } from "@jsplumb/common"
 import {Connection} from "../connector/connection-impl"
 import {ConnectionSelection} from "../selection/connection-selection"
 import {SELECTOR_MANAGED_ELEMENT} from "../constants"
+import { Endpoints} from '../endpoint/endpoints'
+import { Connections } from '../connector/connections'
 
 interface GroupMemberEventParams<E> {
     el:jsPlumbElement<E>,
@@ -533,7 +535,7 @@ export class GroupManager<E> {
                         _collapseSet(group.connections.target, 1)
 
                         // hide internal connections - the group is collapsed
-                        forEach(group.connections.internal,(c:Connection) => c.setVisible(false))
+                        forEach(group.connections.internal,(c:Connection) => Connections.setVisible(c, false))
 
                         // collapse child groups
                         forEach(group.getGroups(), (g) => _expandNestedGroup(g, true))
@@ -614,13 +616,13 @@ export class GroupManager<E> {
                     const handleDroppedConnections = (list:ConnectionSelection, index:number) => {
                         const oidx = index === 0 ? 1 : 0
                         list.each( (c:Connection) => {
-                            c.setVisible(false)
+                            Connections.setVisible(c, false)
                             if (c.endpoints[oidx].element._jsPlumbGroup === actualGroup) {
-                                c.endpoints[oidx].setVisible(false)
+                                Endpoints.setVisible(c.endpoints[oidx], false)
                                 this._expandConnection(c, oidx, actualGroup)
                             }
                             else {
-                                c.endpoints[index].setVisible(false)
+                                Endpoints.setVisible(c.endpoints[index], false)
                                 this._collapseConnection(c, index, actualGroup)
                             }
                         })
@@ -631,7 +633,6 @@ export class GroupManager<E> {
                         handleDroppedConnections(this.instance.select({target: el}), 1)
                     }
 
-                    let elId = this.instance.getId(el)
                     let newPosition = { x: elpos.x - cpos.x, y: elpos.y - cpos.y }
 
                     this.instance.setPosition(el, newPosition)

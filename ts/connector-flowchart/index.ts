@@ -5,9 +5,9 @@
  * @packageDocumentation
  */
 
-import {FlowchartConnector} from "./flowchart-connector"
 import {Connectors} from "@jsplumb/core"
+import {CONNECTOR_TYPE_FLOWCHART, FlowchartConnectorHandler} from "./flowchart-connector"
 
 export * from "./flowchart-connector"
 
-Connectors.register(FlowchartConnector.type, FlowchartConnector)
+Connectors.register(CONNECTOR_TYPE_FLOWCHART, FlowchartConnectorHandler)

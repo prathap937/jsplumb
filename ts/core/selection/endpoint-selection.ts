@@ -1,5 +1,6 @@
 import {SelectionBase} from './common'
 import { Endpoint} from '../endpoint/endpoint'
+import { Endpoints} from '../endpoint/endpoints'
 import {AnchorSpec} from "@jsplumb/common"
 
 export class EndpointSelection extends SelectionBase<Endpoint> {
@@ -9,12 +10,12 @@ export class EndpointSelection extends SelectionBase<Endpoint> {
         return this
     }
     setAnchor(a:AnchorSpec):EndpointSelection {
-        this.each((ep:Endpoint) => ep.setAnchor(a))
+        this.each((ep:Endpoint) => Endpoints.setAnchor(ep, a))
         return this
     }
 
     deleteEveryConnection():EndpointSelection {
-        this.each((ep:Endpoint) => ep.deleteEveryConnection())
+        this.each((ep:Endpoint) => Endpoints.deleteEveryConnection(ep))
         return this
     }
 

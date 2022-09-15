@@ -134,7 +134,7 @@ var testSuite = function () {
         support.assertManagedConnectionCount(d1, 1)
         support.assertManagedConnectionCount(d2, 1)
 
-         ok(e1.isFull(), "endpoint 1 is full");
+         ok(jsPlumb.Endpoints.isFull(e1), "endpoint 1 is full");
 
         support.detachConnection(e1, 0);
         equal(_jsPlumb.select().length, 0, "zero connections after detach");
@@ -718,7 +718,7 @@ var testSuite = function () {
         support.assertManagedConnectionCount(d1, 1)
         support.assertManagedConnectionCount(d2, 1)
 
-        ok(e1.isFull(), "endpoint 1 is full");
+        ok(jsPlumb.Endpoints.isFull(e1), "endpoint 1 is full");
 
         support.detachConnection(e1, 0);
         equal(_jsPlumb.select().length, 0, "zero connections after detach");

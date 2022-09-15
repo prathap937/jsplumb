@@ -1,11 +1,22 @@
-import {AbstractBezierConnector, AbstractBezierOptions} from "./abstract-bezier-connector"
+import {
+    _compute,
+    AbstractBezierOptions, BaseBezierConnectorGeometry, BezierConnectorBase,
+    BezierConnectorGeometry, createBezierConnectorBase
+} from "./abstract-bezier-connector"
 import {
     QuadraticBezierSegmentParams,
     SEGMENT_TYPE_QUADRATIC_BEZIER
 } from "./bezier-segment"
-import {Connection, ConnectorComputeParams, PaintGeometry} from "@jsplumb/core"
-import { AnchorPlacement } from "@jsplumb/common"
-import {PointXY} from "@jsplumb/util"
+import {
+    _addSegment,
+    Connection, ConnectorBase,
+    ConnectorComputeParams,
+    ConnectorHandler,
+    PaintGeometry, setGeometry, transformAnchorPlacement
+} from "@jsplumb/core"
+import {AnchorPlacement} from "@jsplumb/common"
+import {extend, log, PointXY} from "@jsplumb/util"
+
 
 function _segment (x1:number, y1:number, x2:number, y2:number):number {
     if (x1 <= x2 && y2 <= y1) {
@@ -89,110 +100,185 @@ function _findControlPoint (midx:number, midy:number, segment:number, sourceEdge
 
 export interface StateMachineOptions extends AbstractBezierOptions  { }
 
-export class StateMachineConnector extends AbstractBezierConnector {
+function _computeBezier (connector:StateMachineConnector, paintInfo:PaintGeometry, params:ConnectorComputeParams, sp:AnchorPlacement, tp:AnchorPlacement, w:number, h:number):void {
+    let _sx = sp.curX < tp.curX ? 0 : w,
+        _sy = sp.curY < tp.curY ? 0 : h,
+        _tx = sp.curX < tp.curX ? w : 0,
+        _ty = sp.curY < tp.curY ? h : 0
 
-    static type = "StateMachine"
-    type = StateMachineConnector.type
-
-    _controlPoint:PointXY
-
-    constructor(public connection:Connection, params:StateMachineOptions) {
-        super(connection, params)
-
-        this.curviness = params.curviness || 10
-        this.margin = params.margin || 5
-        this.proximityLimit = params.proximityLimit || 80
-        this.clockwise = params.orientation && params.orientation === "clockwise"
+    // now adjust for the margin
+    if (sp.x === 0) {
+        _sx -= connector.margin
+    }
+    if (sp.x === 1) {
+        _sx += connector.margin
+    }
+    if (sp.y === 0) {
+        _sy -= connector.margin
+    }
+    if (sp.y === 1) {
+        _sy += connector.margin
+    }
+    if (tp.x === 0) {
+        _tx -= connector.margin
+    }
+    if (tp.x === 1) {
+        _tx += connector.margin
+    }
+    if (tp.y === 0) {
+        _ty -= connector.margin
+    }
+    if (tp.y === 1) {
+        _ty += connector.margin
     }
 
-    _computeBezier (paintInfo:PaintGeometry, params:ConnectorComputeParams, sp:AnchorPlacement, tp:AnchorPlacement, w:number, h:number):void {
-        let _sx = sp.curX < tp.curX ? 0 : w,
-            _sy = sp.curY < tp.curY ? 0 : h,
-            _tx = sp.curX < tp.curX ? w : 0,
-            _ty = sp.curY < tp.curY ? h : 0
+    //
+    // these connectors are quadratic bezier curves, having a single control point. if both anchors
+    // are located at 0.5 on their respective faces, the control point is set to the midpoint and you
+    // get a straight line.  this is also the case if the two anchors are within 'proximityLimit', since
+    // it seems to make good aesthetic sense to do that. outside of that, the control point is positioned
+    // at 'curviness' pixels away along the normal to the straight line connecting the two anchors.
+    //
+    // there may be two improvements to this.  firstly, we might actually support the notion of avoiding nodes
+    // in the UI, or at least making a good effort at doing so.  if a connection would pass underneath some node,
+    // for example, we might increase the distance the control point is away from the midpoint in a bid to
+    // steer it around that node.  this will work within limits, but i think those limits would also be the likely
+    // limits for, once again, aesthetic good sense in the layout of a chart using these connectors.
+    //
+    // the second possible change is actually two possible changes: firstly, it is possible we should gradually
+    // decrease the 'curviness' as the distance between the anchors decreases; start tailing it off to 0 at some
+    // point (which should be configurable).  secondly, we might slightly increase the 'curviness' for connectors
+    // with respect to how far their anchor is from the center of its respective face. this could either look cool,
+    // or stupid, and may indeed work only in a way that is so subtle as to have been a waste of time.
+    //
 
-        // now adjust for the margin
-        if (sp.x === 0) {
-            _sx -= this.margin
-        }
-        if (sp.x === 1) {
-            _sx += this.margin
-        }
-        if (sp.y === 0) {
-            _sy -= this.margin
-        }
-        if (sp.y === 1) {
-            _sy += this.margin
-        }
-        if (tp.x === 0) {
-            _tx -= this.margin
-        }
-        if (tp.x === 1) {
-            _tx += this.margin
-        }
-        if (tp.y === 0) {
-            _ty -= this.margin
-        }
-        if (tp.y === 1) {
-            _ty += this.margin
-        }
+    if (connector.edited !== true) {
 
-        //
-        // these connectors are quadratic bezier curves, having a single control point. if both anchors
-        // are located at 0.5 on their respective faces, the control point is set to the midpoint and you
-        // get a straight line.  this is also the case if the two anchors are within 'proximityLimit', since
-        // it seems to make good aesthetic sense to do that. outside of that, the control point is positioned
-        // at 'curviness' pixels away along the normal to the straight line connecting the two anchors.
-        //
-        // there may be two improvements to this.  firstly, we might actually support the notion of avoiding nodes
-        // in the UI, or at least making a good effort at doing so.  if a connection would pass underneath some node,
-        // for example, we might increase the distance the control point is away from the midpoint in a bid to
-        // steer it around that node.  this will work within limits, but i think those limits would also be the likely
-        // limits for, once again, aesthetic good sense in the layout of a chart using these connectors.
-        //
-        // the second possible change is actually two possible changes: firstly, it is possible we should gradually
-        // decrease the 'curviness' as the distance between the anchors decreases; start tailing it off to 0 at some
-        // point (which should be configurable).  secondly, we might slightly increase the 'curviness' for connectors
-        // with respect to how far their anchor is from the center of its respective face. this could either look cool,
-        // or stupid, and may indeed work only in a way that is so subtle as to have been a waste of time.
-        //
+        let _midx = (_sx + _tx) / 2,
+            _midy = (_sy + _ty) / 2,
+            segment = _segment(_sx, _sy, _tx, _ty),
+            distance = Math.sqrt(Math.pow(_tx - _sx, 2) + Math.pow(_ty - _sy, 2))
 
-        if (this.edited !== true) {
-
-            let _midx = (_sx + _tx) / 2,
-                _midy = (_sy + _ty) / 2,
-                segment = _segment(_sx, _sy, _tx, _ty),
-                distance = Math.sqrt(Math.pow(_tx - _sx, 2) + Math.pow(_ty - _sy, 2))
-
-            // calculate the control point.  this code will be where we'll put in a rudimentary element avoidance scheme; it
-            // will work by extending the control point to force the curve to be, um, curvier.
-            this._controlPoint = _findControlPoint(_midx,
-                _midy,
-                segment,
-                params.sourcePos,
-                params.targetPos,
-                this.curviness, this.curviness,
-                distance,
-                this.proximityLimit)
-        } else {
-            this._controlPoint = this.geometry.controlPoints[0]
-        }
-
-        let cpx, cpy
-
-        cpx = this._controlPoint.x
-        cpy = this._controlPoint.y
-
-        this.geometry = {
-            controlPoints:[this._controlPoint, this._controlPoint],
-            source:params.sourcePos,
-            target:params.targetPos
-        }
-
-        this._addSegment<QuadraticBezierSegmentParams>(SEGMENT_TYPE_QUADRATIC_BEZIER, {
-            x1: _tx, y1: _ty, x2: _sx, y2: _sy,
-            cpx: cpx, cpy: cpy
-        })
+        // calculate the control point.  this code will be where we'll put in a rudimentary element avoidance scheme; it
+        // will work by extending the control point to force the curve to be, um, curvier.
+        connector._controlPoint = _findControlPoint(_midx,
+            _midy,
+            segment,
+            params.sourcePos,
+            params.targetPos,
+            connector.curviness, connector.curviness,
+            distance,
+            connector.proximityLimit)
+    } else {
+        connector._controlPoint = connector.geometry.controlPoint
     }
 
+    let cpx, cpy
+
+    cpx = connector._controlPoint.x
+    cpy = connector._controlPoint.y
+
+    connector.geometry = {
+        controlPoint:connector._controlPoint,
+        source:params.sourcePos,
+        target:params.targetPos
+    }
+
+    _addSegment<QuadraticBezierSegmentParams>(connector, SEGMENT_TYPE_QUADRATIC_BEZIER, {
+        x1: _tx, y1: _ty, x2: _sx, y2: _sy,
+        cpx: cpx, cpy: cpy
+    })
 }
+
+export const CONNECTOR_TYPE_STATE_MACHINE = "StateMachine"
+export const CONNECTOR_TYPE_QUADRATIC_BEZIER = "QuadraticBezier"
+
+export interface StateMachineConnector extends BezierConnectorBase {
+    type:typeof CONNECTOR_TYPE_STATE_MACHINE
+    geometry:StateMachineConnectorGeometry
+    _controlPoint:PointXY
+}
+
+/**
+ * The bezier connector's internal representation of a path.
+ * @public
+ */
+export interface StateMachineConnectorGeometry extends BaseBezierConnectorGeometry {
+    controlPoint:PointXY
+}
+
+/**
+ * @internal
+ */
+export const StateMachineConnectorHandler:ConnectorHandler = {
+    _compute(connector: StateMachineConnector, paintInfo: PaintGeometry, p: ConnectorComputeParams): void {
+
+        _compute(connector, paintInfo, p, _computeBezier)
+    },
+    create(connection:Connection, connectorType: string, params: any): StateMachineConnector {
+
+        params = params || {}
+        const base = createBezierConnectorBase(connectorType, connection, params, [0,0])
+        return extend(base as any, {
+            curviness : params.curviness || 10,
+            margin : params.margin || 5,
+            proximityLimit : params.proximityLimit || 80,
+            clockwise : params.orientation && params.orientation === "clockwise"
+        }) as StateMachineConnector
+
+    },
+    exportGeometry(connector: StateMachineConnector): StateMachineConnectorGeometry {
+
+        if (connector.geometry == null) {
+            return null
+        } else {
+            return {
+                controlPoint:extend({} as any, connector.geometry.controlPoint),
+                source:extend({} as any, connector.geometry.source),
+                target:extend({} as any, connector.geometry.target)
+            }
+        }
+    },
+    importGeometry(connector: StateMachineConnector, geometry: StateMachineConnectorGeometry): boolean {
+
+        if (geometry != null) {
+
+            if (geometry.controlPoint == null) {
+                log("jsPlumb StateMachine: cannot import geometry; controlPoint missing")
+                setGeometry(connector, null, true)
+                return false
+            }
+
+            if (geometry.source == null || geometry.source.curX == null || geometry.source.curY == null) {
+                log("jsPlumb StateMachine: cannot import geometry; source missing or malformed")
+                setGeometry(connector, null, true)
+                return false
+            }
+
+            if (geometry.target == null || geometry.target.curX == null || geometry.target.curY == null) {
+                log("jsPlumb StateMachine: cannot import geometry; target missing or malformed")
+                setGeometry(connector, null, true)
+                return false
+            }
+
+            setGeometry(connector, geometry, false)
+            return true
+        } else {
+            return false
+        }
+    },
+    transformGeometry(connector: StateMachineConnector, g: BezierConnectorGeometry, dx: number, dy: number): BezierConnectorGeometry {
+
+        return {
+            controlPoints:[
+                {x:g.controlPoints[0].x + dx,y:g.controlPoints[0].y + dy },
+                {x:g.controlPoints[1].x + dx,y:g.controlPoints[1].y + dy }
+            ],
+            source:transformAnchorPlacement(g.source, dx, dy),
+            target:transformAnchorPlacement(g.target, dx, dy)
+        }
+    },
+    setAnchorOrientation(connector:ConnectorBase, idx:number, orientation:number[]):void {}
+}
+
+

@@ -264,7 +264,7 @@ var testSuite = function () {
         var conn = _jsPlumb.connect({ source: d16, target: d17, connector: "Bezier" });
         assertConnectionByScopeCount(_jsPlumb.defaultScope, 1, _jsPlumb);
         equal(conn.connector.type, "Bezier", "Bezier connector chosen for connection");
-        equal(conn.connector.getCurviness(), 150, "Bezier connector chose 150 curviness");
+        equal(conn.connector.majorAnchor, 150, "Bezier connector chose 150 curviness");
     });
 
     test(": _jsPlumb.connect (Connector test, bezier, curviness as int)", function () {
@@ -272,7 +272,7 @@ var testSuite = function () {
         var conn = _jsPlumb.connect({ source: d16, target: d17, connector: { type:"Bezier", options:{ curviness: 200 }} });
         assertConnectionByScopeCount(_jsPlumb.defaultScope, 1, _jsPlumb);
         equal(conn.connector.type, "Bezier", "Canvas Bezier connector chosen for connection");
-        equal(conn.connector.getCurviness(), 200, "Bezier connector chose 200 curviness");
+        equal(conn.connector.majorAnchor, 200, "Bezier connector chose 200 curviness");
     });
 
     test(": _jsPlumb.connect (Connector test, bezier, curviness as named option)", function () {
@@ -280,7 +280,7 @@ var testSuite = function () {
         var conn = _jsPlumb.connect({ source: d16, target: d17, connector: {type:"Bezier", options:{curviness: 300}} });
         assertConnectionByScopeCount(_jsPlumb.defaultScope, 1, _jsPlumb);
         equal(conn.connector.type, "Bezier", "Bezier connector chosen for connection");
-        equal(conn.connector.getCurviness(), 300, "Bezier connector chose 300 curviness");
+        equal(conn.connector.majorAnchor, 300, "Bezier connector chose 300 curviness");
     });
 
     test(": _jsPlumb.connect (anchors registered correctly; source and target anchors given, as arrays)", function () {
@@ -366,48 +366,48 @@ var testSuite = function () {
         var d16 = support.addDiv("d16"), d17 = support.addDiv("d17");
         var conn = _jsPlumb.connect({ source: d16, target: d17, endpoints: ["Rectangle", "Rectangle"] });
         assertConnectionByScopeCount(_jsPlumb.defaultScope, 1, _jsPlumb);
-        equal(conn.endpoints[0].endpoint.type, "Rectangle", "Rectangle endpoint chosen for connection source");
-        equal(conn.endpoints[1].endpoint.type, "Rectangle", "Rectangle endpoint chosen for connection target");
+        equal(conn.endpoints[0].representation.type, "Rectangle", "Rectangle endpoint chosen for connection source");
+        equal(conn.endpoints[1].representation.type, "Rectangle", "Rectangle endpoint chosen for connection target");
     });
 
     test(": _jsPlumb.connect (Endpoint as string test)", function () {
         var d16 = support.addDiv("d16"), d17 = support.addDiv("d17");
         var conn = _jsPlumb.connect({ source: d16, target: d17, endpoints: ["Rectangle", "Rectangle"] });
         assertConnectionByScopeCount(_jsPlumb.defaultScope, 1, _jsPlumb);
-        equal(conn.endpoints[0].endpoint.type, "Rectangle", "Rectangle endpoint chosen for connection source");
-        equal(conn.endpoints[1].endpoint.type, "Rectangle", "Rectangle endpoint chosen for connection target");
+        equal(conn.endpoints[0].representation.type, "Rectangle", "Rectangle endpoint chosen for connection source");
+        equal(conn.endpoints[1].representation.type, "Rectangle", "Rectangle endpoint chosen for connection target");
     });
 
     test(": _jsPlumb.connect (Endpoints test)", function () {
         var d16 = support.addDiv("d16"), d17 = support.addDiv("d17");
         var conn = _jsPlumb.connect({ source: d16, target: d17, endpoints: ["Rectangle", "Dot" ] });
         assertConnectionByScopeCount(_jsPlumb.defaultScope, 1, _jsPlumb);
-        equal(conn.endpoints[0].endpoint.type, "Rectangle", "Rectangle endpoint chosen for connection source");
-        equal(conn.endpoints[1].endpoint.type, "Dot", "Dot endpoint chosen for connection target");
+        equal(conn.endpoints[0].representation.type, "Rectangle", "Rectangle endpoint chosen for connection source");
+        equal(conn.endpoints[1].representation.type, "Dot", "Dot endpoint chosen for connection target");
     });
 
     test(": _jsPlumb.connect (Blank Endpoint specified via 'endpoint' param)", function () {
         var d16 = support.addDiv("d16"), d17 = support.addDiv("d17");
         var conn = _jsPlumb.connect({ source: d16, target: d17, endpoints: ["Blank", "Blank"] });
         assertConnectionByScopeCount(_jsPlumb.defaultScope, 1, _jsPlumb);
-        equal(conn.endpoints[0].endpoint.type, "Blank", "Blank endpoint chosen for connection source");
-        equal(conn.endpoints[1].endpoint.type, "Blank", "Blank endpoint chosen for connection target");
+        equal(conn.endpoints[0].representation.type, "Blank", "Blank endpoint chosen for connection source");
+        equal(conn.endpoints[1].representation.type, "Blank", "Blank endpoint chosen for connection target");
     });
 
     test(": _jsPlumb.connect (Blank Endpoint specified via 'endpoints' param)", function () {
         var d16 = support.addDiv("d16"), d17 = support.addDiv("d17");
         var conn = _jsPlumb.connect({ source: d16, target: d17, endpoints: ["Blank", "Blank" ] });
         assertConnectionByScopeCount(_jsPlumb.defaultScope, 1, _jsPlumb);
-        equal(conn.endpoints[0].endpoint.type, "Blank", "Blank endpoint chosen for connection source");
-        equal(conn.endpoints[1].endpoint.type, "Blank", "Blank endpoint chosen for connection target");
+        equal(conn.endpoints[0].representation.type, "Blank", "Blank endpoint chosen for connection source");
+        equal(conn.endpoints[1].representation.type, "Blank", "Blank endpoint chosen for connection target");
     });
 
     test(": _jsPlumb.connect (Endpoint as string test)", function () {
         var d16 = support.addDiv("d16"), d17 = support.addDiv("d17");
         var conn = _jsPlumb.connect({ source: d16, target: d17, endpoints: ["Rectangle", "Dot" ] });
         assertConnectionByScopeCount(_jsPlumb.defaultScope, 1, _jsPlumb);
-        equal(conn.endpoints[0].endpoint.type, "Rectangle", "Rectangle endpoint chosen for connection source");
-        equal(conn.endpoints[1].endpoint.type, "Dot", "Dot endpoint chosen for connection target");
+        equal(conn.endpoints[0].representation.type, "Rectangle", "Rectangle endpoint chosen for connection source");
+        equal(conn.endpoints[1].representation.type, "Dot", "Dot endpoint chosen for connection target");
     });
 
     test(": _jsPlumb.connect (by Endpoints, connector test)", function () {
@@ -591,36 +591,36 @@ var testSuite = function () {
     test(" detachable parameter defaults to true on _jsPlumb.connect", function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
-        equal(c.isDetachable(), true, "connections detachable by default");
+        equal(jsPlumb.Connections.isDetachable(c), true, "connections detachable by default");
     });
 
     test(" detachable parameter set to false on _jsPlumb.connect", function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2, detachable: false});
-        equal(c.isDetachable(), false, "connection detachable");
+        equal(jsPlumb.Connections.isDetachable(c), false, "connection detachable");
     });
 
     test(" setDetachable on initially detachable connection", function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
-        equal(c.isDetachable(), true, "connection initially detachable");
-        c.setDetachable(false);
-        equal(c.isDetachable(), false, "connection not detachable");
+        equal(jsPlumb.Connections.isDetachable(c), true, "connection initially detachable");
+        jsPlumb.Connections.setDetachable(c, false);
+        equal(jsPlumb.Connections.isDetachable(c), false, "connection not detachable");
     });
 
     test(" setDetachable on initially not detachable connection", function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2, detachable: false });
-        equal(c.isDetachable(), false, "connection not initially detachable");
-        c.setDetachable(true);
-        equal(c.isDetachable(), true, "connection now detachable");
+        equal(jsPlumb.Connections.isDetachable(c), false, "connection not initially detachable");
+        jsPlumb.Connections.setDetachable(c, true);
+        equal(jsPlumb.Connections.isDetachable(c), true, "connection now detachable");
     });
 
     test(" _jsPlumb.defaults.ConnectionsDetachable", function () {
         _jsPlumb.defaults.connectionsDetachable = false;
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
-        equal(c.isDetachable(), false, "connections not detachable by default (overrode the defaults)");
+        equal(jsPlumb.Connections.isDetachable(c), false, "connections not detachable by default (overrode the defaults)");
         _jsPlumb.defaults.connectionsDetachable = true;
     });
 
@@ -748,7 +748,7 @@ var testSuite = function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
 
-        ok(c.getOverlay("arrow") != null, "Arrow overlay created from defaults");
+        ok(c.overlays["arrow"] != null, "Arrow overlay created from defaults");
     });
 
     test(": _jsPlumb.connect (default overlays + overlays specified in connect call)", function () {
@@ -760,8 +760,8 @@ var testSuite = function () {
                     { type:"Label", options:{id: "label"}}
             ]});
 
-        ok(c.getOverlay("arrow") != null, "Arrow overlay created from defaults");
-        ok(c.getOverlay("label") != null, "Label overlay created from connect call");
+        ok(c.overlays["arrow"] != null, "Arrow overlay created from defaults");
+        ok(c.overlays["label"] != null, "Label overlay created from connect call");
     });
 
     test(": _jsPlumb.connect (default connection overlays)", function () {
@@ -771,7 +771,7 @@ var testSuite = function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
 
-        ok(c.getOverlay("arrow") != null, "Arrow overlay created from defaults");
+        ok(c.overlays["arrow"] != null, "Arrow overlay created from defaults");
     });
 
     test(": _jsPlumb.connect (default connection overlays + overlays specified in connect call)", function () {
@@ -783,8 +783,8 @@ var testSuite = function () {
                     { type:"Label", options:{id: "label"}}
             ]});
 
-        ok(c.getOverlay("arrow") != null, "Arrow overlay created from defaults");
-        ok(c.getOverlay("label") != null, "Label overlay created from connect call");
+        ok(c.overlays["arrow"] != null, "Arrow overlay created from defaults");
+        ok(c.overlays["label"] != null, "Label overlay created from connect call");
     });
 
 
@@ -796,8 +796,8 @@ var testSuite = function () {
                 label: "FOO"
             });
 
-        equal(_length(c.getOverlays()), 1, "one overlay set");
-        equal(c.getLabel(), "FOO", "label is set correctly");
+        equal(_length(c.overlays), 1, "one overlay set");
+        equal(jsPlumb.Components.getLabel(c), "FOO", "label is set correctly");
     });
 
     test(": _jsPlumb.connect (set label after construction, with string)", function () {
@@ -806,8 +806,8 @@ var testSuite = function () {
                 source: d1,
                 target: d2});
 
-        c.setLabel("FOO");
-        equal(c.getLabel(), "FOO", "label is set correctly");
+        jsPlumb.Components.setLabel(c, "FOO");
+        equal(jsPlumb.Components.getLabel(c), "FOO", "label is set correctly");
     });
 
     test(": _jsPlumb.connect (set label after construction, with function)", function () {
@@ -816,10 +816,10 @@ var testSuite = function () {
                 source: d1,
                 target: d2});
 
-        c.setLabel(function () {
+        jsPlumb.Components.setLabel(c, function () {
             return "BAR";
         });
-        equal(c.getLabel(), "BAR", "label is set correctly");
+        equal(jsPlumb.Components.getLabel(c), "BAR", "label is set correctly");
     });
 
     test(": _jsPlumb.connect (set label after construction, with params object)", function () {
@@ -828,12 +828,12 @@ var testSuite = function () {
                 source: d1,
                 target: d2});
 
-        c.setLabel({
+        jsPlumb.Components.setLabel(c, {
             label: "BAZ",
             cssClass: "CLASSY",
             location: 0.9
         });
-        var lo = c.getLabelOverlay();
+        var lo = jsPlumb.Components.getLabelOverlay(c);
         ok(lo != null, "label overlay exists");
         equal(lo.getLabel(), "BAZ", "label overlay has correct value");
         equal(lo.location, 0.9, "label overlay has correct location");
@@ -848,10 +848,10 @@ var testSuite = function () {
                 labelLocation: 0.2
             });
 
-        var lo = c.getLabelOverlay();
+        var lo = jsPlumb.Components.getLabelOverlay(c);
         equal(lo.location, 0.2, "label overlay has correct location");
 
-        c.setLabel({
+        jsPlumb.Components.setLabel(c, {
             label: "BAZ",
             cssClass: "CLARS",
             location: 0.9
@@ -869,7 +869,7 @@ var testSuite = function () {
                 target: d2,
                 label: "FOO"
             }),
-            lo = c.getLabelOverlay();
+            lo = jsPlumb.Components.getLabelOverlay(c);
 
         ok(lo != null, "label overlay exists");
         equal(lo.getLabel(), "FOO", "label overlay has correct value");
@@ -884,7 +884,7 @@ var testSuite = function () {
                 label: "FOO",
                 labelLocation: 0.2
             }),
-            lo = c.getLabelOverlay();
+            lo = jsPlumb.Components.getLabelOverlay(c);
 
         ok(lo != null, "label overlay exists");
         equal(lo.getLabel(), "FOO", "label overlay has correct value");
@@ -973,12 +973,12 @@ var testSuite = function () {
         });
         equal(2, _length(connection1.overlays));
 
-        var labelOverlay = connection1.getOverlay("aLabel");
-        var arrowOverlay = connection1.getOverlay("anArrow");
+        var labelOverlay = connection1.overlays["aLabel"];
+        var arrowOverlay = connection1.overlays["anArrow"];
 
         ok(labelOverlay.canvas != null, "the label overlay has a canvas");
 
-        connection1.removeOverlay("aLabel");
+        jsPlumb.Components.removeOverlay(connection1, "aLabel");
 
         equal(null, connection1.overlays["aLabel"], "not registered in overlays map");
         equal(null, connection1.overlayPositions["aLabel"], "not registered in overlay positions map");
@@ -992,7 +992,7 @@ var testSuite = function () {
         // remove the arrow
         var arrowElement = arrowOverlay.path;
         ok(arrowElement.parentNode != null, "arrow element is in the DOM");
-        connection1.removeOverlay("anArrow");
+        jsPlumb.Components.removeOverlay(connection1, "anArrow");
 
         equal(null, connection1.overlays["anArrow"], "anArrow not registered in overlays map");
         equal(null, connection1.overlayPositions["anArrow"], "anArrow not registered in overlay positions map");
@@ -1025,7 +1025,7 @@ var testSuite = function () {
             ]
         });
         equal(2, _length(connection1.overlays));
-        connection1.removeOverlays("aLabel", "anArrow");
+        jsPlumb.Components.removeOverlays(connection1, "aLabel", "anArrow");
         equal(0, _length(connection1.overlays));
     });
 
@@ -1107,7 +1107,7 @@ var testSuite = function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
 
-        var o = c.getOverlay("custom");
+        var o = c.overlays["custom"];
         equal(o.canvas.getAttribute("custom"), "true", "custom overlay created correctly");
         equal(o.canvas.innerHTML, c.id, "custom overlay has correct value");
     });
@@ -1128,7 +1128,7 @@ var testSuite = function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
 
-        var o = c.getOverlay("custom");
+        var o = c.overlays["custom"];
         equal(o.canvas.getAttribute("custom"), "true", "custom overlay created correctly");
         equal(o.canvas.innerHTML, c.id, "custom overlay has correct value");
     });

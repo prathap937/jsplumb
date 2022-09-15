@@ -5,7 +5,12 @@ import {JsPlumbInstance} from "../core"
 
 import {Component} from '../component/component'
 import { OverlayFactory } from '../factory/overlay-factory'
-import {AbstractConnector} from "../connector/abstract-connector"
+import {
+    ConnectorBase,
+    pointAlongComponentPathFrom,
+    pointOnComponentPath,
+    TYPE_DESCRIPTOR_CONNECTOR
+} from "../connector/abstract-connector"
 import { PaintStyle, ArrowOverlayOptions } from '@jsplumb/common'
 
 const DEFAULT_WIDTH = 20
@@ -43,20 +48,20 @@ export class ArrowOverlay extends Overlay {
 
     draw(component:Component, currentConnectionPaintStyle:PaintStyle, absolutePosition?: PointXY): any {
 
-        if (component instanceof AbstractConnector) {
+        //if (component._typeDescriptor === TYPE_DESCRIPTOR_CONNECTOR) {
 
-            let connector = component as AbstractConnector
+            let connector = component as unknown as ConnectorBase
 
             let hxy, mid, txy, tail, cxy
 
             if (this.location > 1 || this.location < 0) {
                 let fromLoc = this.location < 0 ? 1 : 0
-                hxy = connector.pointAlongPathFrom(fromLoc, this.location, false)
-                mid = connector.pointAlongPathFrom(fromLoc, this.location - (this.direction * this.length / 2), false)
+                hxy = pointAlongComponentPathFrom(connector, fromLoc, this.location, false)
+                mid = pointAlongComponentPathFrom(connector, fromLoc, this.location - (this.direction * this.length / 2), false)
                 txy = pointOnLine(hxy, mid, this.length)
             } else if (this.location === 1) {
-                hxy = connector.pointOnPath(this.location)
-                mid = connector.pointAlongPathFrom(this.location, -(this.length))
+                hxy = pointOnComponentPath(connector, this.location)
+                mid = pointAlongComponentPathFrom(connector, this.location, -(this.length))
                 txy = pointOnLine(hxy, mid, this.length)
 
                 if (this.direction === -1) {
@@ -65,8 +70,8 @@ export class ArrowOverlay extends Overlay {
                     hxy = _
                 }
             } else if (this.location === 0) {
-                txy = connector.pointOnPath(this.location)
-                mid = connector.pointAlongPathFrom(this.location, this.length)
+                txy = pointOnComponentPath(connector, this.location)
+                mid = pointAlongComponentPathFrom(connector, this.location, this.length)
                 hxy = pointOnLine(txy, mid, this.length)
                 if (this.direction === -1) {
                     const __ = txy
@@ -74,8 +79,8 @@ export class ArrowOverlay extends Overlay {
                     hxy = __
                 }
             } else {
-                hxy = connector.pointAlongPathFrom(this.location, this.direction * this.length / 2)
-                mid = connector.pointOnPath(this.location)
+                hxy = pointAlongComponentPathFrom(connector, this.location, this.direction * this.length / 2)
+                mid = pointOnComponentPath(connector, this.location)
                 txy = pointOnLine(hxy, mid, this.length)
             }
 
@@ -98,7 +103,7 @@ export class ArrowOverlay extends Overlay {
                 ymin: Math.min(hxy.y, tail[0].y, tail[1].y),
                 ymax: Math.max(hxy.y, tail[0].y, tail[1].y)
             }
-        }
+        //}
     }
 
     updateFrom(d: any): void { }

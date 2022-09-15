@@ -1,5 +1,6 @@
 
 import {Endpoint} from "../endpoint/endpoint"
+import { Endpoints } from "../endpoint/endpoints"
 import {
     AnchorComputeParams,
     AnchorOrientationHint,
@@ -33,6 +34,7 @@ import {
 import {ViewportElement} from "../viewport"
 import {AnchorPlacement, AnchorSpec} from "@jsplumb/common"
 import {SOURCE, TARGET} from "../constants"
+import {compute, resetBounds} from "../connector/abstract-connector"
 
 
 // -------------------- internal data structures --------------------------------------
@@ -134,7 +136,7 @@ export class LightweightRouter<T extends {E:unknown}> implements Router<T, Light
             }
         })
 
-        instance.bind<Endpoint<T["E"]>>(Constants.EVENT_INTERNAL_ENDPOINT_UNREGISTERED, (ep:Endpoint<T["E"]>) => {
+        instance.bind<Endpoint>(Constants.EVENT_INTERNAL_ENDPOINT_UNREGISTERED, (ep:Endpoint) => {
             this._removeEndpointFromAnchorLists(ep)
         })
     }
@@ -271,7 +273,7 @@ export class LightweightRouter<T extends {E:unknown}> implements Router<T, Light
 
             if(newIdx !== currentIdx) {
                 anchor.cssClass = newLoc.cls || anchor.cssClass
-                params.element._anchorLocationChanged(anchor)
+                Endpoints._anchorLocationChanged(params.element, anchor)
             }
             pos = this._computeSingleLocation(newLoc, xy, wh, params)
         }
@@ -427,9 +429,9 @@ export class LightweightRouter<T extends {E:unknown}> implements Router<T, Light
                 rotation:this.instance._getRotations(connection.targetId)
             })
 
-        connection.connector.resetBounds()
+        resetBounds(connection.connector)
 
-        connection.connector.compute({
+        compute(connection.connector, {
             sourcePos: sAnchorP,
             targetPos: tAnchorP,
             sourceEndpoint: connection.endpoints[0],
@@ -440,7 +442,7 @@ export class LightweightRouter<T extends {E:unknown}> implements Router<T, Light
         })
     }
 
-    getEndpointLocation(endpoint: Endpoint<any>, params: AnchorComputeParams): AnchorPlacement {
+    getEndpointLocation(endpoint: Endpoint, params: AnchorComputeParams): AnchorPlacement {
         params = params || {}
         const anchor = endpoint._anchor
         let pos = this.anchorLocations.get(anchor.id)
@@ -451,7 +453,7 @@ export class LightweightRouter<T extends {E:unknown}> implements Router<T, Light
         return pos
     }
 
-    getEndpointOrientation(ep: Endpoint<any>): Orientation {
+    getEndpointOrientation(ep: Endpoint): Orientation {
         return ep._anchor ? this.getAnchorOrientation(ep._anchor) : [0,0]
     }
 
@@ -465,11 +467,11 @@ export class LightweightRouter<T extends {E:unknown}> implements Router<T, Light
 
     // TODO this method should not need to be called. for now, a placeholder implementation, which
     // returns whether or not the endpoint is not continuous and has more than one placement
-    isDynamicAnchor(ep: Endpoint<any>): boolean {
+    isDynamicAnchor(ep: Endpoint): boolean {
         return ep._anchor ? !isContinuous(ep._anchor) && ep._anchor.locations.length > 1 : false
     }
 
-    isFloating(ep: Endpoint<any>): boolean {
+    isFloating(ep: Endpoint): boolean {
         return ep._anchor ? isFloating(ep._anchor) : false
     }
 
@@ -641,7 +643,7 @@ export class LightweightRouter<T extends {E:unknown}> implements Router<T, Light
         this.anchorLists.clear()
     }
 
-    setAnchor(endpoint: Endpoint<any>, anchor: LightweightAnchor): void {
+    setAnchor(endpoint: Endpoint, anchor: LightweightAnchor): void {
         if(anchor != null) {
             endpoint._anchor = anchor
         }

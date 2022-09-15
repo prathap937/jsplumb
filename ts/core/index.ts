@@ -11,7 +11,7 @@ import {RectangleEndpointHandler} from "./endpoint/rectangle-endpoint"
 
 import {StraightConnector} from "./connector/straight-connector"
 
-import { Connectors } from './connector/connectors'
+// import { Connectors } from './connector/connectors'
 import {EndpointFactory} from "./factory/endpoint-factory"
 
 export * from "./constants"
@@ -33,10 +33,9 @@ export * from "./connector/arc-segment"
 export * from "./connector/connection-impl"
 export * from "./connector/connectors"
 export * from "./connector/straight-segment"
-
 export * from './connector/straight-connector'
-
 export * from './connector/segments'
+export * from './connector/connections'
 
 export * from "./selection/connection-selection"
 
@@ -69,6 +68,6 @@ EndpointFactory.registerHandler(DotEndpointHandler)
 EndpointFactory.registerHandler(RectangleEndpointHandler)
 EndpointFactory.registerHandler(BlankEndpointHandler)
 
-Connectors.register(StraightConnector.type, StraightConnector)
+// Connectors.register(StraightConnector.type, StraightConnector)
 
 

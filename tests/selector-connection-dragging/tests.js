@@ -722,7 +722,7 @@ var testSuite = function () {
         ok(elDragged === false, "element was not dragged")
         equal(1, _jsPlumb.select().length, "one connection in the instance")
 
-        equal(c.getData().fooAttribute, "the value of foo", "attribute values extracted properly");
+        equal(c.data.fooAttribute, "the value of foo", "attribute values extracted properly");
 
         equal(c.endpoints[0].parameters["fooAttribute"], "the value of foo", "attribute values extracted and set as parameters on Endpoint");
     });
@@ -762,7 +762,7 @@ var testSuite = function () {
         ok(elDragged === false, "element was not dragged")
         equal(1, _jsPlumb.select().length, "one connection in the instance")
 
-        equal(c.getData().fooAttribute, "the value of foo", "attribute values extracted properly");
+        equal(c.data.fooAttribute, "the value of foo", "attribute values extracted properly");
 
         equal(c.endpoints[0].parameters["fooAttribute"], "the value of foo", "attribute values extracted and set as parameters on source Endpoint");
         equal(c.endpoints[1].parameters["fooAttribute"], "the value of foo target", "attribute values extracted and set as parameters on target Endpoint");

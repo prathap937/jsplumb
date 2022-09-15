@@ -1,6 +1,6 @@
 
 import { _attr, _node, _appendAtIndex, ELEMENT_PATH } from './svg-util'
-import {Component, Connection, Endpoint, Overlay} from "@jsplumb/core"
+import {Connections, Endpoints, Component, Connection, Endpoint, Overlay} from "@jsplumb/core"
 import { PaintStyle } from "@jsplumb/common"
 import {extend, Extents} from "@jsplumb/util"
 
@@ -23,11 +23,11 @@ export function ensureSVGOverlayPath(o:SVGElementOverlay):SVGElement {
 
     let parent:SVGElement = o.path.parentNode as unknown as any
     if (parent == null) {
-        if (o.component instanceof Connection) {
+        if (Connections.isConnection(o.component)) {
             let connector = (o.component as Connection).connector
             parent = connector != null ? (connector as any).canvas : null
-        } else if (o.component instanceof Endpoint) {
-            let endpoint = (o.component as Endpoint).endpoint
+        } else if (Endpoints.isEndpoint(o.component)) {
+            let endpoint = (o.component as Endpoint).representation
             parent = endpoint != null ? (endpoint as any).canvas : endpoint
         }
 

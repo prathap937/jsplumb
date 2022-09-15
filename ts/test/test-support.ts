@@ -290,7 +290,7 @@ export class BrowserUITestSupport {
      * @param events Map of event handlers for injecting tests into the lifecycle.
      * @public
      */
-    dragConnection (d1:Element|Endpoint, d2:Element|Endpoint, mouseUpOnTarget?:boolean, events?:EventHandlers<Connection>):Connection {
+    dragConnection (d1:Element|Endpoint, d2:Element|Endpoint, mouseUpOnTarget?:boolean, events?:EventHandlers<Connection<any>>):Connection<any> {
         const el1 = this.getCanvas(d1), el2 = this.getCanvas(d2);
         const e1 = this.makeEvent(el1), e2 = this.makeEvent(el2);
         events = events || {}
@@ -318,7 +318,7 @@ export class BrowserUITestSupport {
      * @param events Map of event handlers for injecting tests into the lifecycle.
      * @public
      */
-    aSyncDragConnection (d1:Element|Endpoint, d2:Element|Endpoint, events?:EventHandlers<Connection>) {
+    aSyncDragConnection (d1:Element|Endpoint, d2:Element|Endpoint, events?:EventHandlers<Connection<any>>) {
         events = events || {}
         const el1 = this.getCanvas(d1), el2 = this.getCanvas(d2);
         const e1 = this.makeEvent(el1), e2 = this.makeEvent(el2);
@@ -409,7 +409,7 @@ export class BrowserUITestSupport {
      * @param events Map of event handlers for injecting tests into the lifecycle.
      * @public
      */
-    detachConnectionByTarget (c:Connection, events?:EventHandlers) {
+    detachConnectionByTarget (c:Connection<any>, events?:EventHandlers) {
         this.detachConnection(c.endpoints[1], events)
     }
 
@@ -420,7 +420,7 @@ export class BrowserUITestSupport {
      * @param events Optional map of event handlers, allowing you to inject tests at various phases in the lifecycle
      * @public
      */
-    relocateTarget (conn:Connection, newEl:Element, events?:EventHandlers) {
+    relocateTarget (conn:Connection<any>, newEl:Element, events?:EventHandlers) {
         this.relocate(conn, 1, newEl, events)
     }
 
@@ -432,7 +432,7 @@ export class BrowserUITestSupport {
      * @param events Optional map of event handlers, allowing you to inject tests at various phases in the lifecycle
      * @public
      */
-    relocate (conn:Connection, idx:number, newEl:Element, events?:EventHandlers) {
+    relocate (conn:Connection<any>, idx:number, newEl:Element, events?:EventHandlers) {
         events = events || {}
 
         // allow Endpoints to be passed in
@@ -460,7 +460,7 @@ export class BrowserUITestSupport {
      * @param events Optional map of event handlers, allowing you to inject tests at various phases in the lifecycle
      * @public
      */
-    relocateSource (conn:Connection, newEl:Element, events?:EventHandlers) {
+    relocateSource (conn:Connection<any>, newEl:Element, events?:EventHandlers) {
         this.relocate(conn, 0, newEl, events)
     }
 
@@ -491,7 +491,7 @@ export class BrowserUITestSupport {
      * @public
      */
     getCanvas (epOrEl:any) {
-        if (epOrEl.endpoint) {
+        if (epOrEl.representation) {
             return this.getEndpointCanvas(epOrEl);
         } else {
             return epOrEl;
@@ -504,7 +504,7 @@ export class BrowserUITestSupport {
      * @public
      */
     getEndpointCanvas (ep:Endpoint):HTMLElement {
-        return (ep as any).endpoint.canvas;
+        return (ep.representation as any).canvas;
     }
 
     /**
@@ -512,7 +512,7 @@ export class BrowserUITestSupport {
      * @param c
      * @public
      */
-    getConnectionCanvas (c:Connection):HTMLElement {
+    getConnectionCanvas (c:Connection<any>):HTMLElement {
         return (c as any).connector.canvas;
     }
 
@@ -591,7 +591,7 @@ export class BrowserUITestSupport {
      * @param events
      * @public
      */
-    fireEventOnConnection (connection:Connection, ...events:Array<string>) {
+    fireEventOnConnection (connection:Connection<any>, ...events:Array<string>) {
         const canvas = this.getConnectionCanvas(connection)
         this.fireEventOnElement(canvas, ...events)
     }
@@ -601,7 +601,7 @@ export class BrowserUITestSupport {
      * @param connection
      * @public
      */
-    clickOnConnection(connection:Connection) {
+    clickOnConnection(connection:Connection<any>) {
         this.fireEventOnConnection(connection, EVENT_CLICK)
     }
 
@@ -610,7 +610,7 @@ export class BrowserUITestSupport {
      * @param connection
      * @public
      */
-    dblClickOnConnection(connection:Connection) {
+    dblClickOnConnection(connection:Connection<any>) {
         this.fireEventOnConnection(connection, EVENT_DBL_CLICK)
     }
 
@@ -619,7 +619,7 @@ export class BrowserUITestSupport {
      * @param connection
      * @public
      */
-    tapOnConnection(connection:Connection) {
+    tapOnConnection(connection:Connection<any>) {
         this.fireEventOnConnection(connection, EVENT_MOUSEDOWN)
         this.fireEventOnConnection(connection, EVENT_MOUSEUP)
     }
@@ -629,7 +629,7 @@ export class BrowserUITestSupport {
      * @param connection
      * @public
      */
-    dblTapOnConnection(connection:Connection) {
+    dblTapOnConnection(connection:Connection<any>) {
         this.fireEventOnConnection(connection, EVENT_MOUSEDOWN)
         this.fireEventOnConnection(connection, EVENT_MOUSEUP)
         this.fireEventOnConnection(connection, EVENT_MOUSEDOWN)
@@ -695,7 +695,7 @@ export class BrowserUITestSupport {
      * @public
      */
     fireEventOnOverlay (connection:Connection, overlayId:string, event:string) {
-        const overlay = connection.getOverlay(overlayId)
+        const overlay = connection.overlays[overlayId]
         const canvas = this.getOverlayCanvas(overlay)
         this._jsPlumb.trigger(canvas, event)
     }
@@ -706,7 +706,7 @@ export class BrowserUITestSupport {
      * @param overlayId ID of the overlay to fire the event on
      * @public
      */
-    clickOnOverlay(connection:Connection, overlayId:string) {
+    clickOnOverlay(connection:Connection<any>, overlayId:string) {
         this.fireEventOnOverlay(connection, overlayId, EVENT_CLICK)
     }
 
@@ -716,7 +716,7 @@ export class BrowserUITestSupport {
      * @param overlayId ID of the overlay to fire the event on
      * @public
      */
-    dblClickOnOverlay(connection:Connection, overlayId:string) {
+    dblClickOnOverlay(connection:Connection<any>, overlayId:string) {
         this.fireEventOnOverlay(connection, overlayId, EVENT_DBL_CLICK)
     }
 
@@ -726,7 +726,7 @@ export class BrowserUITestSupport {
      * @param overlayId ID of the overlay to fire the event on
      * @public
      */
-    tapOnOverlay(connection:Connection, overlayId:string) {
+    tapOnOverlay(connection:Connection<any>, overlayId:string) {
         this.fireEventOnOverlay(connection, overlayId, EVENT_MOUSEDOWN)
         this.fireEventOnOverlay(connection, overlayId, EVENT_MOUSEUP)
     }
@@ -737,7 +737,7 @@ export class BrowserUITestSupport {
      * @param overlayId ID of the overlay to fire the event on
      * @public
      */
-    dblTapOnOverlay(connection:Connection, overlayId:string) {
+    dblTapOnOverlay(connection:Connection<any>, overlayId:string) {
         this.fireEventOnOverlay(connection, overlayId, EVENT_MOUSEDOWN)
         this.fireEventOnOverlay(connection, overlayId, EVENT_MOUSEUP)
         this.fireEventOnOverlay(connection, overlayId, EVENT_MOUSEDOWN)
