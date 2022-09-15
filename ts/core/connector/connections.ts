@@ -8,8 +8,8 @@ import * as Constants from "../constants"
 import { Overlay } from '../overlay/overlay'
 import {ConnectionTypeDescriptor, } from "../type-descriptors"
 import { makeLightweightAnchorFromSpec} from '../factory/anchor-record-factory'
-import {Component, Components} from '../component/component'
-import {Endpoints, TYPE_DESCRIPTOR_ENDPOINT} from '../endpoint/endpoints'
+import {Components} from '../component/component'
+import {Endpoints} from '../endpoint/endpoints'
 
 export const TYPE_DESCRIPTOR_CONNECTION = "connection"
 export const DEFAULT_LABEL_LOCATION_CONNECTION = 0.5
@@ -107,7 +107,6 @@ export function setPreparedConnector(connection:Connection, connector:ConnectorB
         }
 
         // put classes from prior connector onto the canvas
-        //connection.addClass(previousClasses)
         Connections.addClass(connection, previousClasses)
 
         if (previous != null) {
@@ -216,7 +215,6 @@ export const Connections = {
         }
 
         // apply connector before superclass, as a new connector means overlays have to move.
-        //super.applyType(t, typeMap)
         Components.applyBaseType(connection, t, typeMap)
 
         // none of these things result in the creation of objects so can be ignored.

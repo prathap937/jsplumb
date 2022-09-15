@@ -6,7 +6,7 @@ import {
     transformAnchorPlacement
 } from "./abstract-connector"
 import {SEGMENT_TYPE_STRAIGHT} from "./straight-segment"
-import {AnchorPlacement, Geometry} from "@jsplumb/common"
+import {AnchorPlacement} from "@jsplumb/common"
 import {ConnectorHandler, Connectors, defaultConnectorHandler} from "./connectors"
 import {Connection } from './connection-impl'
 import {createConnectorBase} from "./abstract-connector"

@@ -11,7 +11,7 @@ import {
     EndpointSpec,
     FullEndpointSpec
 } from "@jsplumb/common"
-import {Component, Components} from '../component/component'
+import {Components} from '../component/component'
 import { Connections } from '../connector/connections'
 import {Connection, EVENT_ANCHOR_CHANGED} from "@jsplumb/core"
 
@@ -68,11 +68,6 @@ export abstract class EndpointRepresentation<C> {
         this.bounds.xmax = this.x + this.w
         this.bounds.ymax = this.y + this.h
     }
-
-    // setVisible(v:boolean){
-    //     this.instance.setEndpointVisible(this.endpoint, v)
-    // }
-
 }
 
 export const TYPE_DESCRIPTOR_ENDPOINT = "endpoint"
@@ -121,8 +116,6 @@ export const Endpoints = {
 
         Components._setComponentVisible(endpoint, v)
 
-        // endpoint.endpoint.setVisible(v)
-
         endpoint.instance.setEndpointVisible(endpoint, v)
 
         if (v) {
@@ -134,7 +127,6 @@ export const Endpoints = {
         if (!doNotChangeConnections) {
             for (let i = 0; i < endpoint.connections.length; i++) {
                 Connections.setVisible(endpoint.connections[i], v)
-                // endpoint.connections[i].setVisible(v)
                 if (!doNotNotifyOtherEndpoint) {
                     let oIdx = endpoint === endpoint.connections[i].endpoints[0] ? 1 : 0
                     // only change the other endpoint if this is its only connection.
