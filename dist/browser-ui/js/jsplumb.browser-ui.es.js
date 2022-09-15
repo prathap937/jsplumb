@@ -1,4 +1,4 @@
-import { NONE, cls, CLASS_CONNECTOR, CLASS_ENDPOINT, att, ATTRIBUTE_GROUP, CLASS_OVERLAY, ATTRIBUTE_TABINDEX, EVENT_ZOOM, SELECTOR_MANAGED_ELEMENT, ATTRIBUTE_NOT_DRAGGABLE, SOURCE, TARGET, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_START_DETACH, ATTRIBUTE_SCOPE_PREFIX, CLASS_ENDPOINT_FLOATING, REDROP_POLICY_ANY, REDROP_POLICY_STRICT, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_ANY_SOURCE_OR_TARGET, CHECK_DROP_ALLOWED, classList, EVENT_MAX_CONNECTIONS, IS_DETACH_ALLOWED, CHECK_CONDITION, INTERCEPT_BEFORE_DETACH, createFloatingAnchor, EndpointRepresentation, ABSOLUTE, Overlay, Connection, Endpoint, BLOCK, ATTRIBUTE_MANAGED, STATIC, FIXED, isLabelOverlay, isArrowOverlay, isDiamondOverlay, isPlainArrowOverlay, isCustomOverlay, JsPlumbInstance, DotEndpoint, RectangleEndpoint, BlankEndpoint } from '@jsplumb/core';
+import { NONE, cls, CLASS_CONNECTOR, CLASS_ENDPOINT, att, ATTRIBUTE_GROUP, CLASS_OVERLAY, ATTRIBUTE_TABINDEX, EVENT_ZOOM, SELECTOR_MANAGED_ELEMENT, ATTRIBUTE_NOT_DRAGGABLE, Components, Connections, Endpoints, SOURCE, TARGET, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_START_DETACH, ATTRIBUTE_SCOPE_PREFIX, CLASS_ENDPOINT_FLOATING, REDROP_POLICY_ANY, REDROP_POLICY_STRICT, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_ANY_SOURCE_OR_TARGET, CHECK_DROP_ALLOWED, classList, IS_DETACH_ALLOWED, CHECK_CONDITION, INTERCEPT_BEFORE_DETACH, createFloatingAnchor, EndpointRepresentation, ABSOLUTE, Overlay, BLOCK, ATTRIBUTE_MANAGED, STATIC, FIXED, isLabelOverlay, isArrowOverlay, isDiamondOverlay, isPlainArrowOverlay, isCustomOverlay, pointOnComponentPath, JsPlumbInstance, DotEndpoint, RectangleEndpoint, BlankEndpoint } from '@jsplumb/core';
 import { isString, forEach, fastTrim, log, removeWithFunction, uuid, snapToGrid, extend, findWithFunction, wrap, getWithFunction, getFromSetWithFunction, intersects, merge, each, getAllWithFunction, functionChain, isObject, isAssignableFrom, fromArray, isFunction } from '@jsplumb/util';
 import { WILDCARD, FALSE as FALSE$1, TRUE as TRUE$1, UNDEFINED } from '@jsplumb/common';
 
@@ -2971,7 +2971,7 @@ var ElementDragHandler = function () {
 function _makeFloatingEndpoint(ep, endpoint, referenceCanvas, sourceElement, sourceElementId, instance) {
   var floatingAnchor = createFloatingAnchor(instance, sourceElement, sourceElementId);
   var p = {
-    paintStyle: ep.getPaintStyle(),
+    paintStyle: ep.paintStyle,
     preparedAnchor: floatingAnchor,
     element: sourceElement,
     scope: ep.scope,
@@ -3141,7 +3141,7 @@ var EndpointDragHandler = function () {
                 payload[def.extract[att]] = v;
               }
             }
-            this.ep.mergeParameters(payload);
+            Components.mergeParameters(this.ep, payload);
           }
           if (tempEndpointParams.uniqueEndpoint) {
             var elementId = this.ep.elementId;
@@ -3155,7 +3155,7 @@ var EndpointDragHandler = function () {
           }
           sourceElement._jsPlumbOrphanedEndpoints = sourceElement._jsPlumbOrphanedEndpoints || [];
           sourceElement._jsPlumbOrphanedEndpoints.push(this.ep);
-          this.instance.trigger(this.ep.endpoint.canvas, EVENT_MOUSEDOWN, e, payload);
+          this.instance.trigger(this.ep.representation.canvas, EVENT_MOUSEDOWN, e, payload);
         }
       }
     }
@@ -3238,8 +3238,8 @@ var EndpointDragHandler = function () {
         data: data
       });
       this.jpc.pending = true;
-      this.jpc.addClass(this.instance.draggingClass);
-      this.ep.addClass(this.instance.draggingClass);
+      Connections.addClass(this.jpc, this.instance.draggingClass);
+      Endpoints.addClass(this.ep, this.instance.draggingClass);
       this.instance.fire(EVENT_CONNECTION_DRAG, this.jpc);
     }
   }, {
@@ -3248,8 +3248,8 @@ var EndpointDragHandler = function () {
       this.existingJpc = true;
       this.instance.setHover(this.jpc, false);
       var anchorIdx = this.jpc.endpoints[0].id === this.ep.id ? 0 : 1;
-      this.ep.detachFromConnection(this.jpc, null, true);
-      this.floatingEndpoint.addConnection(this.jpc);
+      Endpoints.detachFromConnection(this.ep, this.jpc, null, true);
+      Endpoints.addConnection(this.floatingEndpoint, this.jpc);
       this.instance.fire(EVENT_CONNECTION_DRAG, this.jpc);
       this.instance.sourceOrTargetChanged(this.jpc.endpoints[anchorIdx].elementId, this.placeholderInfo.id, this.jpc, this.placeholderInfo.element, anchorIdx);
       this.jpc.suspendedEndpoint = this.jpc.endpoints[anchorIdx];
@@ -3258,9 +3258,9 @@ var EndpointDragHandler = function () {
       this.jpc.suspendedElementType = anchorIdx === 0 ? SOURCE : TARGET;
       this.instance.setHover(this.jpc.suspendedEndpoint, false);
       this.floatingEndpoint.referenceEndpoint = this.jpc.suspendedEndpoint;
-      this.floatingEndpoint.mergeParameters(this.jpc.suspendedEndpoint.parameters);
+      Components.mergeParameters(this.floatingEndpoint, this.jpc.suspendedEndpoint.parameters);
       this.jpc.endpoints[anchorIdx] = this.floatingEndpoint;
-      this.jpc.addClass(this.instance.draggingClass);
+      Connections.addClass(this.jpc, this.instance.draggingClass);
       this.floatingId = this.placeholderInfo.id;
       this.floatingIndex = anchorIdx;
       this.instance._refreshEndpoint(this.ep);
@@ -3275,11 +3275,11 @@ var EndpointDragHandler = function () {
       if (this.jpc == null && !this.ep.isSource && !this.ep.isTemporarySource) {
         _continue = false;
       }
-      if (this.ep.isSource && this.ep.isFull() && !(this.jpc != null && this.ep.dragAllowedWhenFull)) {
+      if (this.ep.isSource && Endpoints.isFull(this.ep) && !(this.jpc != null && this.ep.dragAllowedWhenFull)) {
         _continue = false;
       }
-      if (this.jpc != null && !this.jpc.isDetachable(this.ep)) {
-        if (this.ep.isFull()) {
+      if (this.jpc != null && !Connections.isDetachable(this.jpc, this.ep)) {
+        if (Endpoints.isFull(this.ep)) {
           _continue = false;
         } else {
           this.jpc = null;
@@ -3306,7 +3306,7 @@ var EndpointDragHandler = function () {
   }, {
     key: "_createFloatingEndpoint",
     value: function _createFloatingEndpoint(canvasElement) {
-      var endpointToFloat = this.ep.endpoint;
+      var endpointToFloat = this.ep.representation;
       if (this.ep.edgeType != null) {
         var aae = this.instance._deriveEndpointAndAnchorSpec(this.ep.edgeType);
         endpointToFloat = aae.endpoints[1];
@@ -3314,7 +3314,7 @@ var EndpointDragHandler = function () {
       this.floatingEndpoint = _makeFloatingEndpoint(this.ep, endpointToFloat, canvasElement, this.placeholderInfo.element, this.placeholderInfo.id, this.instance);
       this.floatingAnchor = this.floatingEndpoint._anchor;
       this.floatingEndpoint.deleteOnEmpty = true;
-      this.floatingElement = this.floatingEndpoint.endpoint.canvas;
+      this.floatingElement = this.floatingEndpoint.representation.canvas;
       this.floatingId = this.instance.getId(this.floatingElement);
     }
   }, {
@@ -3325,7 +3325,7 @@ var EndpointDragHandler = function () {
       var boundingRect;
       var matchingEndpoints = this.instance.getContainer().querySelectorAll([".", CLASS_ENDPOINT, "[", ATTRIBUTE_SCOPE_PREFIX, this.ep.scope, "]:not(.", CLASS_ENDPOINT_FLOATING, ")"].join(""));
       forEach(matchingEndpoints, function (candidate) {
-        if ((_this.jpc != null || candidate !== canvasElement) && candidate !== _this.floatingElement && (_this.jpc != null || !candidate.jtk.endpoint.isFull())) {
+        if ((_this.jpc != null || candidate !== canvasElement) && candidate !== _this.floatingElement && (_this.jpc != null || !Endpoints.isFull(candidate.jtk.endpoint))) {
           if (isSourceDrag && candidate.jtk.endpoint.isSource || !isSourceDrag && candidate.jtk.endpoint.isTarget) {
             var o = getElementPosition(candidate, _this.instance),
                 s = getElementSize(candidate, _this.instance);
@@ -3507,7 +3507,7 @@ var EndpointDragHandler = function () {
       if (!this.ep) {
         return false;
       }
-      this.endpointRepresentation = this.ep.endpoint;
+      this.endpointRepresentation = this.ep.representation;
       this.canvasElement = this.endpointRepresentation.canvas;
       this.jpc = this.ep.connectorSelector();
       var _this$_shouldStartDra = this._shouldStartDrag(),
@@ -3520,7 +3520,7 @@ var EndpointDragHandler = function () {
       }
       this.instance.setHover(this.ep, false);
       this.instance.isConnectionBeingDragged = true;
-      if (this.jpc && !this.ep.isFull() && this.ep.isSource) {
+      if (this.jpc && !Endpoints.isFull(this.ep) && this.ep.isSource) {
         this.jpc = null;
       }
       this._createFloatingEndpoint(this.canvasElement);
@@ -3579,15 +3579,15 @@ var EndpointDragHandler = function () {
             if (_cont) {
               var bb = this.instance.checkCondition(CHECK_DROP_ALLOWED, {
                 sourceEndpoint: this.jpc.endpoints[idx],
-                targetEndpoint: newDropTarget.endpoint.endpoint,
+                targetEndpoint: newDropTarget.endpoint.representation,
                 connection: this.jpc
               });
               if (bb) {
-                newDropTarget.endpoint.endpoint.addClass(this.instance.endpointDropAllowedClass);
-                newDropTarget.endpoint.endpoint.removeClass(this.instance.endpointDropForbiddenClass);
+                newDropTarget.endpoint.representation.addClass(this.instance.endpointDropAllowedClass);
+                newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropForbiddenClass);
               } else {
-                newDropTarget.endpoint.endpoint.removeClass(this.instance.endpointDropAllowedClass);
-                newDropTarget.endpoint.endpoint.addClass(this.instance.endpointDropForbiddenClass);
+                newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropAllowedClass);
+                newDropTarget.endpoint.representation.addClass(this.instance.endpointDropForbiddenClass);
               }
               this.floatingAnchor.over(newDropTarget.endpoint);
               this.instance._paintConnection(this.jpc);
@@ -3655,12 +3655,7 @@ var EndpointDragHandler = function () {
             } else {
               if (!dropEndpoint.enabled) {
                 this._reattachOrDiscard(p.e);
-              } else if (dropEndpoint.isFull()) {
-                dropEndpoint.fire(EVENT_MAX_CONNECTIONS, {
-                  endpoint: this,
-                  connection: this.jpc,
-                  maxConnections: this.instance.defaults.maxConnections
-                }, originalEvent);
+              } else if (Endpoints.isFull(dropEndpoint)) {
                 this._reattachOrDiscard(p.e);
               } else {
                 if (idx === 0) {
@@ -3672,11 +3667,11 @@ var EndpointDragHandler = function () {
                 }
                 var _doContinue = true;
                 if (existingConnection && this.jpc.suspendedEndpoint.id !== dropEndpoint.id) {
-                  if (!this.jpc.isDetachAllowed(this.jpc) || !this.jpc.endpoints[idx].isDetachAllowed(this.jpc) || !this.jpc.suspendedEndpoint.isDetachAllowed(this.jpc) || !this.instance.checkCondition("beforeDetach", this.jpc)) {
+                  if (!Components.isDetachAllowed(this.jpc, this.jpc) || !Components.isDetachAllowed(this.jpc.endpoints[idx], this.jpc) || !Components.isDetachAllowed(this.jpc.suspendedEndpoint, this.jpc) || !this.instance.checkCondition("beforeDetach", this.jpc)) {
                     _doContinue = false;
                   }
                 }
-                _doContinue = _doContinue && dropEndpoint.isDropAllowed(this.jpc.sourceId, this.jpc.targetId, this.jpc.scope, this.jpc, dropEndpoint);
+                _doContinue = _doContinue && Components.isDropAllowed(dropEndpoint, this.jpc.sourceId, this.jpc.targetId, this.jpc.scope, this.jpc, dropEndpoint);
                 if (_doContinue) {
                   this._drop(dropEndpoint, idx, originalEvent, _doContinue);
                 } else {
@@ -3689,9 +3684,9 @@ var EndpointDragHandler = function () {
           this._reattachOrDiscard(p.e);
         }
         this.instance._refreshEndpoint(this.ep);
-        this.ep.removeClass(this.instance.draggingClass);
+        Endpoints.removeClass(this.ep, this.instance.draggingClass);
         this._cleanupDraggablePlaceholder();
-        this.jpc.removeClass(this.instance.draggingClass);
+        Connections.removeClass(this.jpc, this.instance.draggingClass);
         delete this.jpc.suspendedEndpoint;
         delete this.jpc.suspendedElement;
         delete this.jpc.suspendedElementType;
@@ -3735,7 +3730,7 @@ var EndpointDragHandler = function () {
         }
         var targetElement = this.currentDropTarget.targetEl;
         var elxy = getPositionOnElement(p.e, targetElement, this.instance.currentZoom);
-        var eps = this.instance._deriveEndpointAndAnchorSpec(jpc.getType().join(" "), true);
+        var eps = this.instance._deriveEndpointAndAnchorSpec(Components.getType(jpc).join(" "), true);
         var pp = eps.endpoints ? extend(p, {
           endpoint: targetDefinition.def.endpoint || eps.endpoints[1],
           cssClass: targetDefinition.def.cssClass || "",
@@ -3761,7 +3756,7 @@ var EndpointDragHandler = function () {
         dropEndpoint._mtNew = true;
         dropEndpoint.deleteOnEmpty = true;
         if (targetDefinition.def.parameters) {
-          dropEndpoint.mergeParameters(targetDefinition.def.parameters);
+          Components.mergeParameters(dropEndpoint, targetDefinition.def.parameters);
         }
         if (targetDefinition.def.extract) {
           var tpayload = {};
@@ -3771,25 +3766,25 @@ var EndpointDragHandler = function () {
               tpayload[targetDefinition.def.extract[att]] = v;
             }
           }
-          dropEndpoint.mergeParameters(tpayload);
+          Components.mergeParameters(dropEndpoint, tpayload);
         }
       } else {
         dropEndpoint = this.currentDropTarget.endpoint;
       }
       if (dropEndpoint) {
-        dropEndpoint.removeClass(this.instance.endpointDropAllowedClass);
-        dropEndpoint.removeClass(this.instance.endpointDropForbiddenClass);
+        Endpoints.removeClass(dropEndpoint, this.instance.endpointDropAllowedClass);
+        Endpoints.removeClass(dropEndpoint, this.instance.endpointDropForbiddenClass);
       }
       return dropEndpoint;
     }
   }, {
     key: "_doForceReattach",
     value: function _doForceReattach(idx) {
-      this.floatingEndpoint.detachFromConnection(this.jpc, null, true);
+      Endpoints.detachFromConnection(this.floatingEndpoint, this.jpc, null, true);
       this.jpc.endpoints[idx] = this.jpc.suspendedEndpoint;
       this.instance.setHover(this.jpc, false);
       this.jpc._forceDetach = true;
-      this.jpc.suspendedEndpoint.addConnection(this.jpc);
+      Endpoints.addConnection(this.jpc.suspendedEndpoint, this.jpc);
       this.instance.sourceOrTargetChanged(this.floatingId, this.jpc.suspendedEndpoint.elementId, this.jpc, this.jpc.suspendedEndpoint.element, idx);
       this.instance.deleteEndpoint(this.floatingEndpoint);
       this.instance.repaint(this.jpc.source);
@@ -3798,13 +3793,14 @@ var EndpointDragHandler = function () {
   }, {
     key: "_shouldReattach",
     value: function _shouldReattach() {
-      if (this.jpc.isReattach() || this.jpc._forceReattach) {
+      if (Connections.isReattach(this.jpc, true)) {
         return true;
       } else {
         var suspendedEndpoint = this.jpc.suspendedEndpoint,
             otherEndpointIdx = this.jpc.suspendedElementType == SOURCE ? 1 : 0,
             otherEndpoint = this.jpc.endpoints[otherEndpointIdx];
-        return !functionChain(true, false, [[suspendedEndpoint, IS_DETACH_ALLOWED, [this.jpc]], [otherEndpoint, IS_DETACH_ALLOWED, [this.jpc]], [this.jpc, IS_DETACH_ALLOWED, [this.jpc]], [this.instance, CHECK_CONDITION, [INTERCEPT_BEFORE_DETACH, this.jpc]]]);
+            this.jpc;
+        return !functionChain(true, false, [[Components, IS_DETACH_ALLOWED, [suspendedEndpoint, this.jpc]], [Components, IS_DETACH_ALLOWED, [otherEndpoint, this.jpc]], [Components, IS_DETACH_ALLOWED, [this.jpc]], [this.instance, CHECK_CONDITION, [INTERCEPT_BEFORE_DETACH, this.jpc]]]);
       }
     }
   }, {
@@ -3823,7 +3819,7 @@ var EndpointDragHandler = function () {
         this.jpc.endpoints[idx] = this.jpc.suspendedEndpoint;
       }
       if (this.floatingEndpoint) {
-        this.floatingEndpoint.detachFromConnection(this.jpc);
+        Endpoints.detachFromConnection(this.floatingEndpoint, this.jpc);
       }
       this.instance.deleteConnection(this.jpc, {
         originalEvent: originalEvent,
@@ -3833,12 +3829,12 @@ var EndpointDragHandler = function () {
   }, {
     key: "_drop",
     value: function _drop(dropEndpoint, idx, originalEvent, optionalData) {
-      this.jpc.endpoints[idx].detachFromConnection(this.jpc);
+      Endpoints.detachFromConnection(this.jpc.endpoints[idx], this.jpc);
       if (this.jpc.suspendedEndpoint) {
-        this.jpc.suspendedEndpoint.detachFromConnection(this.jpc);
+        Endpoints.detachFromConnection(this.jpc.suspendedEndpoint, this.jpc);
       }
       this.jpc.endpoints[idx] = dropEndpoint;
-      dropEndpoint.addConnection(this.jpc);
+      Endpoints.addConnection(dropEndpoint, this.jpc);
       if (this.jpc.suspendedEndpoint) {
         var suspendedElementId = this.jpc.suspendedEndpoint.elementId;
         this.instance.fireMoveEvent({
@@ -3859,15 +3855,15 @@ var EndpointDragHandler = function () {
       }
       if (this.jpc.endpoints[0].finalEndpoint) {
         var _toDelete = this.jpc.endpoints[0];
-        _toDelete.detachFromConnection(this.jpc);
+        Endpoints.detachFromConnection(_toDelete, this.jpc);
         this.jpc.endpoints[0] = this.jpc.endpoints[0].finalEndpoint;
-        this.jpc.endpoints[0].addConnection(this.jpc);
+        Endpoints.addConnection(this.jpc.endpoints[0], this.jpc);
       }
       if (isObject(optionalData)) {
-        this.jpc.mergeData(optionalData);
+        Components.mergeData(this.jpc, optionalData);
       }
       if (this._originalAnchorSpec) {
-        this.jpc.endpoints[0].setAnchor(this._originalAnchorSpec);
+        Endpoints.setAnchor(this.jpc.endpoints[0], this._originalAnchorSpec);
         this._originalAnchorSpec = null;
       }
       this.instance._finaliseConnection(this.jpc, null, originalEvent);
@@ -4013,11 +4009,11 @@ function ensureSVGOverlayPath(o) {
   }
   var parent = o.path.parentNode;
   if (parent == null) {
-    if (o.component instanceof Connection) {
+    if (Connections.isConnection(o.component)) {
       var connector = o.component.connector;
       parent = connector != null ? connector.canvas : null;
-    } else if (o.component instanceof Endpoint) {
-      var endpoint = o.component.endpoint;
+    } else if (Endpoints.isEndpoint(o.component)) {
+      var endpoint = o.component.representation;
       parent = endpoint != null ? endpoint.canvas : endpoint;
     }
     if (parent != null) {
@@ -4426,7 +4422,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
   _createClass(BrowserJsPlumbInstance, [{
     key: "fireOverlayMethod",
     value: function fireOverlayMethod(overlay, event, e) {
-      var stem = overlay.component instanceof Connection ? CONNECTION : ENDPOINT;
+      var stem = Connections.isConnection(overlay.component) ? CONNECTION : ENDPOINT;
       var mappedEvent = compoundEvent(stem, event)
       ;
       e._jsPlumbOverlay = overlay;
@@ -5196,7 +5192,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
               loc = parseInt("" + o.location, 10);
               absolute = true;
             }
-            cxy = component.pointOnPath(loc, absolute);
+            cxy = pointOnComponentPath(component, loc, absolute);
           }
           var minx = cxy.x - td.w / 2,
               miny = cxy.y - td.h / 2;
@@ -5252,9 +5248,9 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
     key: "setHover",
     value: function setHover(component, hover) {
       component._hover = hover;
-      if (component instanceof Endpoint && component.endpoint != null) {
+      if (Endpoints.isEndpoint(component) && component.representation != null) {
         this.setEndpointHover(component, hover, -1);
-      } else if (component instanceof Connection && component.connector != null) {
+      } else if (Connections.isConnection(component) && component.connector != null) {
         this.setConnectorHover(component.connector, hover);
       }
     }
@@ -5342,7 +5338,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
   }, {
     key: "addEndpointClass",
     value: function addEndpointClass(ep, c) {
-      var canvas = getEndpointCanvas(ep.endpoint);
+      var canvas = getEndpointCanvas(ep.representation);
       if (canvas != null) {
         this.addClass(canvas, c);
       }
@@ -5351,7 +5347,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
     key: "applyEndpointType",
     value: function applyEndpointType(ep, t) {
       if (t.cssClass) {
-        var canvas = getEndpointCanvas(ep.endpoint);
+        var canvas = getEndpointCanvas(ep.representation);
         if (canvas) {
           var classes = Array.isArray(t.cssClass) ? t.cssClass : [t.cssClass];
           this.addClass(canvas, classes.join(" "));
@@ -5363,22 +5359,22 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
     value: function destroyEndpoint(ep) {
       var anchorClass = this.endpointAnchorClassPrefix + (ep.currentAnchorClass ? "-" + ep.currentAnchorClass : "");
       this.removeClass(ep.element, anchorClass);
-      cleanup(ep.endpoint);
+      cleanup(ep.representation);
     }
   }, {
     key: "renderEndpoint",
     value: function renderEndpoint(ep, paintStyle) {
-      var renderer = endpointMap[ep.endpoint.type];
+      var renderer = endpointMap[ep.representation.type];
       if (renderer != null) {
-        SvgEndpoint.paint(ep.endpoint, renderer, paintStyle);
+        SvgEndpoint.paint(ep.representation, renderer, paintStyle);
       } else {
-        log("jsPlumb: no endpoint renderer found for type [" + ep.endpoint.type + "]");
+        log("jsPlumb: no endpoint renderer found for type [" + ep.representation.type + "]");
       }
     }
   }, {
     key: "removeEndpointClass",
     value: function removeEndpointClass(ep, c) {
-      var canvas = getEndpointCanvas(ep.endpoint);
+      var canvas = getEndpointCanvas(ep.representation);
       if (canvas != null) {
         this.removeClass(canvas, c);
       }
@@ -5386,7 +5382,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
   }, {
     key: "getEndpointClass",
     value: function getEndpointClass(ep) {
-      var canvas = getEndpointCanvas(ep.endpoint);
+      var canvas = getEndpointCanvas(ep.representation);
       if (canvas != null) {
         return canvas.className;
       } else {
@@ -5397,7 +5393,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
     key: "setEndpointHover",
     value: function setEndpointHover(endpoint, hover, endpointIndex, doNotCascade) {
       if (endpoint != null && (hover === false || !this.currentlyDragging && !this.isHoverSuspended())) {
-        var canvas = getEndpointCanvas(endpoint.endpoint);
+        var canvas = getEndpointCanvas(endpoint.representation);
         if (canvas != null) {
           if (endpoint.hoverClass != null) {
             if (hover) {
@@ -5431,7 +5427,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
   }, {
     key: "setEndpointVisible",
     value: function setEndpointVisible(ep, v) {
-      setVisible(ep.endpoint, v);
+      setVisible(ep.representation, v);
     }
   }, {
     key: "setGroupVisible",

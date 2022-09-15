@@ -24,37 +24,37 @@ export class BrowserUITestSupport {
     assertManagedEndpointCount(el: Element, count: number): void;
     // (undocumented)
     _assertManagedEndpointCount(el: Element, count: number): void;
-    aSyncDragConnection(d1: Element | Endpoint, d2: Element | Endpoint, events?: EventHandlers<Connection>): void;
+    aSyncDragConnection(d1: Element | Endpoint, d2: Element | Endpoint, events?: EventHandlers<Connection<any>>): void;
     aSyncDragNodeBy(el: Element, x: number, y: number, events?: EventHandlers): void;
     cleanup(): void;
-    clickOnConnection(connection: Connection): void;
+    clickOnConnection(connection: Connection<any>): void;
     clickOnElement(element: Element, clickCount?: number): void;
-    clickOnOverlay(connection: Connection, overlayId: string): void;
-    dblClickOnConnection(connection: Connection): void;
+    clickOnOverlay(connection: Connection<any>, overlayId: string): void;
+    dblClickOnConnection(connection: Connection<any>): void;
     dblClickOnElement(element: Element): void;
-    dblClickOnOverlay(connection: Connection, overlayId: string): void;
-    dblTapOnConnection(connection: Connection): void;
+    dblClickOnOverlay(connection: Connection<any>, overlayId: string): void;
+    dblTapOnConnection(connection: Connection<any>): void;
     dblTapOnElement(element: Element): void;
-    dblTapOnOverlay(connection: Connection, overlayId: string): void;
+    dblTapOnOverlay(connection: Connection<any>, overlayId: string): void;
     detachAndReattachConnection(e: Endpoint, events?: EventHandlers): void;
     detachConnection(e: Endpoint, events?: EventHandlers): void;
-    detachConnectionByTarget(c: Connection, events?: EventHandlers): void;
+    detachConnectionByTarget(c: Connection<any>, events?: EventHandlers): void;
     // (undocumented)
     _divs: Array<string>;
     dragAndAbortConnection(d1: Element | Endpoint): void;
     dragANodeAround(el: HTMLElement, functionToAssertWhileDragging?: () => boolean, assertMessage?: string): void;
-    dragConnection(d1: Element | Endpoint, d2: Element | Endpoint, mouseUpOnTarget?: boolean, events?: EventHandlers<Connection>): Connection;
+    dragConnection(d1: Element | Endpoint, d2: Element | Endpoint, mouseUpOnTarget?: boolean, events?: EventHandlers<Connection<any>>): Connection<any>;
     dragNodeBy(el: Element, x: number, y: number, events?: EventHandlers): void;
     dragNodeTo(el: Element, x: number, y: number, events?: EventHandlers): void;
     dragToGroup(el: Element, targetGroupId: string, events?: EventHandlers): void;
-    fireEventOnConnection(connection: Connection, ...events: Array<string>): void;
+    fireEventOnConnection(connection: Connection<any>, ...events: Array<string>): void;
     fireEventOnElement(e: Element, ...events: Array<string>): void;
     fireEventOnEndpoint(ep: Endpoint, ...events: Array<string>): void;
     fireEventOnOverlay(connection: Connection, overlayId: string, event: string): void;
     // (undocumented)
     getAttribute(el: Element, att: string): string;
     getCanvas(epOrEl: any): any;
-    getConnectionCanvas(c: Connection): HTMLElement;
+    getConnectionCanvas(c: Connection<any>): HTMLElement;
     getEndpointCanvas(ep: Endpoint): HTMLElement;
     // (undocumented)
     getEndpointCanvasPosition(ep: Endpoint): {
@@ -72,12 +72,12 @@ export class BrowserUITestSupport {
     mottle: EventManager;
     // (undocumented)
     _registerDiv(div: string): void;
-    relocate(conn: Connection, idx: number, newEl: Element, events?: EventHandlers): void;
-    relocateSource(conn: Connection, newEl: Element, events?: EventHandlers): void;
-    relocateTarget(conn: Connection, newEl: Element, events?: EventHandlers): void;
-    tapOnConnection(connection: Connection): void;
+    relocate(conn: Connection<any>, idx: number, newEl: Element, events?: EventHandlers): void;
+    relocateSource(conn: Connection<any>, newEl: Element, events?: EventHandlers): void;
+    relocateTarget(conn: Connection<any>, newEl: Element, events?: EventHandlers): void;
+    tapOnConnection(connection: Connection<any>): void;
     tapOnElement(element: Element): void;
-    tapOnOverlay(connection: Connection, overlayId: string): void;
+    tapOnOverlay(connection: Connection<any>, overlayId: string): void;
     uuid(): string;
     within(val: number, target: number, msg: string): void;
 }

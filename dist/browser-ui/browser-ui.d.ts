@@ -9,12 +9,12 @@
  * @packageDocumentation
  */
 
-import { AbstractConnector } from '@jsplumb/core';
 import { BehaviouralTypeDescriptor } from '@jsplumb/core';
 import { BoundingBox } from '@jsplumb/util';
 import { Component } from '@jsplumb/core';
 import { Connection } from '@jsplumb/core';
 import { ConnectionDragSelector } from '@jsplumb/core';
+import { ConnectorBase } from '@jsplumb/core';
 import { DeleteConnectionOptions } from '@jsplumb/core';
 import { Endpoint } from '@jsplumb/core';
 import { Extents } from '@jsplumb/util';
@@ -565,7 +565,7 @@ export declare class BrowserJsPlumbInstance extends JsPlumbInstance<{
      * @param paintStyle
      * @param absolutePosition
      */
-    drawOverlay(o: Overlay, component: any, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
+    drawOverlay(o: Overlay, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
     /**
      * @internal
      * @param o
@@ -583,14 +583,14 @@ export declare class BrowserJsPlumbInstance extends JsPlumbInstance<{
      * @param paintStyle
      * @param extents
      */
-    paintConnector(connector: AbstractConnector, paintStyle: PaintStyle, extents?: Extents): void;
+    paintConnector(connector: ConnectorBase, paintStyle: PaintStyle, extents?: Extents): void;
     /**
      * @internal
      * @param connector
      * @param hover
      * @param sourceEndpoint
      */
-    setConnectorHover(connector: AbstractConnector, hover: boolean, sourceEndpoint?: Endpoint): void;
+    setConnectorHover(connector: ConnectorBase, hover: boolean, sourceEndpoint?: Endpoint): void;
     /**
      * @internal
      * @param connection
@@ -601,30 +601,30 @@ export declare class BrowserJsPlumbInstance extends JsPlumbInstance<{
      * @param connector
      * @param clazz
      */
-    addConnectorClass(connector: AbstractConnector, clazz: string): void;
+    addConnectorClass(connector: ConnectorBase, clazz: string): void;
     /**
      * @internal
      * @param connector
      * @param clazz
      */
-    removeConnectorClass(connector: AbstractConnector, clazz: string): void;
+    removeConnectorClass(connector: ConnectorBase, clazz: string): void;
     /**
      * @internal
      * @param connector
      */
-    getConnectorClass(connector: AbstractConnector): string;
+    getConnectorClass(connector: ConnectorBase): string;
     /**
      * @internal
      * @param connector
      * @param v
      */
-    setConnectorVisible(connector: AbstractConnector, v: boolean): void;
+    setConnectorVisible(connector: ConnectorBase, v: boolean): void;
     /**
      * @internal
      * @param connector
      * @param t
      */
-    applyConnectorType(connector: AbstractConnector, t: TypeDescriptor): void;
+    applyConnectorType(connector: ConnectorBase, t: TypeDescriptor): void;
     /**
      * @internal
      * @param ep
@@ -1591,7 +1591,7 @@ export declare interface jsPlumbDOMElement extends HTMLElement, jsPlumbElement<E
  * @internal
  */
 export declare interface jsPlumbDOMInformation {
-    connector?: AbstractConnector;
+    connector?: ConnectorBase;
     endpoint?: Endpoint;
     overlay?: Overlay;
 }

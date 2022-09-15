@@ -373,7 +373,7 @@ var BrowserUITestSupport = function () {
   }, {
     key: "getCanvas",
     value: function getCanvas(epOrEl) {
-      if (epOrEl.endpoint) {
+      if (epOrEl.representation) {
         return this.getEndpointCanvas(epOrEl);
       } else {
         return epOrEl;
@@ -382,7 +382,7 @@ var BrowserUITestSupport = function () {
   }, {
     key: "getEndpointCanvas",
     value: function getEndpointCanvas(ep) {
-      return ep.endpoint.canvas;
+      return ep.representation.canvas;
     }
   }, {
     key: "getConnectionCanvas",
@@ -499,7 +499,7 @@ var BrowserUITestSupport = function () {
   }, {
     key: "fireEventOnOverlay",
     value: function fireEventOnOverlay(connection, overlayId, event) {
-      var overlay = connection.getOverlay(overlayId);
+      var overlay = connection.overlays[overlayId];
       var canvas = this.getOverlayCanvas(overlay);
       this._jsPlumb.trigger(canvas, event);
     }

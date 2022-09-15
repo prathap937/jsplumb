@@ -1,11 +1,10 @@
 import { JsPlumbInstance } from "../core";
 import { ConnectParams } from '../params';
-import { ConnectionTypeDescriptor } from "../type-descriptors";
-import { AbstractConnector } from "./abstract-connector";
+import { ConnectorBase } from "./abstract-connector";
 import { Endpoint } from "../endpoint/endpoint";
 import { Component } from "../component/component";
 import { Merge } from "@jsplumb/util";
-import { ConnectorSpec, AnchorSpec, EndpointSpec, PaintStyle } from "@jsplumb/common";
+import { EndpointSpec, PaintStyle } from "@jsplumb/common";
 /**
  * @internal
  */
@@ -14,25 +13,20 @@ export declare type ConnectionOptions<E = any> = Merge<ConnectParams<E>, {
     target?: E;
     sourceEndpoint?: Endpoint;
     targetEndpoint?: Endpoint;
-    previousConnection?: Connection<E>;
+    previousConnection?: Connection;
     geometry?: any;
 }>;
-/**
- * @public
- */
-export declare class Connection<E = any> extends Component {
-    instance: JsPlumbInstance;
-    connector: AbstractConnector;
+export declare const TYPE_ID_CONNECTION = "_jsplumb_connection";
+export declare const ID_PREFIX_CONNECTION = "_jsPlumb_c";
+export interface Connection<E = any> extends Component {
+    connector: ConnectorBase;
     defaultLabelLocation: number;
     scope: string;
+    deleted: boolean;
     typeId: string;
-    getIdPrefix(): string;
-    getDefaultOverlayKey(): string;
-    getXY(): {
-        x: number;
-        y: number;
-    };
-    previousConnection: Connection;
+    idPrefix: string;
+    defaultOverlayKey: string;
+    previousConnection: Connection<E>;
     /**
      * The id of the source of the connection
      * @public
@@ -83,17 +77,20 @@ export declare class Connection<E = any> extends Component {
      * Source and target endpoints.
      * @public
      */
-    endpoints: [Endpoint<E>, Endpoint<E>];
+    endpoints: [Endpoint, Endpoint];
     endpointStyles: [PaintStyle, PaintStyle];
     readonly endpointSpec: EndpointSpec;
     readonly endpointsSpec: [EndpointSpec, EndpointSpec];
     endpointStyle: PaintStyle;
     endpointHoverStyle: PaintStyle;
     readonly endpointHoverStyles: [PaintStyle, PaintStyle];
+    id: string;
+    lastPaintedAt: string;
+    paintStyleInUse: PaintStyle;
     /**
      * @internal
      */
-    suspendedEndpoint: Endpoint<E>;
+    suspendedEndpoint: Endpoint;
     /**
      * @internal
      */
@@ -123,78 +120,16 @@ export declare class Connection<E = any> extends Component {
      * @internal
      */
     proxies: Array<{
-        ep: Endpoint<E>;
-        originalEp: Endpoint<E>;
+        ep: Endpoint;
+        originalEp: Endpoint;
     }>;
     /**
      * @internal
      */
     pending: boolean;
-    /**
-     * Connections should never be constructed directly by users of the library.
-     * @internal
-     * @param instance
-     * @param params
-     */
-    constructor(instance: JsPlumbInstance, params: ConnectionOptions<E>);
-    makeEndpoint(isSource: boolean, el: any, elId: string, anchor?: AnchorSpec, ep?: Endpoint): Endpoint;
-    static type: string;
-    getTypeDescriptor(): string;
-    isDetachable(ep?: Endpoint): boolean;
-    setDetachable(detachable: boolean): void;
-    isReattach(): boolean;
-    setReattach(reattach: boolean): void;
-    applyType(t: ConnectionTypeDescriptor, typeMap: any): void;
-    /**
-     * Adds the given class to the UI elements being used to represent this connection's connector, and optionally to
-     * the UI elements representing the connection's endpoints.
-     * @param c class to add
-     * @param cascade If true, also add the class to the connection's endpoints.
-     * @public
-     */
-    addClass(c: string, cascade?: boolean): void;
-    /**
-     * Removes the given class from the UI elements being used to represent this connection's connector, and optionally from
-     * the UI elements representing the connection's endpoints.
-     * @param c class to remove
-     * @param cascade If true, also remove the class from the connection's endpoints.
-     * @public
-     */
-    removeClass(c: string, cascade?: boolean): void;
-    /**
-     * Sets the visible state of the connection.
-     * @param v
-     * @public
-     */
-    setVisible(v: boolean): void;
-    /**
-     * @internal
-     */
-    destroy(): void;
-    getUuids(): [string, string];
-    /**
-     * @internal
-     */
-    prepareConnector(connectorSpec: ConnectorSpec, typeId?: string): AbstractConnector;
-    /**
-     * @internal
-     */
-    setPreparedConnector(connector: AbstractConnector, doNotRepaint?: boolean, doNotChangeListenerComponent?: boolean, typeId?: string): void;
-    /**
-     * @internal
-     * @param connectorSpec
-     * @param doNotRepaint
-     * @param doNotChangeListenerComponent
-     * @param typeId
-     */
-    _setConnector(connectorSpec: ConnectorSpec, doNotRepaint?: boolean, doNotChangeListenerComponent?: boolean, typeId?: string): void;
-    /**
-     * Replace the Endpoint at the given index with a new Endpoint.  This is used by the Toolkit edition, if changes to an edge type
-     * cause a change in Endpoint.
-     * @param idx 0 for source, 1 for target
-     * @param endpointDef Spec for the new Endpoint.
-     * @public
-     */
-    replaceEndpoint(idx: number, endpointDef: EndpointSpec): void;
 }
+export declare function createConnection(instance: JsPlumbInstance, params: ConnectionOptions): Connection;
+/**
+ * @public
+ */
 //# sourceMappingURL=connection-impl.d.ts.map

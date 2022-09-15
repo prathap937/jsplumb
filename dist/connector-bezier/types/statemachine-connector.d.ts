@@ -1,15 +1,24 @@
-import { AbstractBezierConnector, AbstractBezierOptions } from "./abstract-bezier-connector";
-import { Connection, ConnectorComputeParams, PaintGeometry } from "@jsplumb/core";
-import { AnchorPlacement } from "@jsplumb/common";
+import { AbstractBezierOptions, BaseBezierConnectorGeometry, BezierConnectorBase } from "./abstract-bezier-connector";
+import { ConnectorHandler } from "@jsplumb/core";
 import { PointXY } from "@jsplumb/util";
 export interface StateMachineOptions extends AbstractBezierOptions {
 }
-export declare class StateMachineConnector extends AbstractBezierConnector {
-    connection: Connection;
-    static type: string;
-    type: string;
+export declare const CONNECTOR_TYPE_STATE_MACHINE = "StateMachine";
+export declare const CONNECTOR_TYPE_QUADRATIC_BEZIER = "QuadraticBezier";
+export interface StateMachineConnector extends BezierConnectorBase {
+    type: typeof CONNECTOR_TYPE_STATE_MACHINE;
+    geometry: StateMachineConnectorGeometry;
     _controlPoint: PointXY;
-    constructor(connection: Connection, params: StateMachineOptions);
-    _computeBezier(paintInfo: PaintGeometry, params: ConnectorComputeParams, sp: AnchorPlacement, tp: AnchorPlacement, w: number, h: number): void;
 }
+/**
+ * The bezier connector's internal representation of a path.
+ * @public
+ */
+export interface StateMachineConnectorGeometry extends BaseBezierConnectorGeometry {
+    controlPoint: PointXY;
+}
+/**
+ * @internal
+ */
+export declare const StateMachineConnectorHandler: ConnectorHandler;
 //# sourceMappingURL=statemachine-connector.d.ts.map

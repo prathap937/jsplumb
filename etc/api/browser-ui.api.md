@@ -4,12 +4,12 @@
 
 ```ts
 
-import { AbstractConnector } from '@jsplumb/core';
 import { BehaviouralTypeDescriptor } from '@jsplumb/core';
 import { BoundingBox } from '@jsplumb/util';
 import { Component } from '@jsplumb/core';
 import { Connection } from '@jsplumb/core';
 import { ConnectionDragSelector } from '@jsplumb/core';
+import { ConnectorBase } from '@jsplumb/core';
 import { DeleteConnectionOptions } from '@jsplumb/core';
 import { Endpoint } from '@jsplumb/core';
 import { Extents } from '@jsplumb/util';
@@ -61,7 +61,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     constructor(_instanceIndex: number, defaults?: BrowserJsPlumbDefaults);
     addClass(el: Element | NodeListOf<Element>, clazz: string): void;
     // @internal (undocumented)
-    addConnectorClass(connector: AbstractConnector, clazz: string): void;
+    addConnectorClass(connector: ConnectorBase, clazz: string): void;
     addDragFilter(filter: Function | string, exclude?: boolean): void;
     // @internal (undocumented)
     addEndpointClass(ep: Endpoint, c: string): void;
@@ -77,7 +77,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     // @internal (undocumented)
     _appendElementToGroup(group: UIGroup<any>, el: Element): void;
     // @internal (undocumented)
-    applyConnectorType(connector: AbstractConnector, t: TypeDescriptor): void;
+    applyConnectorType(connector: ConnectorBase, t: TypeDescriptor): void;
     // @internal (undocumented)
     applyEndpointType<C>(ep: Endpoint, t: TypeDescriptor): void;
     clearDragGroup(name: string): void;
@@ -119,7 +119,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     // (undocumented)
     dragSelectClass: string;
     // @internal (undocumented)
-    drawOverlay(o: Overlay, component: any, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
+    drawOverlay(o: Overlay, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
     // (undocumented)
     _elementClick: Function;
     // (undocumented)
@@ -160,7 +160,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     getAttribute(el: Element, name: string): string;
     getClass(el: Element): string;
     // @internal (undocumented)
-    getConnectorClass(connector: AbstractConnector): string;
+    getConnectorClass(connector: ConnectorBase): string;
     // @internal (undocumented)
     getEndpointClass(ep: Endpoint): string;
     // @internal
@@ -204,7 +204,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     // (undocumented)
     _overlayTap: Function;
     // @internal (undocumented)
-    paintConnector(connector: AbstractConnector, paintStyle: PaintStyle, extents?: Extents): void;
+    paintConnector(connector: ConnectorBase, paintStyle: PaintStyle, extents?: Extents): void;
     // @internal (undocumented)
     _paintOverlay(o: Overlay, params: any, extents: any): void;
     // @internal (undocumented)
@@ -212,7 +212,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     removeAttribute(el: Element, attName: string): void;
     removeClass(el: Element | NodeListOf<Element>, clazz: string): void;
     // @internal (undocumented)
-    removeConnectorClass(connector: AbstractConnector, clazz: string): void;
+    removeConnectorClass(connector: ConnectorBase, clazz: string): void;
     removeDragFilter(filter: Function | string): void;
     // @internal (undocumented)
     _removeElement(element: Element): void;
@@ -230,9 +230,9 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     setAttribute(el: Element, name: string, value: string): void;
     setAttributes(el: Element, atts: Record<string, string>): void;
     // @internal (undocumented)
-    setConnectorHover(connector: AbstractConnector, hover: boolean, sourceEndpoint?: Endpoint): void;
+    setConnectorHover(connector: ConnectorBase, hover: boolean, sourceEndpoint?: Endpoint): void;
     // @internal (undocumented)
-    setConnectorVisible(connector: AbstractConnector, v: boolean): void;
+    setConnectorVisible(connector: ConnectorBase, v: boolean): void;
     setContainer(newContainer: Element): void;
     setDragConstrainFunction(constrainFunction: ConstrainFunction): void;
     setDraggable(element: Element, draggable: boolean): void;
@@ -1081,7 +1081,7 @@ export interface jsPlumbDOMElement extends HTMLElement, jsPlumbElement<Element> 
 // @internal (undocumented)
 export interface jsPlumbDOMInformation {
     // (undocumented)
-    connector?: AbstractConnector;
+    connector?: ConnectorBase;
     // (undocumented)
     endpoint?: Endpoint;
     // (undocumented)

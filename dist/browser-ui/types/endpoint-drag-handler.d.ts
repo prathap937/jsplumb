@@ -21,7 +21,7 @@ export declare class EndpointDragHandler implements DragHandler {
     jpc: Connection;
     existingJpc: boolean;
     private _originalAnchorSpec;
-    ep: Endpoint<Element>;
+    ep: Endpoint;
     endpointRepresentation: EndpointRepresentation<any>;
     canvasElement: Element;
     private _activeDefinition;

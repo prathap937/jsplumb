@@ -10,6 +10,7 @@ import { AnchorSpec } from '@jsplumb/common';
 import { ArrowOverlayOptions } from '@jsplumb/common';
 import { BlankEndpointParams } from '@jsplumb/common';
 import { BoundingBox } from '@jsplumb/util';
+import { Connection as Connection_2 } from '@jsplumb/core';
 import { Connector } from '@jsplumb/common';
 import { ConnectorOptions } from '@jsplumb/common';
 import { ConnectorSpec } from '@jsplumb/common';
@@ -40,111 +41,6 @@ import { Size } from '@jsplumb/util';
 
 export declare const ABSOLUTE = "absolute";
 
-/**
- * @internal
- */
-export declare abstract class AbstractConnector implements Connector {
-    connection: Connection;
-    abstract type: string;
-    edited: boolean;
-    stub: number | number[];
-    sourceStub: number;
-    targetStub: number;
-    maxStub: number;
-    typeId: string;
-    gap: number;
-    sourceGap: number;
-    targetGap: number;
-    segments: Array<Segment>;
-    totalLength: number;
-    segmentProportions: Array<[number, number]>;
-    segmentProportionalLengths: Array<number>;
-    protected paintInfo: PaintGeometry;
-    strokeWidth: number;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    segment: number;
-    bounds: Extents;
-    cssClass: string;
-    hoverClass: string;
-    abstract getDefaultStubs(): [number, number];
-    geometry: Geometry;
-    constructor(connection: Connection, params: ConnectorOptions);
-    getTypeDescriptor(): string;
-    getIdPrefix(): string;
-    protected setGeometry(g: Geometry, internal: boolean): void;
-    /**
-     * Subclasses can override this. By default we just pass back the geometry we are using internally.
-     */
-    exportGeometry(): Geometry;
-    /**
-     * Subclasses can override this. By default we just set the given geometry as our internal representation.
-     */
-    importGeometry(g: Geometry): boolean;
-    resetGeometry(): void;
-    /**
-     *
-     * @param g
-     * @param dx
-     * @param dy
-     */
-    abstract transformGeometry(g: Geometry, dx: number, dy: number): Geometry;
-    /**
-     * Helper method for subclasses - AnchorPlacement is a common component of a connector geometry.
-     * @internal
-     * @param a
-     * @param dx
-     * @param dy
-     */
-    protected transformAnchorPlacement(a: AnchorPlacement, dx: number, dy: number): AnchorPlacement;
-    abstract _compute(geometry: PaintGeometry, params: ConnectorComputeParams): void;
-    resetBounds(): void;
-    /**
-     * Function: findSegmentForPoint
-     * Returns the segment that is closest to the given [x,y],
-     * null if nothing found.  This function returns a JS
-     * object with:
-     *
-     *   d   -   distance from segment
-     *   l   -   proportional location in segment
-     *   x   -   x point on the segment
-     *   y   -   y point on the segment
-     *   s   -   the segment itself.
-     */
-    findSegmentForPoint(x: number, y: number): SegmentForPoint;
-    lineIntersection(x1: number, y1: number, x2: number, y2: number): Array<PointXY>;
-    boxIntersection(x: number, y: number, w: number, h: number): Array<PointXY>;
-    boundingBoxIntersection(box: any): Array<PointXY>;
-    _updateSegmentProportions(): void;
-    /**
-     * returns [segment, proportion of travel in segment, segment index] for the segment
-     * that contains the point which is 'location' distance along the entire path, where
-     * 'location' is a decimal between 0 and 1 inclusive. in this connector type, paths
-     * are made up of a list of segments, each of which contributes some fraction to
-     * the total length.
-     * From 1.3.10 this also supports the 'absolute' property, which lets us specify a location
-     * as the absolute distance in pixels, rather than a proportion of the total path.
-     */
-    _findSegmentForLocation(location: number, absolute?: boolean): {
-        segment: Segment;
-        proportion: number;
-        index: number;
-    };
-    _addSegment<T extends SegmentParams>(segmentType: string, params: T): void;
-    _clearSegments(): void;
-    getLength(): number;
-    private _prepareCompute;
-    updateBounds(segment: Segment): void;
-    private dumpSegmentsToConsole;
-    pointOnPath(location: number, absolute?: boolean): PointXY;
-    gradientAtPoint(location: number, absolute?: boolean): number;
-    pointAlongPathFrom(location: number, distance: number, absolute?: boolean): PointXY;
-    compute(params: ConnectorComputeParams): void;
-    setAnchorOrientation(idx: number, orientation: number[]): void;
-}
-
 export declare interface AbstractSelectOptions<E> {
     scope?: SelectionList;
     source?: ElementSelectionSpecifier<E>;
@@ -157,6 +53,8 @@ export declare interface AddGroupOptions<E> extends GroupOptions {
     el: E;
     collapsed?: boolean;
 }
+
+export declare function _addSegment<T extends SegmentParams>(connector: ConnectorBase, segmentType: string, params: T): void;
 
 /**
  * @internal
@@ -474,288 +372,41 @@ export declare type ClassAction = typeof ADD_CLASS_ACTION | typeof REMOVE_CLASS_
 
 export declare function classList(...className: Array<string>): string;
 
+export declare function _clearSegments(connector: ConnectorBase): void;
+
 export declare function cls(...className: Array<string>): string;
 
 /**
- * Base class for Endpoint and Connection.
- * @public
+ * @internal
  */
-export declare abstract class Component extends EventGenerator {
-    instance: JsPlumbInstance;
-    abstract getTypeDescriptor(): string;
-    abstract getDefaultOverlayKey(): string;
-    abstract getIdPrefix(): string;
-    abstract getXY(): PointXY;
-    defaultLabelLocation: number | [number, number];
+export declare interface Component {
     overlays: Record<string, Overlay>;
     overlayPositions: Record<string, PointXY>;
     overlayPlacements: Record<string, Extents>;
-    clone: () => Component;
-    deleted: boolean;
-    segment: number;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    id: string;
+    instance: JsPlumbInstance;
     visible: boolean;
-    typeId: string;
-    params: Record<string, any>;
+    cssClass: string;
+    hoverClass: string;
+    id: string;
+    getDefaultOverlayKey(): string;
+    getIdPrefix(): string;
+    getXY(): PointXY;
+    _typeDescriptor: string;
+    _types: Set<string>;
+    _typeCache: {};
+    deleted: boolean;
+    _hover: boolean;
     paintStyle: PaintStyle;
     hoverPaintStyle: PaintStyle;
     paintStyleInUse: PaintStyle;
-    _hover: boolean;
+    parameters: ComponentParameters;
+    params: Record<string, any>;
     lastPaintedAt: string;
     data: Record<string, any>;
     _defaultType: ComponentTypeDescriptor;
     events: any;
-    parameters: ComponentParameters;
-    _types: Set<string>;
-    _typeCache: {};
-    cssClass: string;
-    hoverClass: string;
     beforeDetach: BeforeDetachInterceptor;
     beforeDrop: BeforeDropInterceptor;
-    protected constructor(instance: JsPlumbInstance, params?: ComponentOptions);
-    /**
-     * Called internally when the user is trying to disconnect the given connection.
-     * @internal
-     * @param connection
-     */
-    isDetachAllowed(connection: Connection): boolean;
-    /**
-     * @internal
-     * @param sourceId
-     * @param targetId
-     * @param scope
-     * @param connection
-     * @param dropEndpoint
-     */
-    isDropAllowed(sourceId: string, targetId: string, scope: string, connection: Connection, dropEndpoint: Endpoint): boolean;
-    /**
-     * @internal
-     */
-    getDefaultType(): ComponentTypeDescriptor;
-    /**
-     * @internal
-     */
-    appendToDefaultType(obj: Record<string, any>): void;
-    /**
-     * @internal
-     */
-    getId(): string;
-    /**
-     * @internal
-     */
-    cacheTypeItem(key: string, item: any, typeId: string): void;
-    /**
-     * @internal
-     */
-    getCachedTypeItem(key: string, typeId: string): any;
-    /**
-     * @internal
-     */
-    setType(typeId: string, params?: any): void;
-    /**
-     * @internal
-     */
-    getType(): string[];
-    /**
-     * @internal
-     */
-    reapplyTypes(params?: any): void;
-    /**
-     * @internal
-     */
-    hasType(typeId: string): boolean;
-    /**
-     * @internal
-     */
-    addType(typeId: string, params?: any): void;
-    /**
-     * @internal
-     */
-    removeType(typeId: string, params?: any): void;
-    /**
-     * @internal
-     */
-    clearTypes(params?: any): void;
-    /**
-     * @internal
-     */
-    toggleType(typeId: string, params?: any): void;
-    /**
-     * @internal
-     */
-    applyType(t: any, params?: any): void;
-    /**
-     * @internal
-     */
-    setPaintStyle(style: PaintStyle): void;
-    /**
-     * @internal
-     */
-    getPaintStyle(): PaintStyle;
-    /**
-     * @internal
-     */
-    setHoverPaintStyle(style: PaintStyle): void;
-    /**
-     * @internal
-     */
-    getHoverPaintStyle(): PaintStyle;
-    /**
-     * @internal
-     */
-    destroy(): void;
-    /**
-     * @internal
-     */
-    isHover(): boolean;
-    /**
-     * @internal
-     */
-    mergeParameters(p: ComponentParameters): void;
-    /**
-     * @internal
-     */
-    setVisible(v: boolean): void;
-    /**
-     * @internal
-     */
-    isVisible(): boolean;
-    /**
-     * @internal
-     */
-    setAbsoluteOverlayPosition(overlay: Overlay, xy: PointXY): void;
-    /**
-     * @internal
-     */
-    getAbsoluteOverlayPosition(overlay: Overlay): PointXY;
-    /**
-     * @internal
-     */
-    private _clazzManip;
-    /**
-     * Adds a css class to the component
-     * @param clazz Class to add. May be a space separated list.
-     * @param cascade This is for subclasses to use, if they wish to. For instance, a Connection might want to optionally cascade a css class
-     * down to its endpoints.
-     * @public
-     */
-    addClass(clazz: string, cascade?: boolean): void;
-    /**
-     * Removes a css class from the component
-     * @param clazz Class to remove. May be a space separated list.
-     * @param cascade This is for subclasses to use, if they wish to. For instance, a Connection might want to optionally cascade a css class
-     * removal down to its endpoints.
-     * @public
-     */
-    removeClass(clazz: string, cascade?: boolean): void;
-    /**
-     * Returns a space-separated list of the current classes assigned to this component.
-     * @public
-     */
-    getClass(): string;
-    /**
-     * @internal
-     */
-    shouldFireEvent(event: string, value: any, originalEvent?: Event): boolean;
-    /**
-     * Gets any backing data stored against the given component.
-     * @public
-     */
-    getData(): Record<string, any>;
-    /**
-     * Sets backing data stored against the given component, overwriting any current value.
-     * @param d
-     * @public
-     */
-    setData(d: any): void;
-    /**
-     * Merges the given backing data into any current backing data.
-     * @param d
-     * @public
-     */
-    mergeData(d: any): void;
-    /**
-     * Add an overlay to the component.  This method is not intended for use by users of the API. You must `revalidate`
-     * an associated element for this component if you call this method directly. Consider using the `addOverlay` method
-     * of `JsPlumbInstance` instead, which adds the overlay and then revalidates.
-     * @param overlay
-     * @internal
-     */
-    addOverlay(overlay: OverlaySpec): Overlay;
-    /**
-     * Get the Overlay with the given ID. You can optionally provide a type parameter for this method in order to get
-     * a typed return value (such as `LabelOverlay`, `ArrowOverlay`, etc), since some overlays have methods that
-     * others do not.
-     * @param id ID of the overlay to retrieve.
-     * @public
-     */
-    getOverlay<T extends Overlay>(id: string): T;
-    /**
-     * Gets all the overlays registered on this component.
-     * @public
-     */
-    getOverlays(): Record<string, Overlay>;
-    /**
-     * Hide the overlay with the given id.
-     * @param id
-     * @public
-     */
-    hideOverlay(id: string): void;
-    /**
-     * Hide all overlays, or a specific set of overlays.
-     * @param ids optional list of ids to hide.
-     * @public
-     */
-    hideOverlays(...ids: Array<string>): void;
-    /**
-     * Show a specific overlay (set it to be visible)
-     * @param id
-     * @public
-     */
-    showOverlay(id: string): void;
-    /**
-     * Show all overlays, or a specific set of overlays.
-     * @param ids optional list of ids to show.
-     * @public
-     */
-    showOverlays(...ids: Array<string>): void;
-    /**
-     * Remove all overlays from this component.
-     * @public
-     */
-    removeAllOverlays(): void;
-    /**
-     * Remove the overlay with the given id.
-     * @param overlayId
-     * @param dontCleanup This is an internal parameter. You are not encouraged to provide a value for this.
-     * @internal
-     */
-    removeOverlay(overlayId: string, dontCleanup?: boolean): void;
-    /**
-     * Remove the given set of overlays, specified by their ids.
-     * @param overlays
-     * @public
-     */
-    removeOverlays(...overlays: string[]): void;
-    /**
-     * Return this component's label, if one is set.
-     * @public
-     */
-    getLabel(): string;
-    /**
-     * @internal
-     */
-    getLabelOverlay(): LabelOverlay;
-    /**
-     * Set this component's label.
-     * @param l Either some text, or a function which returns some text, or an existing label overlay.
-     * @public
-     */
-    setLabel(l: string | Function | LabelOverlay): void;
 }
 
 /**
@@ -778,6 +429,209 @@ export declare interface ComponentOptions {
 
 export declare type ComponentParameters = Record<string, any>;
 
+export declare const Components: {
+    applyType(component: Component, t: any, params?: any): void;
+    applyBaseType(component: Component, t: any, params?: any): void;
+    destroy(component: Component): void;
+    /**
+     * base method, called by subclasses.
+     * @param component
+     * @param v
+     * @internal
+     */
+    _setComponentVisible(component: Component, v: boolean): void;
+    setVisible(component: Component, v: boolean): void;
+    /**
+     * @internal
+     */
+    isVisible(component: Component): boolean;
+    /**
+     * Adds a css class to the component
+     * @param clazz Class to add. May be a space separated list.
+     * @param cascade This is for subclasses to use, if they wish to. For instance, a Connection might want to optionally cascade a css class
+     * down to its endpoints.
+     * @public
+     */
+    addBaseClass(component: Component, clazz: string, cascade?: boolean): void;
+    /**
+     * Removes a css class from the component
+     * @param clazz Class to remove. May be a space separated list.
+     * @param cascade This is for subclasses to use, if they wish to. For instance, a Connection might want to optionally cascade a css class
+     * removal down to its endpoints.
+     * @public
+     */
+    removeBaseClass(component: Component, clazz: string, cascade?: boolean): void;
+    addClass(component: Component, clazz: string, cascade?: boolean): void;
+    removeClass(component: Component, clazz: string, cascade?: boolean): void;
+    /**
+     * Show all overlays, or a specific set of overlays.
+     * @param ids optional list of ids to show.
+     * @public
+     */
+    showOverlays(component: Component, ...ids: Array<string>): void;
+    /**
+     * Hide all overlays, or a specific set of overlays.
+     * @param ids optional list of ids to hide.
+     * @public
+     */
+    hideOverlays(component: Component, ...ids: Array<string>): void;
+    setPaintStyle(component: Component, style: PaintStyle): void;
+    /**
+     * @internal
+     */
+    setHoverPaintStyle(component: Component, style: PaintStyle): void;
+    mergeParameters(component: Component, p: ComponentParameters): void;
+    /**
+     * Add an overlay to the component.  This method is not intended for use by users of the API. You must `revalidate`
+     * an associated element for this component if you call this method directly. Consider using the `addOverlay` method
+     * of `JsPlumbInstance` instead, which adds the overlay and then revalidates.
+     * @param overlay
+     * @internal
+     */
+    addOverlay(component: Component, overlay: OverlaySpec): Overlay;
+    /**
+     * Get the Overlay with the given ID. You can optionally provide a type parameter for this method in order to get
+     * a typed return value (such as `LabelOverlay`, `ArrowOverlay`, etc), since some overlays have methods that
+     * others do not.
+     * @param id ID of the overlay to retrieve.
+     * @public
+     */
+    getOverlay<T extends Overlay>(component: Component, id: string): T;
+    /**
+     * Hide the overlay with the given id.
+     * @param id
+     * @public
+     */
+    hideOverlay(component: Component, id: string): void;
+    /**
+     * Show a specific overlay (set it to be visible)
+     * @param id
+     * @public
+     */
+    showOverlay(component: Component, id: string): void;
+    /**
+     * Remove all overlays from this component.
+     * @public
+     */
+    removeAllOverlays(component: Component): void;
+    /**
+     * Remove the overlay with the given id.
+     * @param overlayId
+     * @param dontCleanup This is an internal parameter. You are not encouraged to provide a value for this.
+     * @internal
+     */
+    removeOverlay(component: Component, overlayId: string, dontCleanup?: boolean): void;
+    /**
+     * Remove the given set of overlays, specified by their ids.
+     * @param overlays
+     * @public
+     */
+    removeOverlays(component: Component, ...overlays: string[]): void;
+    /**
+     * Return this component's label, if one is set.
+     * @public
+     */
+    getLabel(component: Component): string;
+    /**
+     * @internal
+     */
+    getLabelOverlay(component: Component): LabelOverlay;
+    /**
+     * Set this component's label.
+     * @param l Either some text, or a function which returns some text, or an existing label overlay.
+     * @public
+     */
+    setLabel(component: Component, l: string | Function | LabelOverlay): void;
+    /**
+     * @internal
+     */
+    getDefaultType(component: Component): ComponentTypeDescriptor;
+    /**
+     * @internal
+     */
+    appendToDefaultType(component: Component, obj: Record<string, any>): void;
+    /**
+     * @internal
+     */
+    /**
+     * @internal
+     */
+    cacheTypeItem(component: Component, key: string, item: any, typeId: string): void;
+    /**
+     * @internal
+     */
+    getCachedTypeItem(component: Component, key: string, typeId: string): any;
+    /**
+     * @internal
+     */
+    setType(component: Component, typeId: string, params?: any): void;
+    /**
+     * @internal
+     */
+    getType(component: Component): string[];
+    /**
+     * @internal
+     */
+    reapplyTypes(component: Component, params?: any): void;
+    /**
+     * @internal
+     */
+    hasType(component: Component, typeId: string): boolean;
+    /**
+     * @internal
+     */
+    addType(component: Component, typeId: string, params?: any): void;
+    /**
+     * @internal
+     */
+    removeType(component: Component, typeId: string, params?: any): void;
+    /**
+     * @internal
+     */
+    clearTypes(component: Component, params?: any): void;
+    /**
+     * @internal
+     */
+    toggleType(component: Component, typeId: string, params?: any): void;
+    /**
+     * Called internally when the user is trying to disconnect the given connection.
+     * @internal
+     * @param connection
+     */
+    isDetachAllowed(component: Component, connection: Connection): boolean;
+    /**
+     * @internal
+     * @param sourceId
+     * @param targetId
+     * @param scope
+     * @param connection
+     * @param dropEndpoint
+     */
+    isDropAllowed(component: Component, sourceId: string, targetId: string, scope: string, connection: Connection, dropEndpoint: Endpoint): boolean;
+    /**
+     * Gets any backing data stored against the given component.
+     * @public
+     */
+    getData(component: Component): Record<string, any>;
+    /**
+     * Sets backing data stored against the given component, overwriting any current value.
+     * @param d
+     * @public
+     */
+    setData(component: Component, d: any): void;
+    /**
+     * Merges the given backing data into any current backing data.
+     * @param d
+     * @public
+     */
+    mergeData(component: Component, d: any): void;
+    setAbsoluteOverlayPosition(component: Component, overlay: Overlay, xy: PointXY): void;
+    /**
+     * @internal
+     */
+    getAbsoluteOverlayPosition(component: Component, overlay: Overlay): PointXY;
+};
+
 /**
  * Base interface for type descriptors for internal methods.
  * @internal
@@ -785,6 +639,8 @@ export declare type ComponentParameters = Record<string, any>;
 export declare interface ComponentTypeDescriptor extends TypeDescriptorBase {
     overlays: Record<string, OverlaySpec>;
 }
+
+export declare function compute(connector: ConnectorBase, params: ConnectorComputeParams): void;
 
 export declare type ComputedBlankEndpoint = [number, number, number, number];
 
@@ -804,22 +660,15 @@ export declare interface ComputedPosition {
 
 export declare type ComputedRectangleEndpoint = [number, number, number, number];
 
-/**
- * @public
- */
-export declare class Connection<E = any> extends Component {
-    instance: JsPlumbInstance;
-    connector: AbstractConnector;
+export declare interface Connection<E = any> extends Component {
+    connector: ConnectorBase;
     defaultLabelLocation: number;
     scope: string;
+    deleted: boolean;
     typeId: string;
-    getIdPrefix(): string;
-    getDefaultOverlayKey(): string;
-    getXY(): {
-        x: number;
-        y: number;
-    };
-    previousConnection: Connection;
+    idPrefix: string;
+    defaultOverlayKey: string;
+    previousConnection: Connection<E>;
     /**
      * The id of the source of the connection
      * @public
@@ -870,17 +719,20 @@ export declare class Connection<E = any> extends Component {
      * Source and target endpoints.
      * @public
      */
-    endpoints: [Endpoint<E>, Endpoint<E>];
+    endpoints: [Endpoint, Endpoint];
     endpointStyles: [PaintStyle, PaintStyle];
     readonly endpointSpec: EndpointSpec;
     readonly endpointsSpec: [EndpointSpec, EndpointSpec];
     endpointStyle: PaintStyle;
     endpointHoverStyle: PaintStyle;
     readonly endpointHoverStyles: [PaintStyle, PaintStyle];
+    id: string;
+    lastPaintedAt: string;
+    paintStyleInUse: PaintStyle;
     /**
      * @internal
      */
-    suspendedEndpoint: Endpoint<E>;
+    suspendedEndpoint: Endpoint;
     /**
      * @internal
      */
@@ -910,79 +762,13 @@ export declare class Connection<E = any> extends Component {
      * @internal
      */
     proxies: Array<{
-        ep: Endpoint<E>;
-        originalEp: Endpoint<E>;
+        ep: Endpoint;
+        originalEp: Endpoint;
     }>;
     /**
      * @internal
      */
     pending: boolean;
-    /**
-     * Connections should never be constructed directly by users of the library.
-     * @internal
-     * @param instance
-     * @param params
-     */
-    constructor(instance: JsPlumbInstance, params: ConnectionOptions<E>);
-    makeEndpoint(isSource: boolean, el: any, elId: string, anchor?: AnchorSpec, ep?: Endpoint): Endpoint;
-    static type: string;
-    getTypeDescriptor(): string;
-    isDetachable(ep?: Endpoint): boolean;
-    setDetachable(detachable: boolean): void;
-    isReattach(): boolean;
-    setReattach(reattach: boolean): void;
-    applyType(t: ConnectionTypeDescriptor, typeMap: any): void;
-    /**
-     * Adds the given class to the UI elements being used to represent this connection's connector, and optionally to
-     * the UI elements representing the connection's endpoints.
-     * @param c class to add
-     * @param cascade If true, also add the class to the connection's endpoints.
-     * @public
-     */
-    addClass(c: string, cascade?: boolean): void;
-    /**
-     * Removes the given class from the UI elements being used to represent this connection's connector, and optionally from
-     * the UI elements representing the connection's endpoints.
-     * @param c class to remove
-     * @param cascade If true, also remove the class from the connection's endpoints.
-     * @public
-     */
-    removeClass(c: string, cascade?: boolean): void;
-    /**
-     * Sets the visible state of the connection.
-     * @param v
-     * @public
-     */
-    setVisible(v: boolean): void;
-    /**
-     * @internal
-     */
-    destroy(): void;
-    getUuids(): [string, string];
-    /**
-     * @internal
-     */
-    prepareConnector(connectorSpec: ConnectorSpec, typeId?: string): AbstractConnector;
-    /**
-     * @internal
-     */
-    setPreparedConnector(connector: AbstractConnector, doNotRepaint?: boolean, doNotChangeListenerComponent?: boolean, typeId?: string): void;
-    /**
-     * @internal
-     * @param connectorSpec
-     * @param doNotRepaint
-     * @param doNotChangeListenerComponent
-     * @param typeId
-     */
-    _setConnector(connectorSpec: ConnectorSpec, doNotRepaint?: boolean, doNotChangeListenerComponent?: boolean, typeId?: string): void;
-    /**
-     * Replace the Endpoint at the given index with a new Endpoint.  This is used by the Toolkit edition, if changes to an edge type
-     * cause a change in Endpoint.
-     * @param idx 0 for source, 1 for target
-     * @param endpointDef Spec for the new Endpoint.
-     * @public
-     */
-    replaceEndpoint(idx: number, endpointDef: EndpointSpec): void;
 }
 
 /**
@@ -1008,12 +794,12 @@ export declare class ConnectionDragSelector {
  * @public
  */
 export declare interface ConnectionEstablishedParams<E = any> {
-    connection: Connection<E>;
+    connection: Connection;
     source: E;
-    sourceEndpoint: Endpoint<E>;
+    sourceEndpoint: Endpoint;
     sourceId: string;
     target: E;
-    targetEndpoint: Endpoint<E>;
+    targetEndpoint: Endpoint;
     targetId: string;
 }
 
@@ -1033,8 +819,8 @@ export declare interface ConnectionMovedParams<E = any> {
     newSourceId: string;
     originalTargetId: string;
     newTargetId: string;
-    originalEndpoint: Endpoint<E>;
-    newEndpoint: Endpoint<E>;
+    originalEndpoint: Endpoint;
+    newEndpoint: Endpoint;
 }
 
 /**
@@ -1045,9 +831,55 @@ export declare type ConnectionOptions<E = any> = Merge<ConnectParams<E>, {
     target?: E;
     sourceEndpoint?: Endpoint;
     targetEndpoint?: Endpoint;
-    previousConnection?: Connection<E>;
+    previousConnection?: Connection;
     geometry?: any;
 }>;
+
+export declare const Connections: {
+    isReattach(connection: Connection, alsoCheckForced: boolean): boolean;
+    isDetachable(connection: Connection, ep?: Endpoint): boolean;
+    setDetachable(connection: Connection, detachable: boolean): void;
+    setReattach(connection: Connection, reattach: boolean): void;
+    prepareConnector(connection: Connection, connectorSpec: ConnectorSpec, typeId?: string): ConnectorBase;
+    /**
+     * @internal
+     * @param connectorSpec
+     * @param doNotRepaint
+     * @param doNotChangeListenerComponent
+     * @param typeId
+     */
+    setConnector(connection: Connection, connectorSpec: ConnectorSpec, doNotRepaint?: boolean, doNotChangeListenerComponent?: boolean, typeId?: string): void;
+    getUuids(connection: Connection): [string, string];
+    /**
+     * Replace the Endpoint at the given index with a new Endpoint.  This is used by the Toolkit edition, if changes to an edge type
+     * cause a change in Endpoint.
+     * @param idx 0 for source, 1 for target
+     * @param endpointDef Spec for the new Endpoint.
+     * @public
+     */
+    replaceEndpoint(connection: Connection, idx: number, endpointDef: EndpointSpec): void;
+    makeEndpoint(connection: Connection, isSource: boolean, el: any, elId: string, anchor?: AnchorSpec, ep?: Endpoint): Endpoint;
+    applyType(connection: Connection, t: ConnectionTypeDescriptor, typeMap: any): void;
+    destroy(connection: Connection): void;
+    setVisible(connection: Connection, v: boolean): void;
+    /**
+     * Adds the given class to the UI elements being used to represent this connection's connector, and optionally to
+     * the UI elements representing the connection's endpoints.
+     * @param c class to add
+     * @param cascade If true, also add the class to the connection's endpoints.
+     * @public
+     */
+    addClass(connection: Connection, c: string, cascade?: boolean): void;
+    /**
+     * Removes the given class from the UI elements being used to represent this connection's connector, and optionally from
+     * the UI elements representing the connection's endpoints.
+     * @param c class to remove
+     * @param cascade If true, also remove the class from the connection's endpoints.
+     * @public
+     */
+    removeClass(connection: Connection, c: string, cascade?: boolean): void;
+    isConnection(component: any): component is Connection<any>;
+};
 
 export declare class ConnectionSelection extends SelectionBase<Connection> {
     setDetachable(d: boolean): ConnectionSelection;
@@ -1077,6 +909,47 @@ export declare interface ConnectionTypeDescriptor extends TypeDescriptor {
     endpoints?: [EndpointSpec, EndpointSpec];
 }
 
+export declare const CONNECTOR_TYPE_STRAIGHT = "Straight";
+
+/**
+ * Base interface for connectors. In connector implementations, use createConnectorBase(..) to get
+ * one of these and then extend your concrete implementation into it.
+ * @internal
+ */
+export declare interface ConnectorBase extends Connector {
+    edited: boolean;
+    connection: Connection;
+    stub: number | number[];
+    sourceStub: number;
+    targetStub: number;
+    maxStub: number;
+    typeId: string;
+    gap: number;
+    sourceGap: number;
+    targetGap: number;
+    segments: Array<Segment>;
+    totalLength: number;
+    segmentProportions: Array<[number, number]>;
+    segmentProportionalLengths: Array<number>;
+    paintInfo: PaintGeometry;
+    strokeWidth: number;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    segment: number;
+    bounds: Extents;
+    cssClass: string;
+    hoverClass: string;
+    geometry: Geometry;
+    getTypeDescriptor(): string;
+    getIdPrefix(): string;
+}
+
+export declare function connectorBoundingBoxIntersection(connector: ConnectorBase, box: any): Array<PointXY>;
+
+export declare function connectorBoxIntersection(connector: ConnectorBase, x: number, y: number, w: number, h: number): Array<PointXY>;
+
 export declare type ConnectorComputeParams = {
     sourcePos: AnchorPlacement;
     targetPos: AnchorPlacement;
@@ -1087,9 +960,68 @@ export declare type ConnectorComputeParams = {
     targetInfo: ViewportElement<any>;
 };
 
+/**
+ * Definition of an object that can create instances of some connector type, and perform a few
+ * housekeeping tasks on connector's of that type.
+ */
+export declare interface ConnectorHandler {
+    importGeometry(connector: ConnectorBase, g: Geometry): boolean;
+    transformGeometry(connector: ConnectorBase, g: Geometry, dx: number, dy: number): Geometry;
+    _compute(connector: ConnectorBase, geometry: PaintGeometry, params: ConnectorComputeParams): void;
+    create(connection: Connection, connectorType: string, params: any): ConnectorBase;
+    exportGeometry(connector: ConnectorBase): Geometry;
+    setAnchorOrientation(connector: ConnectorBase, idx: number, orientation: number[]): void;
+}
+
+/**
+ * Utilities for registering and working with Connectors
+ * @public
+ */
 export declare const Connectors: {
-    get: (connection: Connection, name: string, params: any) => AbstractConnector;
-    register: (name: string, conn: Constructable<AbstractConnector>) => void;
+    /**
+     * Register a connector handler. If you write your own Connector type you need to register it using this method.
+     * @param connectorType
+     * @param connectorHandler
+     * @public
+     */
+    register: (connectorType: string, connectorHandler: ConnectorHandler) => void;
+    /**
+     * Get a handler for the given connector type
+     * @internal
+     * @param connectorType
+     */
+    get: (connectorType: string) => ConnectorHandler;
+    /**
+     * Export the given connector's geometry, via the associated handler.
+     * @param connector
+     * @internal
+     */
+    exportGeometry(connector: ConnectorBase): any;
+    /**
+     * Import geometry into the given connector, via the associated handler
+     * @param connector
+     * @param g
+     * @internal
+     */
+    importGeometry(connector: ConnectorBase, g: Geometry): any;
+    /**
+     * Transform geometry for the given connector, via the associated handler
+     * @param connector
+     * @param g
+     * @param dx
+     * @param dy
+     * @internal
+     */
+    transformGeometry(connector: ConnectorBase, g: Geometry, dx: number, dy: number): any;
+    /**
+     * Prepare a connector using the given name and args.
+     * @internal
+     * @param connection
+     * @param name
+     * @param args
+     */
+    create(connection: Connection<any>, name: string, args: any): ConnectorBase;
+    setAnchorOrientation(connector: ConnectorBase, idx: number, orientation: number[]): void;
 };
 
 /**
@@ -1215,6 +1147,21 @@ export declare interface ConnectParams<E> {
  */
 export declare function convertToFullOverlaySpec(spec: string | OverlaySpec): FullOverlaySpec;
 
+/**
+ * Base class for Endpoint and Connection.
+ * @public
+ */
+export declare function createComponentBase(instance: JsPlumbInstance, idPrefix: string, typeDescriptor: string, defaultOverlayKey: string, defaultType: Record<string, any>, defaultLabelLocation: number | [number, number], params?: ComponentOptions): Component;
+
+export declare function createConnection(instance: JsPlumbInstance, params: ConnectionOptions): Connection;
+
+/**
+ * factory method to create a ConnectorBase
+ */
+export declare function createConnectorBase(type: string, connection: Connection, params: ConnectorOptions, defaultStubs: [number, number]): ConnectorBase;
+
+export declare function createEndpoint<E>(instance: JsPlumbInstance, params: InternalEndpointOptions<E>): Endpoint;
+
 export declare function createFloatingAnchor(instance: JsPlumbInstance, element: Element, elementId: string): LightweightFloatingAnchor;
 
 export declare function _createPerimeterAnchor(params: Record<string, any>): LightweightPerimeterAnchor;
@@ -1278,6 +1225,31 @@ export declare const DEFAULT_KEY_REATTACH_CONNECTIONS = "reattachConnections";
 
 export declare const DEFAULT_KEY_SCOPE = "scope";
 
+export declare const DEFAULT_LABEL_LOCATION_CONNECTION = 0.5;
+
+export declare const DEFAULT_LABEL_LOCATION_ENDPOINT: [number, number];
+
+export declare const DEFAULT_OVERLAY_KEY_ENDPOINTS = "endpointOverlays";
+
+/**
+ * Provides a few default methods for working with connectors. You only need to interact with this object
+ * if you're writing your own connector and you want to use on of the default methods it provides.
+ * @public
+ */
+export declare const defaultConnectorHandler: {
+    /**
+     * Sets geometry on a connector
+     * @param connector
+     */
+    exportGeometry(connector: ConnectorBase): Geometry;
+    /**
+     * Import geometry to a connector and mark it 'edited'
+     * @param connector
+     * @param g
+     */
+    importGeometry(connector: ConnectorBase, g: Geometry): boolean;
+};
+
 /**
  * Optional parameters to the `DeleteConnection` method.
  */
@@ -1319,28 +1291,22 @@ export declare class DotEndpoint extends EndpointRepresentation<ComputedDotEndpo
 
 export declare const DotEndpointHandler: EndpointHandler<DotEndpoint, ComputedDotEndpoint>;
 
+export declare function dumpSegmentsToConsole(connector: ConnectorBase): void;
+
 export declare type ElementSelectionSpecifier<E> = E | Array<E> | '*';
 
-export declare class Endpoint<E = any> extends Component {
-    instance: JsPlumbInstance;
-    getIdPrefix(): string;
-    getTypeDescriptor(): string;
-    getXY(): {
-        x: number;
-        y: number;
-    };
-    connections: Array<Connection<E>>;
-    endpoint: EndpointRepresentation<any>;
-    element: E;
+export declare interface Endpoint extends Component {
+    connections: Array<Connection>;
+    representation: EndpointRepresentation<any>;
+    proxiedBy: Endpoint;
+    connectorClass: string;
+    connectorHoverClass: string;
+    element: any;
     elementId: string;
     dragAllowedWhenFull: boolean;
     timestamp: string;
     portId: string;
     maxConnections: number;
-    proxiedBy: Endpoint<E>;
-    connectorClass: string;
-    connectorHoverClass: string;
-    finalEndpoint: Endpoint<E>;
     enabled: boolean;
     isSource: boolean;
     isTarget: boolean;
@@ -1349,9 +1315,8 @@ export declare class Endpoint<E = any> extends Component {
     connectionsDirected: boolean;
     connectionsDetachable: boolean;
     reattachConnections: boolean;
-    currentAnchorClass: string;
-    referenceEndpoint: Endpoint<E>;
     edgeType: string;
+    currentAnchorClass: string;
     connector: ConnectorSpec;
     connectorOverlays: Array<OverlaySpec>;
     connectorStyle: PaintStyle;
@@ -1360,69 +1325,24 @@ export declare class Endpoint<E = any> extends Component {
     uuid: string;
     scope: string;
     _anchor: LightweightAnchor;
-    defaultLabelLocation: [number, number];
-    getDefaultOverlayKey(): string;
-    constructor(instance: JsPlumbInstance, params: InternalEndpointOptions<E>);
-    private _updateAnchorClass;
-    private setPreparedAnchor;
-    /**
-     * Called by the router when a dynamic anchor has changed its current location.
-     * @param currentAnchor
-     */
-    _anchorLocationChanged(currentAnchor: LightweightAnchor): void;
-    setAnchor(anchorParams: AnchorSpec | Array<AnchorSpec>): Endpoint;
-    addConnection(conn: Connection): void;
-    /**
-     * Detaches this Endpoint from the given Connection.  If `deleteOnEmpty` is set to true and there are no
-     * Connections after this one is detached, the Endpoint is deleted.
-     * @param connection Connection from which to detach.
-     * @param idx Optional, used internally to identify if this is the source (0) or target endpoint (1). Sometimes we already know this when we call this method.
-     * @param transientDetach For internal use only.
-     */
-    detachFromConnection(connection: Connection, idx?: number, transientDetach?: boolean): void;
-    /**
-     * Delete every connection in the instance.
-     * @param params
-     */
-    deleteEveryConnection(params?: DeleteConnectionOptions): void;
-    /**
-     * Removes all connections from this endpoint to the given other endpoint.
-     * @param otherEndpoint
-     */
-    detachFrom(otherEndpoint: Endpoint): Endpoint;
-    setVisible(v: boolean, doNotChangeConnections?: boolean, doNotNotifyOtherEndpoint?: boolean): void;
-    applyType(t: any, typeMap: any): void;
-    destroy(): void;
-    isFull(): boolean;
-    isFloating(): boolean;
-    /**
-     * Test if this Endpoint is connected to the given Endpoint.
-     * @param otherEndpoint
-     */
-    isConnectedTo(otherEndpoint: Endpoint): boolean;
-    setDragAllowedWhenFull(allowed: boolean): void;
-    getUuid(): string;
-    connectorSelector(): Connection;
-    private prepareEndpoint;
-    setEndpoint<C>(ep: EndpointSpec | EndpointRepresentation<C>): void;
-    private setPreparedEndpoint;
-    addClass(clazz: string, cascade?: boolean): void;
-    removeClass(clazz: string, cascade?: boolean): void;
+    referenceEndpoint: Endpoint;
+    finalEndpoint: Endpoint;
+    connectorSelector: () => Connection;
 }
 
 export declare type EndpointComputeFunction<T> = (endpoint: EndpointRepresentation<T>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any) => T;
 
 export declare const EndpointFactory: {
     get: (ep: Endpoint, name: string, params: any) => EndpointRepresentation<any>;
-    clone: <C>(epr: EndpointRepresentation<C>) => EndpointRepresentation<C>;
-    compute: <T>(endpoint: EndpointRepresentation<T>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any) => T;
+    clone: <C, ElementType>(epr: EndpointRepresentation<C>) => EndpointRepresentation<C>;
+    compute: <T, ElementType_1>(endpoint: EndpointRepresentation<T>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any) => T;
     registerHandler: <E, T_1>(eph: EndpointHandler<E, T_1>) => void;
 };
 
-export declare interface EndpointHandler<E, T> {
+export declare interface EndpointHandler<EndpointClass, T> {
     type: string;
     compute: EndpointComputeFunction<T>;
-    getParams(endpoint: E): Record<string, any>;
+    getParams(endpoint: EndpointClass): Record<string, any>;
     cls: Constructable<EndpointRepresentation<T>>;
 }
 
@@ -1556,13 +1476,55 @@ export declare abstract class EndpointRepresentation<C> {
     bounds: Extents;
     classes: Array<string>;
     instance: JsPlumbInstance;
+    canvas: any;
     abstract type: string;
     protected constructor(endpoint: Endpoint, params?: EndpointRepresentationParams);
     addClass(c: string): void;
     removeClass(c: string): void;
     compute(anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any): void;
-    setVisible(v: boolean): void;
 }
+
+export declare const Endpoints: {
+    applyType(endpoint: Endpoint, t: any, typeMap: any): void;
+    destroy(endpoint: Endpoint): void;
+    setVisible(endpoint: Endpoint, v: boolean, doNotChangeConnections?: boolean, doNotNotifyOtherEndpoint?: boolean): void;
+    addClass(endpoint: Endpoint, clazz: string, cascade?: boolean): void;
+    removeClass(endpoint: Endpoint, clazz: string, cascade?: boolean): void;
+    _setPreparedAnchor(endpoint: Endpoint, anchor: LightweightAnchor): Endpoint;
+    _updateAnchorClass(endpoint: Endpoint): void;
+    /**
+     * Called by the router when a dynamic anchor has changed its current location.
+     * @param currentAnchor
+     */
+    _anchorLocationChanged(endpoint: Endpoint, currentAnchor: LightweightAnchor): void;
+    setAnchor(endpoint: Endpoint, anchorParams: AnchorSpec | Array<AnchorSpec>): Endpoint;
+    addConnection(endpoint: Endpoint, conn: Connection_2): void;
+    deleteEveryConnection(endpoint: Endpoint, params?: DeleteConnectionOptions): void;
+    /**
+     * Removes all connections from this endpoint to the given other endpoint.
+     * @param otherEndpoint
+     */
+    detachFrom(endpoint: Endpoint, otherEndpoint: Endpoint): Endpoint;
+    /**
+     * Detaches this Endpoint from the given Connection.  If `deleteOnEmpty` is set to true and there are no
+     * Connections after this one is detached, the Endpoint is deleted.
+     * @param connection Connection from which to detach.
+     * @param idx Optional, used internally to identify if this is the source (0) or target endpoint (1). Sometimes we already know this when we call this method.
+     * @param transientDetach For internal use only.
+     */
+    detachFromConnection(endpoint: Endpoint, connection: Connection_2, idx?: number, transientDetach?: boolean): void;
+    isFull(endpoint: Endpoint): boolean;
+    isFloating(endpoint: Endpoint): boolean;
+    /**
+     * Test if this Endpoint is connected to the given Endpoint.
+     * @param otherEndpoint
+     */
+    isConnectedTo(endpoint: Endpoint, otherEndpoint: Endpoint): boolean;
+    isEndpoint(component: any): component is Endpoint;
+    prepareEndpoint<C>(endpoint: Endpoint, ep: EndpointSpec | EndpointRepresentation<C>, typeId?: string): EndpointRepresentation<C>;
+    setEndpoint<C_1>(endpoint: Endpoint, ep: EndpointSpec | EndpointRepresentation<C_1>): void;
+    setPreparedEndpoint<C_2>(endpoint: Endpoint, ep: EndpointRepresentation<C_2>): void;
+};
 
 export declare class EndpointSelection extends SelectionBase<Endpoint> {
     setEnabled(e: boolean): EndpointSelection;
@@ -1650,6 +1612,35 @@ declare enum FaceValues {
     bottom = "bottom"
 }
 
+/**
+ * returns [segment, proportion of travel in segment, segment index] for the segment
+ * that contains the point which is 'location' distance along the entire path, where
+ * 'location' is a decimal between 0 and 1 inclusive. in this connector type, paths
+ * are made up of a list of segments, each of which contributes some fraction to
+ * the total length.
+ * From 1.3.10 this also supports the 'absolute' property, which lets us specify a location
+ * as the absolute distance in pixels, rather than a proportion of the total path.
+ */
+export declare function _findSegmentForLocation(connector: ConnectorBase, location: number, absolute?: boolean): {
+    segment: Segment;
+    proportion: number;
+    index: number;
+};
+
+/**
+ * Function: findSegmentForPoint
+ * Returns the segment that is closest to the given [x,y],
+ * null if nothing found.  This function returns a JS
+ * object with:
+ *
+ *   d   -   distance from segment
+ *   l   -   proportional location in segment
+ *   x   -   x point on the segment
+ *   y   -   y point on the segment
+ *   s   -   the segment itself.
+ */
+export declare function findSegmentForPoint(connector: ConnectorBase, x: number, y: number): SegmentForPoint;
+
 export declare const FIXED = "fixed";
 
 /**
@@ -1658,6 +1649,8 @@ export declare const FIXED = "fixed";
  * @internal
  */
 export declare function getDefaultFace(a: LightweightContinuousAnchor): Face;
+
+export declare function gradientAtComponentPoint(connector: ConnectorBase, location: number, absolute?: boolean): number;
 
 export declare interface GroupCollapsedParams<E> {
     group: UIGroup<E>;
@@ -1729,6 +1722,10 @@ export declare interface GroupOptions {
     endpoint?: EndpointSpec;
 }
 
+export declare const ID_PREFIX_CONNECTION = "_jsPlumb_c";
+
+export declare const ID_PREFIX_ENDPOINT = "_jsplumb_e";
+
 export declare const INTERCEPT_BEFORE_DETACH = "beforeDetach";
 
 export declare const INTERCEPT_BEFORE_DRAG = "beforeDrag";
@@ -1741,8 +1738,8 @@ export declare const INTERCEPT_BEFORE_START_DETACH = "beforeStartDetach";
  * Internal extension of ConnectParams containing a few extra things needed to establish a connection.
  */
 export declare interface InternalConnectParams<E> extends ConnectParams<E> {
-    sourceEndpoint?: Endpoint<E>;
-    targetEndpoint?: Endpoint<E>;
+    sourceEndpoint?: Endpoint;
+    targetEndpoint?: Endpoint;
     scope?: string;
     type?: string;
     newConnection?: (p: any) => Connection;
@@ -2394,14 +2391,6 @@ export declare abstract class JsPlumbInstance<T extends {
      */
     _refreshEndpoint(endpoint: Endpoint): void;
     /**
-     * Prepare a connector using the given name and args.
-     * @internal
-     * @param connection
-     * @param name
-     * @param args
-     */
-    _makeConnector(connection: Connection<T["E"]>, name: string, args: any): AbstractConnector;
-    /**
      * Adds an overlay to the given component, repainting the UI as necessary.
      * @param component - A Connection or Endpoint to add the overlay to
      * @param overlay - Spec for the overlay
@@ -2495,7 +2484,7 @@ export declare abstract class JsPlumbInstance<T extends {
      * @internal
      * @param connector
      */
-    getPathData(connector: AbstractConnector): any;
+    getPathData(connector: ConnectorBase): any;
     /**
      * @internal
      * @param o
@@ -2518,7 +2507,7 @@ export declare abstract class JsPlumbInstance<T extends {
      * @param paintStyle
      * @param extents
      */
-    abstract paintConnector(connector: AbstractConnector, paintStyle: PaintStyle, extents?: Extents): void;
+    abstract paintConnector(connector: ConnectorBase, paintStyle: PaintStyle, extents?: Extents): void;
     /**
      * @internal
      * @param connection
@@ -2531,25 +2520,25 @@ export declare abstract class JsPlumbInstance<T extends {
      * @param h
      * @param sourceEndpoint
      */
-    abstract setConnectorHover(connector: AbstractConnector, h: boolean, sourceEndpoint?: Endpoint): void;
+    abstract setConnectorHover(connector: ConnectorBase, h: boolean, sourceEndpoint?: Endpoint): void;
     /**
      * @internal
      * @param connector
      * @param clazz
      */
-    abstract addConnectorClass(connector: AbstractConnector, clazz: string): void;
-    abstract removeConnectorClass(connector: AbstractConnector, clazz: string): void;
-    abstract getConnectorClass(connector: AbstractConnector): string;
-    abstract setConnectorVisible(connector: AbstractConnector, v: boolean): void;
-    abstract applyConnectorType(connector: AbstractConnector, t: TypeDescriptor): void;
-    abstract applyEndpointType(ep: Endpoint<T>, t: TypeDescriptor): void;
-    abstract setEndpointVisible(ep: Endpoint<T>, v: boolean): void;
-    abstract destroyEndpoint(ep: Endpoint<T>): void;
-    abstract renderEndpoint(ep: Endpoint<T>, paintStyle: PaintStyle): void;
-    abstract addEndpointClass(ep: Endpoint<T>, c: string): void;
-    abstract removeEndpointClass(ep: Endpoint<T>, c: string): void;
-    abstract getEndpointClass(ep: Endpoint<T>): string;
-    abstract setEndpointHover(endpoint: Endpoint<T>, h: boolean, endpointIndex: number, doNotCascade?: boolean): void;
+    abstract addConnectorClass(connector: ConnectorBase, clazz: string): void;
+    abstract removeConnectorClass(connector: ConnectorBase, clazz: string): void;
+    abstract getConnectorClass(connector: ConnectorBase): string;
+    abstract setConnectorVisible(connector: ConnectorBase, v: boolean): void;
+    abstract applyConnectorType(connector: ConnectorBase, t: TypeDescriptor): void;
+    abstract applyEndpointType(ep: Endpoint, t: TypeDescriptor): void;
+    abstract setEndpointVisible(ep: Endpoint, v: boolean): void;
+    abstract destroyEndpoint(ep: Endpoint): void;
+    abstract renderEndpoint(ep: Endpoint, paintStyle: PaintStyle): void;
+    abstract addEndpointClass(ep: Endpoint, c: string): void;
+    abstract removeEndpointClass(ep: Endpoint, c: string): void;
+    abstract getEndpointClass(ep: Endpoint): string;
+    abstract setEndpointHover(endpoint: Endpoint, h: boolean, endpointIndex: number, doNotCascade?: boolean): void;
 }
 
 export declare const KEY_CONNECTION_OVERLAYS = "connectionOverlays";
@@ -2664,15 +2653,15 @@ export declare class LightweightRouter<T extends {
     private _removeEndpointFromAnchorLists;
     computeAnchorLocation(anchor: LightweightAnchor, params: AnchorComputeParams): AnchorPlacement;
     computePath(connection: Connection<any>, timestamp: string): void;
-    getEndpointLocation(endpoint: Endpoint<any>, params: AnchorComputeParams): AnchorPlacement;
-    getEndpointOrientation(ep: Endpoint<any>): Orientation;
+    getEndpointLocation(endpoint: Endpoint, params: AnchorComputeParams): AnchorPlacement;
+    getEndpointOrientation(ep: Endpoint): Orientation;
     setAnchorOrientation(anchor: LightweightAnchor, orientation: Orientation): void;
-    isDynamicAnchor(ep: Endpoint<any>): boolean;
-    isFloating(ep: Endpoint<any>): boolean;
+    isDynamicAnchor(ep: Endpoint): boolean;
+    isFloating(ep: Endpoint): boolean;
     prepareAnchor(params: AnchorSpec | Array<AnchorSpec>): LightweightAnchor;
     redraw(elementId: string, timestamp?: string, offsetToUI?: PointXY): RedrawResult;
     reset(): void;
-    setAnchor(endpoint: Endpoint<any>, anchor: LightweightAnchor): void;
+    setAnchor(endpoint: Endpoint, anchor: LightweightAnchor): void;
     setConnectionAnchors(conn: Connection<any>, anchors: [LightweightAnchor, LightweightAnchor]): void;
     private _calculateOrientation;
     /**
@@ -2722,6 +2711,8 @@ export declare class LightweightRouter<T extends {
      */
     anchorsEqual(a1: LightweightAnchor, a2: LightweightAnchor): boolean;
 }
+
+export declare function lineIntersection(connector: ConnectorBase, x1: number, y1: number, x2: number, y2: number): Array<PointXY>;
 
 export declare interface ListSpec {
     endpoint?: EndpointSpec;
@@ -2820,6 +2811,10 @@ export declare class PlainArrowOverlay extends ArrowOverlay {
     constructor(instance: JsPlumbInstance, component: Component, p: ArrowOverlayOptions);
 }
 
+export declare function pointAlongComponentPathFrom(connector: ConnectorBase, location: number, distance: number, absolute?: boolean): PointXY;
+
+export declare function pointOnComponentPath(connector: ConnectorBase, location: number, absolute?: boolean): PointXY;
+
 export declare class RectangleEndpoint extends EndpointRepresentation<ComputedRectangleEndpoint> {
     width: number;
     height: number;
@@ -2882,6 +2877,10 @@ export declare const REMOVE_CLASS_ACTION = "remove";
 
 export declare function _removeTypeCssHelper<E>(component: Component, typeId: string): void;
 
+export declare function resetBounds(connector: ConnectorBase): void;
+
+export declare function resetGeometry(connector: ConnectorBase): void;
+
 export declare const RIGHT = FaceValues.right;
 
 export declare interface Router<T extends {
@@ -2891,7 +2890,7 @@ export declare interface Router<T extends {
     redraw(elementId: string, timestamp?: string, offsetToUI?: PointXY): RedrawResult;
     computePath(connection: Connection, timestamp: string): void;
     computeAnchorLocation(anchor: A, params: AnchorComputeParams): AnchorPlacement;
-    getEndpointLocation(endpoint: Endpoint<any>, params: AnchorComputeParams): AnchorPlacement;
+    getEndpointLocation(endpoint: Endpoint, params: AnchorComputeParams): AnchorPlacement;
     getAnchorOrientation(anchor: A, endpoint?: Endpoint): Orientation;
     getEndpointOrientation(endpoint: Endpoint): Orientation;
     setAnchorOrientation(anchor: A, orientation: Orientation): void;
@@ -2982,15 +2981,12 @@ declare class SelectionBase<T extends Component> {
     hideOverlay(id: string): SelectionBase<T>;
     setPaintStyle(style: PaintStyle): SelectionBase<T>;
     setHoverPaintStyle(style: PaintStyle): SelectionBase<T>;
-    setSuspendEvents(suspend: boolean): SelectionBase<T>;
     setParameter(name: string, value: string): SelectionBase<T>;
     setParameters(p: Record<string, string>): SelectionBase<T>;
     setVisible(v: boolean): SelectionBase<T>;
     addType(name: string): SelectionBase<T>;
     toggleType(name: string): SelectionBase<T>;
     removeType(name: string): SelectionBase<T>;
-    bind(evt: string, handler: (a: any, e?: any) => any): SelectionBase<T>;
-    unbind(evt: string, handler: Function): SelectionBase<T>;
     setHover(h: boolean): SelectionBase<T>;
 }
 
@@ -3001,6 +2997,16 @@ export declare interface SelectOptions<E> extends AbstractSelectOptions<E> {
 }
 
 export declare const SELECTOR_MANAGED_ELEMENT: string;
+
+/**
+ * Sets the geometry on some connector, and the `edited` flag if appropriate.
+ * @param connector
+ * @param g
+ * @param internal
+ */
+export declare function setGeometry(connector: ConnectorBase, g: Geometry, internal: boolean): void;
+
+export declare function setPreparedConnector(connection: Connection, connector: ConnectorBase, doNotRepaint?: boolean, doNotChangeListenerComponent?: boolean, typeId?: string): void;
 
 export declare const SOURCE = "source";
 
@@ -3027,12 +3033,8 @@ export declare interface SourceOrTargetDefinition {
 
 export declare const STATIC = "static";
 
-export declare class StraightConnector extends AbstractConnector {
-    static type: string;
-    type: string;
-    getDefaultStubs(): [number, number];
-    _compute(paintInfo: PaintGeometry, p: ConnectorComputeParams): void;
-    transformGeometry(g: StraightConnectorGeometry, dx: number, dy: number): StraightConnectorGeometry;
+export declare interface StraightConnector extends ConnectorBase {
+    type: typeof CONNECTOR_TYPE_STRAIGHT;
 }
 
 export declare interface StraightConnectorGeometry {
@@ -3079,6 +3081,15 @@ export declare interface TargetDefinition extends SourceOrTargetDefinition {
 
 export declare const TOP = FaceValues.top;
 
+/**
+ * Transform the given anchor placement by dx,dy
+ * @internal
+ * @param a
+ * @param dx
+ * @param dy
+ */
+export declare function transformAnchorPlacement(a: AnchorPlacement, dx: number, dy: number): AnchorPlacement;
+
 export declare type TranslatedViewportElement<E> = Omit<TranslatedViewportElementBase<E>, "dirty">;
 
 /**
@@ -3088,6 +3099,24 @@ export declare interface TranslatedViewportElementBase<E> extends ViewportElemen
     cr: number;
     sr: number;
 }
+
+export declare const TYPE_DESCRIPTOR_CONNECTION = "connection";
+
+export declare const TYPE_DESCRIPTOR_CONNECTOR = "connector";
+
+export declare const TYPE_DESCRIPTOR_ENDPOINT = "endpoint";
+
+export declare const TYPE_ID_CONNECTION = "_jsplumb_connection";
+
+/**
+ * @internal
+ */
+export declare const TYPE_ITEM_ANCHORS = "anchors";
+
+/**
+ * @internal
+ */
+export declare const TYPE_ITEM_CONNECTOR = "connector";
 
 /**
  * Base interface for type descriptors for public methods.
@@ -3219,6 +3248,8 @@ export declare interface UnmanageElementParams<E = any> {
     el: E;
 }
 
+export declare function updateBounds(connector: ConnectorBase, segment: Segment): void;
+
 export declare function _updateHoverStyle<E>(component: Component): void;
 
 /**
@@ -3229,6 +3260,8 @@ export declare interface UpdateOffsetOptions {
     recalc?: boolean;
     elId?: string;
 }
+
+export declare function _updateSegmentProportions(connector: ConnectorBase): void;
 
 export declare type UUID = string;
 

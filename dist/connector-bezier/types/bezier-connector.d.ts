@@ -1,21 +1,24 @@
-import { AbstractBezierConnector, AbstractBezierOptions } from "./abstract-bezier-connector";
-import { Connection, PaintGeometry, ConnectorComputeParams } from "@jsplumb/core";
-import { AnchorPlacement } from "@jsplumb/common";
-import { PointXY } from "@jsplumb/util";
+import { AbstractBezierOptions, BezierConnectorBase, BezierConnectorGeometry } from "./abstract-bezier-connector";
+import { ConnectorHandler } from "@jsplumb/core";
 /**
  * Options for the Bezier connector.
  */
 export interface BezierOptions extends AbstractBezierOptions {
 }
-export declare class BezierConnector extends AbstractBezierConnector {
-    connection: Connection;
-    static type: string;
-    type: string;
+export declare const CONNECTOR_TYPE_BEZIER = "Bezier";
+export declare const CONNECTOR_TYPE_CUBIC_BEZIER = "CubicBezier";
+/**
+ * Models a cubic bezier connector
+ * @internal
+ */
+export interface BezierConnector extends BezierConnectorBase {
+    type: typeof CONNECTOR_TYPE_BEZIER;
     majorAnchor: number;
     minorAnchor: number;
-    constructor(connection: Connection, params: BezierOptions);
-    getCurviness(): number;
-    protected _findControlPoint(point: PointXY, sourceAnchorPosition: AnchorPlacement, targetAnchorPosition: AnchorPlacement, soo: [number, number], too: [number, number]): PointXY;
-    _computeBezier(paintInfo: PaintGeometry, p: ConnectorComputeParams, sp: AnchorPlacement, tp: AnchorPlacement, _w: number, _h: number): void;
+    geometry: BezierConnectorGeometry;
 }
+/**
+ * @internal
+ */
+export declare const BezierConnectorHandler: ConnectorHandler;
 //# sourceMappingURL=bezier-connector.d.ts.map

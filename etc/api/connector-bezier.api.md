@@ -4,11 +4,12 @@
 
 ```ts
 
-import { AbstractConnector } from '@jsplumb/core';
 import { AnchorPlacement } from '@jsplumb/common';
 import { BoundingBox } from '@jsplumb/util';
 import { Connection } from '@jsplumb/core';
+import { ConnectorBase } from '@jsplumb/core';
 import { ConnectorComputeParams } from '@jsplumb/core';
+import { ConnectorHandler } from '@jsplumb/core';
 import { ConnectorOptions } from '@jsplumb/common';
 import { Geometry } from '@jsplumb/common';
 import { LineXY } from '@jsplumb/util';
@@ -16,45 +17,6 @@ import { PaintGeometry } from '@jsplumb/core';
 import { PointXY } from '@jsplumb/util';
 import { Segment } from '@jsplumb/common';
 import { SegmentParams } from '@jsplumb/common';
-
-// Warning: (ae-internal-missing-underscore) The name "AbstractBezierConnector" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal (undocumented)
-export abstract class AbstractBezierConnector extends AbstractConnector {
-    constructor(connection: Connection, params: any);
-    // (undocumented)
-    clockwise: boolean;
-    // (undocumented)
-    _compute(paintInfo: PaintGeometry, p: ConnectorComputeParams): void;
-    // (undocumented)
-    abstract _computeBezier(paintInfo: PaintGeometry, p: ConnectorComputeParams, sp: PointXY, tp: PointXY, _w: number, _h: number): void;
-    // (undocumented)
-    connection: Connection;
-    // (undocumented)
-    curviness: number;
-    // (undocumented)
-    exportGeometry(): BezierConnectorGeometry;
-    // (undocumented)
-    geometry: BezierConnectorGeometry;
-    // (undocumented)
-    getDefaultStubs(): [number, number];
-    // (undocumented)
-    importGeometry(geometry: BezierConnectorGeometry): boolean;
-    // (undocumented)
-    isLoopbackCurrently: boolean;
-    // (undocumented)
-    loopbackRadius: number;
-    // (undocumented)
-    margin: number;
-    // (undocumented)
-    orientation: string;
-    // (undocumented)
-    proximityLimit: number;
-    // (undocumented)
-    showLoopback: boolean;
-    // (undocumented)
-    transformGeometry(g: BezierConnectorGeometry, dx: number, dy: number): BezierConnectorGeometry;
-}
 
 // @public
 export interface AbstractBezierOptions extends ConnectorOptions {
@@ -73,41 +35,63 @@ export interface AbstractBezierOptions extends ConnectorOptions {
 // @public (undocumented)
 export type AxisCoefficients = [number, number, number, number];
 
-// Warning: (ae-incompatible-release-tags) The symbol "BezierConnector" is marked as @public, but its signature references "AbstractBezierConnector" which is marked as @internal
-//
 // @public (undocumented)
-export class BezierConnector extends AbstractBezierConnector {
-    constructor(connection: Connection, params: BezierOptions);
-    // (undocumented)
-    _computeBezier(paintInfo: PaintGeometry, p: ConnectorComputeParams, sp: AnchorPlacement, tp: AnchorPlacement, _w: number, _h: number): void;
-    // (undocumented)
-    connection: Connection;
-    // (undocumented)
-    protected _findControlPoint(point: PointXY, sourceAnchorPosition: AnchorPlacement, targetAnchorPosition: AnchorPlacement, soo: [number, number], too: [number, number]): PointXY;
-    // (undocumented)
-    getCurviness(): number;
-    // (undocumented)
-    majorAnchor: number;
-    // (undocumented)
-    minorAnchor: number;
-    // (undocumented)
-    static type: string;
-    // (undocumented)
-    type: string;
-}
-
-// @public
-export interface BezierConnectorGeometry extends Geometry {
-    // (undocumented)
-    controlPoints: [
-    PointXY,
-    PointXY
-    ];
+export interface BaseBezierConnectorGeometry extends Geometry {
     // (undocumented)
     source: AnchorPlacement;
     // (undocumented)
     target: AnchorPlacement;
 }
+
+// Warning: (ae-internal-missing-underscore) The name "BezierConnector" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export interface BezierConnector extends BezierConnectorBase {
+    // (undocumented)
+    geometry: BezierConnectorGeometry;
+    // (undocumented)
+    majorAnchor: number;
+    // (undocumented)
+    minorAnchor: number;
+    // (undocumented)
+    type: typeof CONNECTOR_TYPE_BEZIER;
+}
+
+// Warning: (ae-internal-missing-underscore) The name "BezierConnectorBase" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export interface BezierConnectorBase extends ConnectorBase {
+    // (undocumented)
+    clockwise: boolean;
+    // (undocumented)
+    curviness: number;
+    // (undocumented)
+    isLoopbackCurrently: boolean;
+    // (undocumented)
+    loopbackRadius: number;
+    // (undocumented)
+    margin: number;
+    // (undocumented)
+    orientation: string;
+    // (undocumented)
+    proximityLimit: number;
+    // (undocumented)
+    showLoopback: boolean;
+}
+
+// @public
+export interface BezierConnectorGeometry extends BaseBezierConnectorGeometry {
+    // (undocumented)
+    controlPoints: [
+    PointXY,
+    PointXY
+    ];
+}
+
+// Warning: (ae-internal-missing-underscore) The name "BezierConnectorHandler" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal (undocumented)
+export const BezierConnectorHandler: ConnectorHandler;
 
 // @public
 export function bezierLineIntersection(x1: number, y1: number, x2: number, y2: number, curve: Curve): Array<PointXY>;
@@ -130,8 +114,30 @@ export function boundingBoxIntersection(boundingBox: BoundingBox, curve: Curve):
 // @public
 export function boxIntersection(x: number, y: number, w: number, h: number, curve: Curve): Array<PointXY>;
 
+// Warning: (ae-incompatible-release-tags) The symbol "_compute" is marked as @public, but its signature references "BezierConnectorBase" which is marked as @internal
+//
+// @public (undocumented)
+export function _compute(connector: BezierConnectorBase, paintInfo: PaintGeometry, p: ConnectorComputeParams, _computeBezier: (connector: BezierConnectorBase, paintInfo: PaintGeometry, p: ConnectorComputeParams, sp: AnchorPlacement, tp: AnchorPlacement, _w: number, _h: number) => void): void;
+
 // @public (undocumented)
 export function computeBezierLength(curve: Curve): number;
+
+// @public (undocumented)
+export const CONNECTOR_TYPE_BEZIER = "Bezier";
+
+// @public (undocumented)
+export const CONNECTOR_TYPE_CUBIC_BEZIER = "CubicBezier";
+
+// @public (undocumented)
+export const CONNECTOR_TYPE_QUADRATIC_BEZIER = "QuadraticBezier";
+
+// @public (undocumented)
+export const CONNECTOR_TYPE_STATE_MACHINE = "StateMachine";
+
+// Warning: (ae-internal-missing-underscore) The name "createBezierConnectorBase" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
+export function createBezierConnectorBase(type: string, connection: Connection, params: ConnectorOptions, defaultStubs: [number, number]): BezierConnectorBase;
 
 // @public (undocumented)
 export interface CubicBezierSegment extends BezierSegment {
@@ -230,22 +236,28 @@ export const SEGMENT_TYPE_CUBIC_BEZIER = "CubicBezier";
 // @public (undocumented)
 export const SEGMENT_TYPE_QUADRATIC_BEZIER = "QuadraticBezier";
 
-// Warning: (ae-incompatible-release-tags) The symbol "StateMachineConnector" is marked as @public, but its signature references "AbstractBezierConnector" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "StateMachineConnector" is marked as @public, but its signature references "BezierConnectorBase" which is marked as @internal
 //
 // @public (undocumented)
-export class StateMachineConnector extends AbstractBezierConnector {
-    constructor(connection: Connection, params: StateMachineOptions);
-    // (undocumented)
-    _computeBezier(paintInfo: PaintGeometry, params: ConnectorComputeParams, sp: AnchorPlacement, tp: AnchorPlacement, w: number, h: number): void;
-    // (undocumented)
-    connection: Connection;
+export interface StateMachineConnector extends BezierConnectorBase {
     // (undocumented)
     _controlPoint: PointXY;
     // (undocumented)
-    static type: string;
+    geometry: StateMachineConnectorGeometry;
     // (undocumented)
-    type: string;
+    type: typeof CONNECTOR_TYPE_STATE_MACHINE;
 }
+
+// @public
+export interface StateMachineConnectorGeometry extends BaseBezierConnectorGeometry {
+    // (undocumented)
+    controlPoint: PointXY;
+}
+
+// Warning: (ae-internal-missing-underscore) The name "StateMachineConnectorHandler" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal (undocumented)
+export const StateMachineConnectorHandler: ConnectorHandler;
 
 // @public (undocumented)
 export interface StateMachineOptions extends AbstractBezierOptions {

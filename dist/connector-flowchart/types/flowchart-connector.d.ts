@@ -1,5 +1,5 @@
-import { Connection, AbstractConnector, ConnectorComputeParams, PaintGeometry } from "@jsplumb/core";
-import { ConnectorOptions, Geometry } from "@jsplumb/common";
+import { ConnectorHandler, ConnectorBase } from "@jsplumb/core";
+import { ConnectorOptions } from "@jsplumb/common";
 /**
  * Options for a flowchart connector
  * @public
@@ -22,28 +22,22 @@ export interface FlowchartConnectorOptions extends ConnectorOptions {
      */
     loopbackRadius?: number;
 }
-/**
- * Flowchart connector inscribes a path consisting of a series of horizontal and vertical segments.
- * @public
- */
-export declare class FlowchartConnector extends AbstractConnector {
-    connection: Connection;
-    static type: string;
-    type: string;
-    private internalSegments;
+declare type FlowchartSegment = [number, number, number, number, string];
+export declare const CONNECTOR_TYPE_FLOWCHART = "Flowchart";
+export interface FlowchartConnector extends ConnectorBase {
+    type: typeof CONNECTOR_TYPE_FLOWCHART;
+    internalSegments: Array<FlowchartSegment>;
     midpoint: number;
     alwaysRespectStubs: boolean;
     cornerRadius: number;
     lastx: number;
     lasty: number;
-    lastOrientation: any;
     loopbackRadius: number;
     isLoopbackCurrently: boolean;
-    getDefaultStubs(): [number, number];
-    constructor(connection: Connection, params: FlowchartConnectorOptions);
-    private addASegment;
-    private writeSegments;
-    _compute(paintInfo: PaintGeometry, params: ConnectorComputeParams): void;
-    transformGeometry(g: Geometry, dx: number, dy: number): Geometry;
 }
+/**
+ * @internal
+ */
+export declare const FlowchartConnectorHandler: ConnectorHandler;
+export {};
 //# sourceMappingURL=flowchart-connector.d.ts.map

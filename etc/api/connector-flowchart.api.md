@@ -4,30 +4,25 @@
 
 ```ts
 
-import { AbstractConnector } from '@jsplumb/core';
-import { Connection } from '@jsplumb/core';
-import { ConnectorComputeParams } from '@jsplumb/core';
+import { ConnectorBase } from '@jsplumb/core';
+import { ConnectorHandler } from '@jsplumb/core';
 import { ConnectorOptions } from '@jsplumb/common';
-import { Geometry } from '@jsplumb/common';
-import { PaintGeometry } from '@jsplumb/core';
 
-// @public
-export class FlowchartConnector extends AbstractConnector {
-    constructor(connection: Connection, params: FlowchartConnectorOptions);
+// @public (undocumented)
+export const CONNECTOR_TYPE_FLOWCHART = "Flowchart";
+
+// @public (undocumented)
+export interface FlowchartConnector extends ConnectorBase {
     // (undocumented)
     alwaysRespectStubs: boolean;
     // (undocumented)
-    _compute(paintInfo: PaintGeometry, params: ConnectorComputeParams): void;
-    // (undocumented)
-    connection: Connection;
-    // (undocumented)
     cornerRadius: number;
+    // Warning: (ae-forgotten-export) The symbol "FlowchartSegment" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    getDefaultStubs(): [number, number];
+    internalSegments: Array<FlowchartSegment>;
     // (undocumented)
     isLoopbackCurrently: boolean;
-    // (undocumented)
-    lastOrientation: any;
     // (undocumented)
     lastx: number;
     // (undocumented)
@@ -37,12 +32,13 @@ export class FlowchartConnector extends AbstractConnector {
     // (undocumented)
     midpoint: number;
     // (undocumented)
-    transformGeometry(g: Geometry, dx: number, dy: number): Geometry;
-    // (undocumented)
-    static type: string;
-    // (undocumented)
-    type: string;
+    type: typeof CONNECTOR_TYPE_FLOWCHART;
 }
+
+// Warning: (ae-internal-missing-underscore) The name "FlowchartConnectorHandler" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal (undocumented)
+export const FlowchartConnectorHandler: ConnectorHandler;
 
 // @public
 export interface FlowchartConnectorOptions extends ConnectorOptions {

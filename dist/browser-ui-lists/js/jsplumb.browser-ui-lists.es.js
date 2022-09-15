@@ -164,7 +164,7 @@ var JsPlumbList = function () {
   }, {
     key: "deriveEndpoint",
     value: function deriveEndpoint(edge, index, ep, conn) {
-      return this.options.deriveEndpoint ? this.options.deriveEndpoint(edge, index, ep, conn) : this.options.endpoint ? this.options.endpoint : ep.endpoint.type;
+      return this.options.deriveEndpoint ? this.options.deriveEndpoint(edge, index, ep, conn) : this.options.endpoint ? this.options.endpoint : ep.representation.type;
     }
   }, {
     key: "newConnection",

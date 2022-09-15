@@ -1,255 +1,58 @@
-import { extend, log, sgn } from '@jsplumb/util';
-import { SEGMENT_TYPE_ARC, AbstractConnector, Segments, Connectors } from '@jsplumb/core';
+import { extend, sgn, log } from '@jsplumb/util';
+import { _addSegment, SEGMENT_TYPE_ARC, createConnectorBase, Segments, setGeometry, transformAnchorPlacement, Connectors } from '@jsplumb/core';
 import { defaultSegmentHandler } from '@jsplumb/common';
 
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-}
-
-function _defineProperties(target, props) {
-  for (var i = 0; i < props.length; i++) {
-    var descriptor = props[i];
-    descriptor.enumerable = descriptor.enumerable || false;
-    descriptor.configurable = true;
-    if ("value" in descriptor) descriptor.writable = true;
-    Object.defineProperty(target, descriptor.key, descriptor);
-  }
-}
-
-function _createClass(Constructor, protoProps, staticProps) {
-  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-  if (staticProps) _defineProperties(Constructor, staticProps);
-  return Constructor;
-}
-
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
+function _compute(connector, paintInfo, p, _computeBezier) {
+  var sp = p.sourcePos,
+      tp = p.targetPos,
+      _w = Math.abs(sp.curX - tp.curX),
+      _h = Math.abs(sp.curY - tp.curY);
+  if (!connector.showLoopback || p.sourceEndpoint.elementId !== p.targetEndpoint.elementId) {
+    connector.isLoopbackCurrently = false;
+    _computeBezier(connector, paintInfo, p, sp, tp, _w, _h);
   } else {
-    obj[key] = value;
+    connector.isLoopbackCurrently = true;
+    var x1 = p.sourcePos.curX,
+        y1 = p.sourcePos.curY - connector.margin,
+        cx = x1,
+        cy = y1 - connector.loopbackRadius,
+    _x = cx - connector.loopbackRadius,
+        _y = cy - connector.loopbackRadius;
+    _w = 2 * connector.loopbackRadius;
+    _h = 2 * connector.loopbackRadius;
+    paintInfo.points[0] = _x;
+    paintInfo.points[1] = _y;
+    paintInfo.points[2] = _w;
+    paintInfo.points[3] = _h;
+    _addSegment(connector, SEGMENT_TYPE_ARC, {
+      loopback: true,
+      x1: x1 - _x + 4,
+      y1: y1 - _y,
+      startAngle: 0,
+      endAngle: 2 * Math.PI,
+      r: connector.loopbackRadius,
+      ac: !connector.clockwise,
+      x2: x1 - _x - 4,
+      y2: y1 - _y,
+      cx: cx - _x,
+      cy: cy - _y
+    });
   }
-
-  return obj;
 }
-
-function _inherits(subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function");
-  }
-
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      writable: true,
-      configurable: true
-    }
+function createBezierConnectorBase(type, connection, params, defaultStubs) {
+  var base = createConnectorBase(type, connection, params, defaultStubs);
+  params = params || {};
+  var bezier = extend(base, {
+    showLoopback: params.showLoopback !== false,
+    curviness: params.curviness || 10,
+    margin: params.margin || 5,
+    proximityLimit: params.proximityLimit || 80,
+    clockwise: params.orientation && params.orientation === "clockwise",
+    loopbackRadius: params.loopbackRadius || 25,
+    isLoopbackCurrently: false
   });
-  if (superClass) _setPrototypeOf(subClass, superClass);
+  return bezier;
 }
-
-function _getPrototypeOf(o) {
-  _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
-    return o.__proto__ || Object.getPrototypeOf(o);
-  };
-  return _getPrototypeOf(o);
-}
-
-function _setPrototypeOf(o, p) {
-  _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
-    o.__proto__ = p;
-    return o;
-  };
-
-  return _setPrototypeOf(o, p);
-}
-
-function _isNativeReflectConstruct() {
-  if (typeof Reflect === "undefined" || !Reflect.construct) return false;
-  if (Reflect.construct.sham) return false;
-  if (typeof Proxy === "function") return true;
-
-  try {
-    Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-function _assertThisInitialized(self) {
-  if (self === void 0) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return self;
-}
-
-function _possibleConstructorReturn(self, call) {
-  if (call && (typeof call === "object" || typeof call === "function")) {
-    return call;
-  }
-
-  return _assertThisInitialized(self);
-}
-
-function _createSuper(Derived) {
-  var hasNativeReflectConstruct = _isNativeReflectConstruct();
-
-  return function _createSuperInternal() {
-    var Super = _getPrototypeOf(Derived),
-        result;
-
-    if (hasNativeReflectConstruct) {
-      var NewTarget = _getPrototypeOf(this).constructor;
-
-      result = Reflect.construct(Super, arguments, NewTarget);
-    } else {
-      result = Super.apply(this, arguments);
-    }
-
-    return _possibleConstructorReturn(this, result);
-  };
-}
-
-var AbstractBezierConnector = function (_AbstractConnector) {
-  _inherits(AbstractBezierConnector, _AbstractConnector);
-  var _super = _createSuper(AbstractBezierConnector);
-  function AbstractBezierConnector(connection, params) {
-    var _this;
-    _classCallCheck(this, AbstractBezierConnector);
-    _this = _super.call(this, connection, params);
-    _this.connection = connection;
-    _defineProperty(_assertThisInitialized(_this), "showLoopback", void 0);
-    _defineProperty(_assertThisInitialized(_this), "curviness", void 0);
-    _defineProperty(_assertThisInitialized(_this), "margin", void 0);
-    _defineProperty(_assertThisInitialized(_this), "proximityLimit", void 0);
-    _defineProperty(_assertThisInitialized(_this), "orientation", void 0);
-    _defineProperty(_assertThisInitialized(_this), "loopbackRadius", void 0);
-    _defineProperty(_assertThisInitialized(_this), "clockwise", void 0);
-    _defineProperty(_assertThisInitialized(_this), "isLoopbackCurrently", void 0);
-    _defineProperty(_assertThisInitialized(_this), "geometry", null);
-    params = params || {};
-    _this.showLoopback = params.showLoopback !== false;
-    _this.curviness = params.curviness || 10;
-    _this.margin = params.margin || 5;
-    _this.proximityLimit = params.proximityLimit || 80;
-    _this.clockwise = params.orientation && params.orientation === "clockwise";
-    _this.loopbackRadius = params.loopbackRadius || 25;
-    _this.isLoopbackCurrently = false;
-    return _this;
-  }
-  _createClass(AbstractBezierConnector, [{
-    key: "getDefaultStubs",
-    value: function getDefaultStubs() {
-      return [0, 0];
-    }
-  }, {
-    key: "_compute",
-    value: function _compute(paintInfo, p) {
-      var sp = p.sourcePos,
-          tp = p.targetPos,
-          _w = Math.abs(sp.curX - tp.curX),
-          _h = Math.abs(sp.curY - tp.curY);
-      if (!this.showLoopback || p.sourceEndpoint.elementId !== p.targetEndpoint.elementId) {
-        this.isLoopbackCurrently = false;
-        this._computeBezier(paintInfo, p, sp, tp, _w, _h);
-      } else {
-        this.isLoopbackCurrently = true;
-        var x1 = p.sourcePos.curX,
-            y1 = p.sourcePos.curY - this.margin,
-            cx = x1,
-            cy = y1 - this.loopbackRadius,
-        _x = cx - this.loopbackRadius,
-            _y = cy - this.loopbackRadius;
-        _w = 2 * this.loopbackRadius;
-        _h = 2 * this.loopbackRadius;
-        paintInfo.points[0] = _x;
-        paintInfo.points[1] = _y;
-        paintInfo.points[2] = _w;
-        paintInfo.points[3] = _h;
-        this._addSegment(SEGMENT_TYPE_ARC, {
-          loopback: true,
-          x1: x1 - _x + 4,
-          y1: y1 - _y,
-          startAngle: 0,
-          endAngle: 2 * Math.PI,
-          r: this.loopbackRadius,
-          ac: !this.clockwise,
-          x2: x1 - _x - 4,
-          y2: y1 - _y,
-          cx: cx - _x,
-          cy: cy - _y
-        });
-      }
-    }
-  }, {
-    key: "exportGeometry",
-    value: function exportGeometry() {
-      if (this.geometry == null) {
-        return null;
-      } else {
-        return {
-          controlPoints: [extend({}, this.geometry.controlPoints[0]), extend({}, this.geometry.controlPoints[1])],
-          source: extend({}, this.geometry.source),
-          target: extend({}, this.geometry.target)
-        };
-      }
-    }
-  }, {
-    key: "transformGeometry",
-    value: function transformGeometry(g, dx, dy) {
-      return {
-        controlPoints: [{
-          x: g.controlPoints[0].x + dx,
-          y: g.controlPoints[0].y + dy
-        }, {
-          x: g.controlPoints[1].x + dx,
-          y: g.controlPoints[1].y + dy
-        }],
-        source: this.transformAnchorPlacement(g.source, dx, dy),
-        target: this.transformAnchorPlacement(g.target, dx, dy)
-      };
-    }
-  }, {
-    key: "importGeometry",
-    value: function importGeometry(geometry) {
-      if (geometry != null) {
-        if (geometry.controlPoints == null || geometry.controlPoints.length != 2) {
-          log("jsPlumb Bezier: cannot import geometry; controlPoints missing or does not have length 2");
-          this.setGeometry(null, true);
-          return false;
-        }
-        if (geometry.controlPoints[0].x == null || geometry.controlPoints[0].y == null || geometry.controlPoints[1].x == null || geometry.controlPoints[1].y == null) {
-          log("jsPlumb Bezier: cannot import geometry; controlPoints malformed");
-          this.setGeometry(null, true);
-          return false;
-        }
-        if (geometry.source == null || geometry.source.curX == null || geometry.source.curY == null) {
-          log("jsPlumb Bezier: cannot import geometry; source missing or malformed");
-          this.setGeometry(null, true);
-          return false;
-        }
-        if (geometry.target == null || geometry.target.curX == null || geometry.target.curY == null) {
-          log("jsPlumb Bezier: cannot import geometry; target missing or malformed");
-          this.setGeometry(null, true);
-          return false;
-        }
-        this.setGeometry(geometry, false);
-        return true;
-      } else {
-        return false;
-      }
-    }
-  }]);
-  return AbstractBezierConnector;
-}(AbstractConnector);
 
 var Vectors = {
   subtract: function subtract(v1, v2) {
@@ -899,103 +702,6 @@ var BezierSegmentHandler = {
 Segments.register(SEGMENT_TYPE_CUBIC_BEZIER, BezierSegmentHandler);
 Segments.register(SEGMENT_TYPE_QUADRATIC_BEZIER, BezierSegmentHandler);
 
-var BezierConnector = function (_AbstractBezierConnec) {
-  _inherits(BezierConnector, _AbstractBezierConnec);
-  var _super = _createSuper(BezierConnector);
-  function BezierConnector(connection, params) {
-    var _this;
-    _classCallCheck(this, BezierConnector);
-    _this = _super.call(this, connection, params);
-    _this.connection = connection;
-    _defineProperty(_assertThisInitialized(_this), "type", BezierConnector.type);
-    _defineProperty(_assertThisInitialized(_this), "majorAnchor", void 0);
-    _defineProperty(_assertThisInitialized(_this), "minorAnchor", void 0);
-    params = params || {};
-    _this.majorAnchor = params.curviness || 150;
-    _this.minorAnchor = 10;
-    return _this;
-  }
-  _createClass(BezierConnector, [{
-    key: "getCurviness",
-    value: function getCurviness() {
-      return this.majorAnchor;
-    }
-  }, {
-    key: "_findControlPoint",
-    value: function _findControlPoint(point, sourceAnchorPosition, targetAnchorPosition, soo, too) {
-      var perpendicular = soo[0] !== too[0] || soo[1] === too[1],
-          p = {
-        x: 0,
-        y: 0
-      };
-      if (!perpendicular) {
-        if (soo[0] === 0) {
-          p.x = sourceAnchorPosition.curX < targetAnchorPosition.curX ? point.x + this.minorAnchor : point.x - this.minorAnchor;
-        } else {
-          p.x = point.x - this.majorAnchor * soo[0];
-        }
-        if (soo[1] === 0) {
-          p.y = sourceAnchorPosition.curY < targetAnchorPosition.curY ? point.y + this.minorAnchor : point.y - this.minorAnchor;
-        } else {
-          p.y = point.y + this.majorAnchor * too[1];
-        }
-      } else {
-        if (too[0] === 0) {
-          p.x = targetAnchorPosition.curX < sourceAnchorPosition.curX ? point.x + this.minorAnchor : point.x - this.minorAnchor;
-        } else {
-          p.x = point.x + this.majorAnchor * too[0];
-        }
-        if (too[1] === 0) {
-          p.y = targetAnchorPosition.curY < sourceAnchorPosition.curY ? point.y + this.minorAnchor : point.y - this.minorAnchor;
-        } else {
-          p.y = point.y + this.majorAnchor * soo[1];
-        }
-      }
-      return p;
-    }
-  }, {
-    key: "_computeBezier",
-    value: function _computeBezier(paintInfo, p, sp, tp, _w, _h) {
-      var _CP,
-          _CP2,
-          _sx = sp.curX < tp.curX ? _w : 0,
-          _sy = sp.curY < tp.curY ? _h : 0,
-          _tx = sp.curX < tp.curX ? 0 : _w,
-          _ty = sp.curY < tp.curY ? 0 : _h;
-      if (this.edited !== true) {
-        _CP = this._findControlPoint({
-          x: _sx,
-          y: _sy
-        }, sp, tp, paintInfo.so, paintInfo.to);
-        _CP2 = this._findControlPoint({
-          x: _tx,
-          y: _ty
-        }, tp, sp, paintInfo.to, paintInfo.so);
-      } else {
-        _CP = this.geometry.controlPoints[0];
-        _CP2 = this.geometry.controlPoints[1];
-      }
-      this.geometry = {
-        controlPoints: [_CP, _CP2],
-        source: p.sourcePos,
-        target: p.targetPos
-      };
-      this._addSegment(SEGMENT_TYPE_CUBIC_BEZIER, {
-        x1: _sx,
-        y1: _sy,
-        x2: _tx,
-        y2: _ty,
-        cp1x: _CP.x,
-        cp1y: _CP.y,
-        cp2x: _CP2.x,
-        cp2y: _CP2.y
-      });
-    }
-  }]);
-  return BezierConnector;
-}(AbstractBezierConnector);
-_defineProperty(BezierConnector, "type", "Bezier");
-
 function _segment(x1, y1, x2, y2) {
   if (x1 <= x2 && y2 <= y1) {
     return 1;
@@ -1006,7 +712,7 @@ function _segment(x1, y1, x2, y2) {
   }
   return 4;
 }
-function _findControlPoint(midx, midy, segment, sourceEdge, targetEdge, dx, dy, distance, proximityLimit) {
+function _findControlPoint$1(midx, midy, segment, sourceEdge, targetEdge, dx, dy, distance, proximityLimit) {
   if (distance <= proximityLimit) {
     return {
       x: midx,
@@ -1083,85 +789,266 @@ function _findControlPoint(midx, midy, segment, sourceEdge, targetEdge, dx, dy, 
     }
   }
 }
-var StateMachineConnector = function (_AbstractBezierConnec) {
-  _inherits(StateMachineConnector, _AbstractBezierConnec);
-  var _super = _createSuper(StateMachineConnector);
-  function StateMachineConnector(connection, params) {
-    var _this;
-    _classCallCheck(this, StateMachineConnector);
-    _this = _super.call(this, connection, params);
-    _this.connection = connection;
-    _defineProperty(_assertThisInitialized(_this), "type", StateMachineConnector.type);
-    _defineProperty(_assertThisInitialized(_this), "_controlPoint", void 0);
-    _this.curviness = params.curviness || 10;
-    _this.margin = params.margin || 5;
-    _this.proximityLimit = params.proximityLimit || 80;
-    _this.clockwise = params.orientation && params.orientation === "clockwise";
-    return _this;
+function _computeBezier$1(connector, paintInfo, params, sp, tp, w, h) {
+  var _sx = sp.curX < tp.curX ? 0 : w,
+      _sy = sp.curY < tp.curY ? 0 : h,
+      _tx = sp.curX < tp.curX ? w : 0,
+      _ty = sp.curY < tp.curY ? h : 0;
+  if (sp.x === 0) {
+    _sx -= connector.margin;
   }
-  _createClass(StateMachineConnector, [{
-    key: "_computeBezier",
-    value: function _computeBezier(paintInfo, params, sp, tp, w, h) {
-      var _sx = sp.curX < tp.curX ? 0 : w,
-          _sy = sp.curY < tp.curY ? 0 : h,
-          _tx = sp.curX < tp.curX ? w : 0,
-          _ty = sp.curY < tp.curY ? h : 0;
-      if (sp.x === 0) {
-        _sx -= this.margin;
-      }
-      if (sp.x === 1) {
-        _sx += this.margin;
-      }
-      if (sp.y === 0) {
-        _sy -= this.margin;
-      }
-      if (sp.y === 1) {
-        _sy += this.margin;
-      }
-      if (tp.x === 0) {
-        _tx -= this.margin;
-      }
-      if (tp.x === 1) {
-        _tx += this.margin;
-      }
-      if (tp.y === 0) {
-        _ty -= this.margin;
-      }
-      if (tp.y === 1) {
-        _ty += this.margin;
-      }
-      if (this.edited !== true) {
-        var _midx = (_sx + _tx) / 2,
-            _midy = (_sy + _ty) / 2,
-            segment = _segment(_sx, _sy, _tx, _ty),
-            distance = Math.sqrt(Math.pow(_tx - _sx, 2) + Math.pow(_ty - _sy, 2));
-        this._controlPoint = _findControlPoint(_midx, _midy, segment, params.sourcePos, params.targetPos, this.curviness, this.curviness, distance, this.proximityLimit);
-      } else {
-        this._controlPoint = this.geometry.controlPoints[0];
-      }
-      var cpx, cpy;
-      cpx = this._controlPoint.x;
-      cpy = this._controlPoint.y;
-      this.geometry = {
-        controlPoints: [this._controlPoint, this._controlPoint],
-        source: params.sourcePos,
-        target: params.targetPos
+  if (sp.x === 1) {
+    _sx += connector.margin;
+  }
+  if (sp.y === 0) {
+    _sy -= connector.margin;
+  }
+  if (sp.y === 1) {
+    _sy += connector.margin;
+  }
+  if (tp.x === 0) {
+    _tx -= connector.margin;
+  }
+  if (tp.x === 1) {
+    _tx += connector.margin;
+  }
+  if (tp.y === 0) {
+    _ty -= connector.margin;
+  }
+  if (tp.y === 1) {
+    _ty += connector.margin;
+  }
+  if (connector.edited !== true) {
+    var _midx = (_sx + _tx) / 2,
+        _midy = (_sy + _ty) / 2,
+        segment = _segment(_sx, _sy, _tx, _ty),
+        distance = Math.sqrt(Math.pow(_tx - _sx, 2) + Math.pow(_ty - _sy, 2));
+    connector._controlPoint = _findControlPoint$1(_midx, _midy, segment, params.sourcePos, params.targetPos, connector.curviness, connector.curviness, distance, connector.proximityLimit);
+  } else {
+    connector._controlPoint = connector.geometry.controlPoint;
+  }
+  var cpx, cpy;
+  cpx = connector._controlPoint.x;
+  cpy = connector._controlPoint.y;
+  connector.geometry = {
+    controlPoint: connector._controlPoint,
+    source: params.sourcePos,
+    target: params.targetPos
+  };
+  _addSegment(connector, SEGMENT_TYPE_QUADRATIC_BEZIER, {
+    x1: _tx,
+    y1: _ty,
+    x2: _sx,
+    y2: _sy,
+    cpx: cpx,
+    cpy: cpy
+  });
+}
+var CONNECTOR_TYPE_STATE_MACHINE = "StateMachine";
+var CONNECTOR_TYPE_QUADRATIC_BEZIER = "QuadraticBezier";
+var StateMachineConnectorHandler = {
+  _compute: function _compute$1(connector, paintInfo, p) {
+    _compute(connector, paintInfo, p, _computeBezier$1);
+  },
+  create: function create(connection, connectorType, params) {
+    params = params || {};
+    var base = createBezierConnectorBase(connectorType, connection, params, [0, 0]);
+    return extend(base, {
+      curviness: params.curviness || 10,
+      margin: params.margin || 5,
+      proximityLimit: params.proximityLimit || 80,
+      clockwise: params.orientation && params.orientation === "clockwise"
+    });
+  },
+  exportGeometry: function exportGeometry(connector) {
+    if (connector.geometry == null) {
+      return null;
+    } else {
+      return {
+        controlPoint: extend({}, connector.geometry.controlPoint),
+        source: extend({}, connector.geometry.source),
+        target: extend({}, connector.geometry.target)
       };
-      this._addSegment(SEGMENT_TYPE_QUADRATIC_BEZIER, {
-        x1: _tx,
-        y1: _ty,
-        x2: _sx,
-        y2: _sy,
-        cpx: cpx,
-        cpy: cpy
-      });
     }
-  }]);
-  return StateMachineConnector;
-}(AbstractBezierConnector);
-_defineProperty(StateMachineConnector, "type", "StateMachine");
+  },
+  importGeometry: function importGeometry(connector, geometry) {
+    if (geometry != null) {
+      if (geometry.controlPoint == null) {
+        log("jsPlumb StateMachine: cannot import geometry; controlPoint missing");
+        setGeometry(connector, null, true);
+        return false;
+      }
+      if (geometry.source == null || geometry.source.curX == null || geometry.source.curY == null) {
+        log("jsPlumb StateMachine: cannot import geometry; source missing or malformed");
+        setGeometry(connector, null, true);
+        return false;
+      }
+      if (geometry.target == null || geometry.target.curX == null || geometry.target.curY == null) {
+        log("jsPlumb StateMachine: cannot import geometry; target missing or malformed");
+        setGeometry(connector, null, true);
+        return false;
+      }
+      setGeometry(connector, geometry, false);
+      return true;
+    } else {
+      return false;
+    }
+  },
+  transformGeometry: function transformGeometry(connector, g, dx, dy) {
+    return {
+      controlPoints: [{
+        x: g.controlPoints[0].x + dx,
+        y: g.controlPoints[0].y + dy
+      }, {
+        x: g.controlPoints[1].x + dx,
+        y: g.controlPoints[1].y + dy
+      }],
+      source: transformAnchorPlacement(g.source, dx, dy),
+      target: transformAnchorPlacement(g.target, dx, dy)
+    };
+  },
+  setAnchorOrientation: function setAnchorOrientation(connector, idx, orientation) {}
+};
 
-Connectors.register(BezierConnector.type, BezierConnector);
-Connectors.register(StateMachineConnector.type, StateMachineConnector);
+var CONNECTOR_TYPE_BEZIER = "Bezier";
+var CONNECTOR_TYPE_CUBIC_BEZIER = "CubicBezier";
+function _computeBezier(connector, paintInfo, p, sp, tp, _w, _h) {
+  var _CP,
+      _CP2,
+      _sx = sp.curX < tp.curX ? _w : 0,
+      _sy = sp.curY < tp.curY ? _h : 0,
+      _tx = sp.curX < tp.curX ? 0 : _w,
+      _ty = sp.curY < tp.curY ? 0 : _h;
+  if (connector.edited !== true) {
+    _CP = _findControlPoint(connector, {
+      x: _sx,
+      y: _sy
+    }, sp, tp, paintInfo.so, paintInfo.to);
+    _CP2 = _findControlPoint(connector, {
+      x: _tx,
+      y: _ty
+    }, tp, sp, paintInfo.to, paintInfo.so);
+  } else {
+    _CP = connector.geometry.controlPoints[0];
+    _CP2 = connector.geometry.controlPoints[1];
+  }
+  connector.geometry = {
+    controlPoints: [_CP, _CP2],
+    source: p.sourcePos,
+    target: p.targetPos
+  };
+  _addSegment(connector, SEGMENT_TYPE_CUBIC_BEZIER, {
+    x1: _sx,
+    y1: _sy,
+    x2: _tx,
+    y2: _ty,
+    cp1x: _CP.x,
+    cp1y: _CP.y,
+    cp2x: _CP2.x,
+    cp2y: _CP2.y
+  });
+}
+function _findControlPoint(connector, point, sourceAnchorPosition, targetAnchorPosition, soo, too) {
+  var perpendicular = soo[0] !== too[0] || soo[1] === too[1],
+      p = {
+    x: 0,
+    y: 0
+  };
+  if (!perpendicular) {
+    if (soo[0] === 0) {
+      p.x = sourceAnchorPosition.curX < targetAnchorPosition.curX ? point.x + connector.minorAnchor : point.x - connector.minorAnchor;
+    } else {
+      p.x = point.x - connector.majorAnchor * soo[0];
+    }
+    if (soo[1] === 0) {
+      p.y = sourceAnchorPosition.curY < targetAnchorPosition.curY ? point.y + connector.minorAnchor : point.y - connector.minorAnchor;
+    } else {
+      p.y = point.y + connector.majorAnchor * too[1];
+    }
+  } else {
+    if (too[0] === 0) {
+      p.x = targetAnchorPosition.curX < sourceAnchorPosition.curX ? point.x + connector.minorAnchor : point.x - connector.minorAnchor;
+    } else {
+      p.x = point.x + connector.majorAnchor * too[0];
+    }
+    if (too[1] === 0) {
+      p.y = targetAnchorPosition.curY < sourceAnchorPosition.curY ? point.y + connector.minorAnchor : point.y - connector.minorAnchor;
+    } else {
+      p.y = point.y + connector.majorAnchor * soo[1];
+    }
+  }
+  return p;
+}
+var BezierConnectorHandler = {
+  _compute: function _compute$1(connector, paintInfo, p) {
+    _compute(connector, paintInfo, p, _computeBezier);
+  },
+  create: function create(connection, connectorType, params) {
+    params = params || {};
+    var base = createBezierConnectorBase(connectorType, connection, params, [0, 0]);
+    return extend(base, {
+      majorAnchor: params.curviness || 150,
+      minorAnchor: 10
+    });
+  },
+  exportGeometry: function exportGeometry(connector) {
+    if (connector.geometry == null) {
+      return null;
+    } else {
+      return {
+        controlPoints: [extend({}, connector.geometry.controlPoints[0]), extend({}, connector.geometry.controlPoints[1])],
+        source: extend({}, connector.geometry.source),
+        target: extend({}, connector.geometry.target)
+      };
+    }
+  },
+  importGeometry: function importGeometry(connector, geometry) {
+    if (geometry != null) {
+      if (geometry.controlPoints == null || geometry.controlPoints.length != 2) {
+        log("jsPlumb Bezier: cannot import geometry; controlPoints missing or does not have length 2");
+        setGeometry(connector, null, true);
+        return false;
+      }
+      if (geometry.controlPoints[0].x == null || geometry.controlPoints[0].y == null || geometry.controlPoints[1].x == null || geometry.controlPoints[1].y == null) {
+        log("jsPlumb Bezier: cannot import geometry; controlPoints malformed");
+        setGeometry(connector, null, true);
+        return false;
+      }
+      if (geometry.source == null || geometry.source.curX == null || geometry.source.curY == null) {
+        log("jsPlumb Bezier: cannot import geometry; source missing or malformed");
+        setGeometry(connector, null, true);
+        return false;
+      }
+      if (geometry.target == null || geometry.target.curX == null || geometry.target.curY == null) {
+        log("jsPlumb Bezier: cannot import geometry; target missing or malformed");
+        setGeometry(connector, null, true);
+        return false;
+      }
+      setGeometry(connector, geometry, false);
+      return true;
+    } else {
+      return false;
+    }
+  },
+  transformGeometry: function transformGeometry(connector, g, dx, dy) {
+    return {
+      controlPoints: [{
+        x: g.controlPoints[0].x + dx,
+        y: g.controlPoints[0].y + dy
+      }, {
+        x: g.controlPoints[1].x + dx,
+        y: g.controlPoints[1].y + dy
+      }],
+      source: transformAnchorPlacement(g.source, dx, dy),
+      target: transformAnchorPlacement(g.target, dx, dy)
+    };
+  },
+  setAnchorOrientation: function setAnchorOrientation(connector, idx, orientation) {}
+};
 
-export { AbstractBezierConnector, BezierConnector, SEGMENT_TYPE_CUBIC_BEZIER, SEGMENT_TYPE_QUADRATIC_BEZIER, StateMachineConnector, bezierLineIntersection, boundingBoxIntersection, boxIntersection, computeBezierLength, dist, distanceFromCurve, gradientAtPoint, gradientAtPointAlongPathFrom, isPoint, locationAlongCurveFrom, nearestPointOnCurve, perpendicularToPathAt, pointAlongCurveFrom, pointAlongPath, pointOnCurve };
+Connectors.register(CONNECTOR_TYPE_STATE_MACHINE, StateMachineConnectorHandler);
+Connectors.register(CONNECTOR_TYPE_QUADRATIC_BEZIER, StateMachineConnectorHandler);
+Connectors.register(CONNECTOR_TYPE_BEZIER, BezierConnectorHandler);
+Connectors.register(CONNECTOR_TYPE_CUBIC_BEZIER, BezierConnectorHandler);
+
+export { BezierConnectorHandler, CONNECTOR_TYPE_BEZIER, CONNECTOR_TYPE_CUBIC_BEZIER, CONNECTOR_TYPE_QUADRATIC_BEZIER, CONNECTOR_TYPE_STATE_MACHINE, SEGMENT_TYPE_CUBIC_BEZIER, SEGMENT_TYPE_QUADRATIC_BEZIER, StateMachineConnectorHandler, _compute, bezierLineIntersection, boundingBoxIntersection, boxIntersection, computeBezierLength, createBezierConnectorBase, dist, distanceFromCurve, gradientAtPoint, gradientAtPointAlongPathFrom, isPoint, locationAlongCurveFrom, nearestPointOnCurve, perpendicularToPathAt, pointAlongCurveFrom, pointAlongPath, pointOnCurve };

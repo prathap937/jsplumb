@@ -21,15 +21,12 @@ export declare class SelectionBase<T extends Component> {
     hideOverlay(id: string): SelectionBase<T>;
     setPaintStyle(style: PaintStyle): SelectionBase<T>;
     setHoverPaintStyle(style: PaintStyle): SelectionBase<T>;
-    setSuspendEvents(suspend: boolean): SelectionBase<T>;
     setParameter(name: string, value: string): SelectionBase<T>;
     setParameters(p: Record<string, string>): SelectionBase<T>;
     setVisible(v: boolean): SelectionBase<T>;
     addType(name: string): SelectionBase<T>;
     toggleType(name: string): SelectionBase<T>;
     removeType(name: string): SelectionBase<T>;
-    bind(evt: string, handler: (a: any, e?: any) => any): SelectionBase<T>;
-    unbind(evt: string, handler: Function): SelectionBase<T>;
     setHover(h: boolean): SelectionBase<T>;
 }
 //# sourceMappingURL=common.d.ts.map

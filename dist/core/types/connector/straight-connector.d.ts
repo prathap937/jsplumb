@@ -1,14 +1,11 @@
-import { AbstractConnector, ConnectorComputeParams, PaintGeometry } from "./abstract-connector";
+import { ConnectorBase } from "./abstract-connector";
 import { AnchorPlacement } from "@jsplumb/common";
 export interface StraightConnectorGeometry {
     source: AnchorPlacement;
     target: AnchorPlacement;
 }
-export declare class StraightConnector extends AbstractConnector {
-    static type: string;
-    type: string;
-    getDefaultStubs(): [number, number];
-    _compute(paintInfo: PaintGeometry, p: ConnectorComputeParams): void;
-    transformGeometry(g: StraightConnectorGeometry, dx: number, dy: number): StraightConnectorGeometry;
+export declare const CONNECTOR_TYPE_STRAIGHT = "Straight";
+export interface StraightConnector extends ConnectorBase {
+    type: typeof CONNECTOR_TYPE_STRAIGHT;
 }
 //# sourceMappingURL=straight-connector.d.ts.map

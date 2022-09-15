@@ -60,15 +60,15 @@ export declare class LightweightRouter<T extends {
     private _removeEndpointFromAnchorLists;
     computeAnchorLocation(anchor: LightweightAnchor, params: AnchorComputeParams): AnchorPlacement;
     computePath(connection: Connection<any>, timestamp: string): void;
-    getEndpointLocation(endpoint: Endpoint<any>, params: AnchorComputeParams): AnchorPlacement;
-    getEndpointOrientation(ep: Endpoint<any>): Orientation;
+    getEndpointLocation(endpoint: Endpoint, params: AnchorComputeParams): AnchorPlacement;
+    getEndpointOrientation(ep: Endpoint): Orientation;
     setAnchorOrientation(anchor: LightweightAnchor, orientation: Orientation): void;
-    isDynamicAnchor(ep: Endpoint<any>): boolean;
-    isFloating(ep: Endpoint<any>): boolean;
+    isDynamicAnchor(ep: Endpoint): boolean;
+    isFloating(ep: Endpoint): boolean;
     prepareAnchor(params: AnchorSpec | Array<AnchorSpec>): LightweightAnchor;
     redraw(elementId: string, timestamp?: string, offsetToUI?: PointXY): RedrawResult;
     reset(): void;
-    setAnchor(endpoint: Endpoint<any>, anchor: LightweightAnchor): void;
+    setAnchor(endpoint: Endpoint, anchor: LightweightAnchor): void;
     setConnectionAnchors(conn: Connection<any>, anchors: [LightweightAnchor, LightweightAnchor]): void;
     private _calculateOrientation;
     /**

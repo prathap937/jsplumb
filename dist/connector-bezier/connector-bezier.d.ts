@@ -5,11 +5,12 @@
  * @packageDocumentation
  */
 
-import { AbstractConnector } from '@jsplumb/core';
 import { AnchorPlacement } from '@jsplumb/common';
 import { BoundingBox } from '@jsplumb/util';
 import { Connection } from '@jsplumb/core';
+import { ConnectorBase } from '@jsplumb/core';
 import { ConnectorComputeParams } from '@jsplumb/core';
+import { ConnectorHandler } from '@jsplumb/core';
 import { ConnectorOptions } from '@jsplumb/common';
 import { Geometry } from '@jsplumb/common';
 import { LineXY } from '@jsplumb/util';
@@ -17,29 +18,6 @@ import { PaintGeometry } from '@jsplumb/core';
 import { PointXY } from '@jsplumb/util';
 import { Segment } from '@jsplumb/common';
 import { SegmentParams } from '@jsplumb/common';
-
-/**
- * @internal
- */
-export declare abstract class AbstractBezierConnector extends AbstractConnector {
-    connection: Connection;
-    showLoopback: boolean;
-    curviness: number;
-    margin: number;
-    proximityLimit: number;
-    orientation: string;
-    loopbackRadius: number;
-    clockwise: boolean;
-    isLoopbackCurrently: boolean;
-    geometry: BezierConnectorGeometry;
-    getDefaultStubs(): [number, number];
-    constructor(connection: Connection, params: any);
-    _compute(paintInfo: PaintGeometry, p: ConnectorComputeParams): void;
-    exportGeometry(): BezierConnectorGeometry;
-    transformGeometry(g: BezierConnectorGeometry, dx: number, dy: number): BezierConnectorGeometry;
-    importGeometry(geometry: BezierConnectorGeometry): boolean;
-    abstract _computeBezier(paintInfo: PaintGeometry, p: ConnectorComputeParams, sp: PointXY, tp: PointXY, _w: number, _h: number): void;
-}
 
 /**
  * Base options interface for StateMachine and Bezier connectors.
@@ -62,29 +40,52 @@ export declare interface AbstractBezierOptions extends ConnectorOptions {
 
 export declare type AxisCoefficients = [number, number, number, number];
 
-export declare class BezierConnector extends AbstractBezierConnector {
-    connection: Connection;
-    static type: string;
-    type: string;
+export declare interface BaseBezierConnectorGeometry extends Geometry {
+    source: AnchorPlacement;
+    target: AnchorPlacement;
+}
+
+/**
+ * Models a cubic bezier connector
+ * @internal
+ */
+export declare interface BezierConnector extends BezierConnectorBase {
+    type: typeof CONNECTOR_TYPE_BEZIER;
     majorAnchor: number;
     minorAnchor: number;
-    constructor(connection: Connection, params: BezierOptions);
-    getCurviness(): number;
-    protected _findControlPoint(point: PointXY, sourceAnchorPosition: AnchorPlacement, targetAnchorPosition: AnchorPlacement, soo: [number, number], too: [number, number]): PointXY;
-    _computeBezier(paintInfo: PaintGeometry, p: ConnectorComputeParams, sp: AnchorPlacement, tp: AnchorPlacement, _w: number, _h: number): void;
+    geometry: BezierConnectorGeometry;
+}
+
+/**
+ * Defines the common properties of a bezier connector.
+ * @internal
+ */
+export declare interface BezierConnectorBase extends ConnectorBase {
+    showLoopback: boolean;
+    curviness: number;
+    margin: number;
+    proximityLimit: number;
+    orientation: string;
+    loopbackRadius: number;
+    clockwise: boolean;
+    isLoopbackCurrently: boolean;
 }
 
 /**
  * The bezier connector's internal representation of a path.
+ * @public
  */
-export declare interface BezierConnectorGeometry extends Geometry {
+export declare interface BezierConnectorGeometry extends BaseBezierConnectorGeometry {
     controlPoints: [
     PointXY,
     PointXY
     ];
-    source: AnchorPlacement;
-    target: AnchorPlacement;
 }
+
+/**
+ * @internal
+ */
+export declare const BezierConnectorHandler: ConnectorHandler;
 
 /**
  * Calculates all intersections of the given line with the given curve.
@@ -129,7 +130,27 @@ export declare function boundingBoxIntersection(boundingBox: BoundingBox, curve:
  */
 export declare function boxIntersection(x: number, y: number, w: number, h: number, curve: Curve): Array<PointXY>;
 
+export declare function _compute(connector: BezierConnectorBase, paintInfo: PaintGeometry, p: ConnectorComputeParams, _computeBezier: (connector: BezierConnectorBase, paintInfo: PaintGeometry, p: ConnectorComputeParams, sp: AnchorPlacement, tp: AnchorPlacement, _w: number, _h: number) => void): void;
+
 export declare function computeBezierLength(curve: Curve): number;
+
+export declare const CONNECTOR_TYPE_BEZIER = "Bezier";
+
+export declare const CONNECTOR_TYPE_CUBIC_BEZIER = "CubicBezier";
+
+export declare const CONNECTOR_TYPE_QUADRATIC_BEZIER = "QuadraticBezier";
+
+export declare const CONNECTOR_TYPE_STATE_MACHINE = "StateMachine";
+
+/**
+ * Create a base bezier connector, shared by Bezier and StateMachine.
+ * @param type
+ * @param connection
+ * @param params
+ * @param defaultStubs
+ * @internal
+ */
+export declare function createBezierConnectorBase(type: string, connection: Connection, params: ConnectorOptions, defaultStubs: [number, number]): BezierConnectorBase;
 
 export declare interface CubicBezierSegment extends BezierSegment {
     cp1x: number;
@@ -252,14 +273,24 @@ export declare const SEGMENT_TYPE_CUBIC_BEZIER = "CubicBezier";
 
 export declare const SEGMENT_TYPE_QUADRATIC_BEZIER = "QuadraticBezier";
 
-export declare class StateMachineConnector extends AbstractBezierConnector {
-    connection: Connection;
-    static type: string;
-    type: string;
+export declare interface StateMachineConnector extends BezierConnectorBase {
+    type: typeof CONNECTOR_TYPE_STATE_MACHINE;
+    geometry: StateMachineConnectorGeometry;
     _controlPoint: PointXY;
-    constructor(connection: Connection, params: StateMachineOptions);
-    _computeBezier(paintInfo: PaintGeometry, params: ConnectorComputeParams, sp: AnchorPlacement, tp: AnchorPlacement, w: number, h: number): void;
 }
+
+/**
+ * The bezier connector's internal representation of a path.
+ * @public
+ */
+export declare interface StateMachineConnectorGeometry extends BaseBezierConnectorGeometry {
+    controlPoint: PointXY;
+}
+
+/**
+ * @internal
+ */
+export declare const StateMachineConnectorHandler: ConnectorHandler;
 
 export declare interface StateMachineOptions extends AbstractBezierOptions {
 }

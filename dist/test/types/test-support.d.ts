@@ -105,7 +105,7 @@ export declare class BrowserUITestSupport {
      * @param events Map of event handlers for injecting tests into the lifecycle.
      * @public
      */
-    dragConnection(d1: Element | Endpoint, d2: Element | Endpoint, mouseUpOnTarget?: boolean, events?: EventHandlers<Connection>): Connection;
+    dragConnection(d1: Element | Endpoint, d2: Element | Endpoint, mouseUpOnTarget?: boolean, events?: EventHandlers<Connection<any>>): Connection<any>;
     /**
      * Drags a connection, using the mouse, from one element or endpoint to another element or endpoint, firing each stage after a timeout.
      * @param d1
@@ -113,7 +113,7 @@ export declare class BrowserUITestSupport {
      * @param events Map of event handlers for injecting tests into the lifecycle.
      * @public
      */
-    aSyncDragConnection(d1: Element | Endpoint, d2: Element | Endpoint, events?: EventHandlers<Connection>): void;
+    aSyncDragConnection(d1: Element | Endpoint, d2: Element | Endpoint, events?: EventHandlers<Connection<any>>): void;
     /**
      * Drags a connection from the given endpoint or element, but aborts the operation by triggering a mouseup in whitespace.
      * @param d1
@@ -141,7 +141,7 @@ export declare class BrowserUITestSupport {
      * @param events Map of event handlers for injecting tests into the lifecycle.
      * @public
      */
-    detachConnectionByTarget(c: Connection, events?: EventHandlers): void;
+    detachConnectionByTarget(c: Connection<any>, events?: EventHandlers): void;
     /**
      * Relocate the target of the given connection onto a different element
      * @param conn Connection to relocate target for
@@ -149,7 +149,7 @@ export declare class BrowserUITestSupport {
      * @param events Optional map of event handlers, allowing you to inject tests at various phases in the lifecycle
      * @public
      */
-    relocateTarget(conn: Connection, newEl: Element, events?: EventHandlers): void;
+    relocateTarget(conn: Connection<any>, newEl: Element, events?: EventHandlers): void;
     /**
      * Relocate either the source or the target of the given connection to a different element.
      * @param conn Connection to relocate
@@ -158,7 +158,7 @@ export declare class BrowserUITestSupport {
      * @param events Optional map of event handlers, allowing you to inject tests at various phases in the lifecycle
      * @public
      */
-    relocate(conn: Connection, idx: number, newEl: Element, events?: EventHandlers): void;
+    relocate(conn: Connection<any>, idx: number, newEl: Element, events?: EventHandlers): void;
     /**
      * Relocate the source of the given connection onto a different element
      * @param conn Connection to relocate target for
@@ -166,7 +166,7 @@ export declare class BrowserUITestSupport {
      * @param events Optional map of event handlers, allowing you to inject tests at various phases in the lifecycle
      * @public
      */
-    relocateSource(conn: Connection, newEl: Element, events?: EventHandlers): void;
+    relocateSource(conn: Connection<any>, newEl: Element, events?: EventHandlers): void;
     /**
      * Create an object that models an event that occurs in the middle of the given element. This does not return
      * a real event, just an object with sufficient properties to use as a mouse event.
@@ -191,7 +191,7 @@ export declare class BrowserUITestSupport {
      * @param c
      * @public
      */
-    getConnectionCanvas(c: Connection): HTMLElement;
+    getConnectionCanvas(c: Connection<any>): HTMLElement;
     getEndpointCanvasPosition(ep: Endpoint): {
         x: number;
         y: number;
@@ -237,31 +237,31 @@ export declare class BrowserUITestSupport {
      * @param events
      * @public
      */
-    fireEventOnConnection(connection: Connection, ...events: Array<string>): void;
+    fireEventOnConnection(connection: Connection<any>, ...events: Array<string>): void;
     /**
      * Fire a click event on the DOM element that represents the given connection.
      * @param connection
      * @public
      */
-    clickOnConnection(connection: Connection): void;
+    clickOnConnection(connection: Connection<any>): void;
     /**
      * Fire a double click event on the DOM element that represents the given connection.
      * @param connection
      * @public
      */
-    dblClickOnConnection(connection: Connection): void;
+    dblClickOnConnection(connection: Connection<any>): void;
     /**
      * Fire a tap event on the DOM element that represents the given connection.
      * @param connection
      * @public
      */
-    tapOnConnection(connection: Connection): void;
+    tapOnConnection(connection: Connection<any>): void;
     /**
      * Fire a double tap event on the DOM element that represents the given connection.
      * @param connection
      * @public
      */
-    dblTapOnConnection(connection: Connection): void;
+    dblTapOnConnection(connection: Connection<any>): void;
     /**
      * Fire a click event on the given element
      * @param element Element to fire click event on
@@ -308,28 +308,28 @@ export declare class BrowserUITestSupport {
      * @param overlayId ID of the overlay to fire the event on
      * @public
      */
-    clickOnOverlay(connection: Connection, overlayId: string): void;
+    clickOnOverlay(connection: Connection<any>, overlayId: string): void;
     /**
      * Fire a double click event on a connection's overlay
      * @param connection Connection to which the overlay belongs
      * @param overlayId ID of the overlay to fire the event on
      * @public
      */
-    dblClickOnOverlay(connection: Connection, overlayId: string): void;
+    dblClickOnOverlay(connection: Connection<any>, overlayId: string): void;
     /**
      * Fire a tap event on a connection's overlay
      * @param connection Connection to which the overlay belongs
      * @param overlayId ID of the overlay to fire the event on
      * @public
      */
-    tapOnOverlay(connection: Connection, overlayId: string): void;
+    tapOnOverlay(connection: Connection<any>, overlayId: string): void;
     /**
      * Fire a double tap event on a connection's overlay
      * @param connection Connection to which the overlay belongs
      * @param overlayId ID of the overlay to fire the event on
      * @public
      */
-    dblTapOnOverlay(connection: Connection, overlayId: string): void;
+    dblTapOnOverlay(connection: Connection<any>, overlayId: string): void;
     /**
      * Cleanup the support class, removing all created divs and destroying the associated jsplumb instance.
      */

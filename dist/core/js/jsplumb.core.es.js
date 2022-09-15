@@ -1,5 +1,6 @@
-import { log, quadrant, pointOnLine, gradient, lineLength, uuid, isString, EventGenerator, isFunction, clone, extend, merge, setToArray, populate, isNumber, map, isObject, isAssignableFrom, getWithFunction, removeWithFunction, suggest, forEach, getsert, insertSorted, findWithFunction, rotatePoint, filterList, functionChain, addToDictionary, normal, theta, TWO_PI, perpendicularLineTo } from '@jsplumb/util';
-import { EMPTY_BOUNDS, PerimeterAnchorShapes, AnchorLocations, DEFAULT, WILDCARD, defaultSegmentHandler } from '@jsplumb/common';
+import { log, isString, uuid, EventGenerator, isFunction, isNumber, map, extend, merge, clone, setToArray, populate, isAssignableFrom, isObject, getWithFunction, removeWithFunction, suggest, forEach, getsert, insertSorted, findWithFunction, quadrant, rotatePoint, lineLength, pointOnLine, gradient, filterList, functionChain, addToDictionary, normal, theta, TWO_PI, perpendicularLineTo } from '@jsplumb/util';
+import { PerimeterAnchorShapes, AnchorLocations, EMPTY_BOUNDS, DEFAULT, WILDCARD, defaultSegmentHandler } from '@jsplumb/common';
+import { EVENT_ANCHOR_CHANGED as EVENT_ANCHOR_CHANGED$1 } from '@jsplumb/core';
 
 function _classCallCheck(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -117,36 +118,6 @@ function _createSuper(Derived) {
   };
 }
 
-function _superPropBase(object, property) {
-  while (!Object.prototype.hasOwnProperty.call(object, property)) {
-    object = _getPrototypeOf(object);
-    if (object === null) break;
-  }
-
-  return object;
-}
-
-function _get(target, property, receiver) {
-  if (typeof Reflect !== "undefined" && Reflect.get) {
-    _get = Reflect.get;
-  } else {
-    _get = function _get(target, property, receiver) {
-      var base = _superPropBase(target, property);
-
-      if (!base) return;
-      var desc = Object.getOwnPropertyDescriptor(base, property);
-
-      if (desc.get) {
-        return desc.get.call(receiver);
-      }
-
-      return desc.value;
-    };
-  }
-
-  return _get(target, property, receiver || target);
-}
-
 function _slicedToArray(arr, i) {
   return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
 }
@@ -255,896 +226,6 @@ var EndpointFactory = {
   }
 };
 
-var EndpointRepresentation = function () {
-  function EndpointRepresentation(endpoint, params) {
-    _classCallCheck(this, EndpointRepresentation);
-    this.endpoint = endpoint;
-    _defineProperty(this, "typeId", void 0);
-    _defineProperty(this, "x", void 0);
-    _defineProperty(this, "y", void 0);
-    _defineProperty(this, "w", void 0);
-    _defineProperty(this, "h", void 0);
-    _defineProperty(this, "computedValue", void 0);
-    _defineProperty(this, "bounds", EMPTY_BOUNDS());
-    _defineProperty(this, "classes", []);
-    _defineProperty(this, "instance", void 0);
-    _defineProperty(this, "type", void 0);
-    params = params || {};
-    this.instance = endpoint.instance;
-    if (endpoint.cssClass) {
-      this.classes.push(endpoint.cssClass);
-    }
-    if (params.cssClass) {
-      this.classes.push(params.cssClass);
-    }
-  }
-  _createClass(EndpointRepresentation, [{
-    key: "addClass",
-    value: function addClass(c) {
-      this.classes.push(c);
-      this.instance.addEndpointClass(this.endpoint, c);
-    }
-  }, {
-    key: "removeClass",
-    value: function removeClass(c) {
-      this.classes = this.classes.filter(function (_c) {
-        return _c !== c;
-      });
-      this.instance.removeEndpointClass(this.endpoint, c);
-    }
-  }, {
-    key: "compute",
-    value: function compute(anchorPoint, orientation, endpointStyle) {
-      this.computedValue = EndpointFactory.compute(this, anchorPoint, orientation, endpointStyle);
-      this.bounds.xmin = this.x;
-      this.bounds.ymin = this.y;
-      this.bounds.xmax = this.x + this.w;
-      this.bounds.ymax = this.y + this.h;
-    }
-  }, {
-    key: "setVisible",
-    value: function setVisible(v) {
-      this.instance.setEndpointVisible(this.endpoint, v);
-    }
-  }]);
-  return EndpointRepresentation;
-}();
-
-var DotEndpoint = function (_EndpointRepresentati) {
-  _inherits(DotEndpoint, _EndpointRepresentati);
-  var _super = _createSuper(DotEndpoint);
-  function DotEndpoint(endpoint, params) {
-    var _this;
-    _classCallCheck(this, DotEndpoint);
-    _this = _super.call(this, endpoint, params);
-    _defineProperty(_assertThisInitialized(_this), "radius", void 0);
-    _defineProperty(_assertThisInitialized(_this), "defaultOffset", void 0);
-    _defineProperty(_assertThisInitialized(_this), "defaultInnerRadius", void 0);
-    _defineProperty(_assertThisInitialized(_this), "type", DotEndpoint.type);
-    params = params || {};
-    _this.radius = params.radius || 5;
-    _this.defaultOffset = 0.5 * _this.radius;
-    _this.defaultInnerRadius = _this.radius / 3;
-    return _this;
-  }
-  return DotEndpoint;
-}(EndpointRepresentation);
-_defineProperty(DotEndpoint, "type", "Dot");
-var DotEndpointHandler = {
-  type: DotEndpoint.type,
-  cls: DotEndpoint,
-  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
-    var x = anchorPoint.curX - ep.radius,
-        y = anchorPoint.curY - ep.radius,
-        w = ep.radius * 2,
-        h = ep.radius * 2;
-    if (endpointStyle && endpointStyle.stroke) {
-      var lw = endpointStyle.strokeWidth || 1;
-      x -= lw;
-      y -= lw;
-      w += lw * 2;
-      h += lw * 2;
-    }
-    ep.x = x;
-    ep.y = y;
-    ep.w = w;
-    ep.h = h;
-    return [x, y, w, h, ep.radius];
-  },
-  getParams: function getParams(ep) {
-    return {
-      radius: ep.radius
-    };
-  }
-};
-
-var BlankEndpoint = function (_EndpointRepresentati) {
-  _inherits(BlankEndpoint, _EndpointRepresentati);
-  var _super = _createSuper(BlankEndpoint);
-  function BlankEndpoint(endpoint, params) {
-    var _this;
-    _classCallCheck(this, BlankEndpoint);
-    _this = _super.call(this, endpoint, params);
-    _defineProperty(_assertThisInitialized(_this), "type", BlankEndpoint.type);
-    return _this;
-  }
-  return BlankEndpoint;
-}(EndpointRepresentation);
-_defineProperty(BlankEndpoint, "type", "Blank");
-var BlankEndpointHandler = {
-  type: BlankEndpoint.type,
-  cls: BlankEndpoint,
-  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
-    ep.x = anchorPoint.curX;
-    ep.y = anchorPoint.curY;
-    ep.w = 10;
-    ep.h = 0;
-    return [anchorPoint.curX, anchorPoint.curY, 10, 0];
-  },
-  getParams: function getParams(ep) {
-    return {};
-  }
-};
-
-var RectangleEndpoint = function (_EndpointRepresentati) {
-  _inherits(RectangleEndpoint, _EndpointRepresentati);
-  var _super = _createSuper(RectangleEndpoint);
-  function RectangleEndpoint(endpoint, params) {
-    var _this;
-    _classCallCheck(this, RectangleEndpoint);
-    _this = _super.call(this, endpoint, params);
-    _defineProperty(_assertThisInitialized(_this), "width", void 0);
-    _defineProperty(_assertThisInitialized(_this), "height", void 0);
-    _defineProperty(_assertThisInitialized(_this), "type", RectangleEndpoint.type);
-    params = params || {};
-    _this.width = params.width || 10;
-    _this.height = params.height || 10;
-    return _this;
-  }
-  _createClass(RectangleEndpoint, null, [{
-    key: "_getParams",
-    value: function _getParams(ep) {
-      return {
-        width: ep.width,
-        height: ep.height
-      };
-    }
-  }]);
-  return RectangleEndpoint;
-}(EndpointRepresentation);
-_defineProperty(RectangleEndpoint, "type", "Rectangle");
-var RectangleEndpointHandler = {
-  type: RectangleEndpoint.type,
-  cls: RectangleEndpoint,
-  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
-    var width = endpointStyle.width || ep.width,
-        height = endpointStyle.height || ep.height,
-        x = anchorPoint.curX - width / 2,
-        y = anchorPoint.curY - height / 2;
-    ep.x = x;
-    ep.y = y;
-    ep.w = width;
-    ep.h = height;
-    return [x, y, width, height];
-  },
-  getParams: function getParams(ep) {
-    return {
-      width: ep.width,
-      height: ep.height
-    };
-  }
-};
-
-var segmentMap = {};
-var Segments = {
-  register: function register(segmentType, segmentHandler) {
-    segmentMap[segmentType] = segmentHandler;
-  },
-  get: function get(segmentType) {
-    var sh = segmentMap[segmentType];
-    if (!sh) {
-      throw {
-        message: "jsPlumb: no segment handler found for segment type '" + segmentType + "'"
-      };
-    } else {
-      return sh;
-    }
-  }
-};
-
-function _getHandler(segment) {
-  return Segments.get(segment.type);
-}
-function _getSegmentLength(segment) {
-  return _getHandler(segment).getLength(segment);
-}
-var AbstractConnector = function () {
-  function AbstractConnector(connection, params) {
-    _classCallCheck(this, AbstractConnector);
-    this.connection = connection;
-    _defineProperty(this, "type", void 0);
-    _defineProperty(this, "edited", false);
-    _defineProperty(this, "stub", void 0);
-    _defineProperty(this, "sourceStub", void 0);
-    _defineProperty(this, "targetStub", void 0);
-    _defineProperty(this, "maxStub", void 0);
-    _defineProperty(this, "typeId", void 0);
-    _defineProperty(this, "gap", void 0);
-    _defineProperty(this, "sourceGap", void 0);
-    _defineProperty(this, "targetGap", void 0);
-    _defineProperty(this, "segments", []);
-    _defineProperty(this, "totalLength", 0);
-    _defineProperty(this, "segmentProportions", []);
-    _defineProperty(this, "segmentProportionalLengths", []);
-    _defineProperty(this, "paintInfo", null);
-    _defineProperty(this, "strokeWidth", void 0);
-    _defineProperty(this, "x", void 0);
-    _defineProperty(this, "y", void 0);
-    _defineProperty(this, "w", void 0);
-    _defineProperty(this, "h", void 0);
-    _defineProperty(this, "segment", void 0);
-    _defineProperty(this, "bounds", EMPTY_BOUNDS());
-    _defineProperty(this, "cssClass", void 0);
-    _defineProperty(this, "hoverClass", void 0);
-    _defineProperty(this, "geometry", void 0);
-    this.stub = params.stub || this.getDefaultStubs();
-    this.sourceStub = Array.isArray(this.stub) ? this.stub[0] : this.stub;
-    this.targetStub = Array.isArray(this.stub) ? this.stub[1] : this.stub;
-    this.gap = params.gap || 0;
-    this.sourceGap = Array.isArray(this.gap) ? this.gap[0] : this.gap;
-    this.targetGap = Array.isArray(this.gap) ? this.gap[1] : this.gap;
-    this.maxStub = Math.max(this.sourceStub, this.targetStub);
-    this.cssClass = params.cssClass || "";
-    this.hoverClass = params.hoverClass || "";
-  }
-  _createClass(AbstractConnector, [{
-    key: "getTypeDescriptor",
-    value: function getTypeDescriptor() {
-      return "connector";
-    }
-  }, {
-    key: "getIdPrefix",
-    value: function getIdPrefix() {
-      return "_jsplumb_connector";
-    }
-  }, {
-    key: "setGeometry",
-    value: function setGeometry(g, internal) {
-      this.geometry = g;
-      this.edited = g != null && !internal;
-    }
-  }, {
-    key: "exportGeometry",
-    value: function exportGeometry() {
-      return this.geometry;
-    }
-  }, {
-    key: "importGeometry",
-    value: function importGeometry(g) {
-      this.geometry = g;
-      return true;
-    }
-  }, {
-    key: "resetGeometry",
-    value: function resetGeometry() {
-      this.geometry = null;
-      this.edited = false;
-    }
-  }, {
-    key: "transformAnchorPlacement",
-    value:
-    function transformAnchorPlacement(a, dx, dy) {
-      return {
-        x: a.x,
-        y: a.y,
-        ox: a.ox,
-        oy: a.oy,
-        curX: a.curX + dx,
-        curY: a.curY + dy
-      };
-    }
-  }, {
-    key: "resetBounds",
-    value: function resetBounds() {
-      this.bounds = EMPTY_BOUNDS();
-    }
-  }, {
-    key: "findSegmentForPoint",
-    value: function findSegmentForPoint(x, y) {
-      var out = {
-        d: Infinity,
-        s: null,
-        x: null,
-        y: null,
-        l: null,
-        x1: null,
-        y1: null,
-        x2: null,
-        y2: null,
-        index: null,
-        connectorLocation: null
-      };
-      for (var i = 0; i < this.segments.length; i++) {
-        var _s = _getHandler(this.segments[i]).findClosestPointOnPath(this.segments[i], x, y);
-        if (_s.d < out.d) {
-          out.d = _s.d;
-          out.l = _s.l;
-          out.x = _s.x;
-          out.y = _s.y;
-          out.s = this.segments[i];
-          out.x1 = _s.x1;
-          out.x2 = _s.x2;
-          out.y1 = _s.y1;
-          out.y2 = _s.y2;
-          out.index = i;
-          out.connectorLocation = this.segmentProportions[i][0] + _s.l * (this.segmentProportions[i][1] - this.segmentProportions[i][0]);
-        }
-      }
-      return out;
-    }
-  }, {
-    key: "lineIntersection",
-    value: function lineIntersection(x1, y1, x2, y2) {
-      var out = [];
-      for (var i = 0; i < this.segments.length; i++) {
-        out.push.apply(out, _getHandler(this.segments[i]).lineIntersection(this.segments[i], x1, y1, x2, y2));
-      }
-      return out;
-    }
-  }, {
-    key: "boxIntersection",
-    value: function boxIntersection(x, y, w, h) {
-      var out = [];
-      for (var i = 0; i < this.segments.length; i++) {
-        out.push.apply(out, _getHandler(this.segments[i]).boxIntersection(this.segments[i], x, y, w, h));
-      }
-      return out;
-    }
-  }, {
-    key: "boundingBoxIntersection",
-    value: function boundingBoxIntersection(box) {
-      var out = [];
-      for (var i = 0; i < this.segments.length; i++) {
-        out.push.apply(out, _getHandler(this.segments[i]).boundingBoxIntersection(this.segments[i], box));
-      }
-      return out;
-    }
-  }, {
-    key: "_updateSegmentProportions",
-    value: function _updateSegmentProportions() {
-      var curLoc = 0;
-      for (var i = 0; i < this.segments.length; i++) {
-        var sl = _getSegmentLength(this.segments[i]);
-        this.segmentProportionalLengths[i] = sl / this.totalLength;
-        this.segmentProportions[i] = [curLoc, curLoc += sl / this.totalLength];
-      }
-    }
-  }, {
-    key: "_findSegmentForLocation",
-    value: function _findSegmentForLocation(location, absolute) {
-      var idx, i, inSegmentProportion;
-      if (absolute) {
-        location = location > 0 ? location / this.totalLength : (this.totalLength + location) / this.totalLength;
-      }
-      if (location === 1) {
-        idx = this.segments.length - 1;
-        inSegmentProportion = 1;
-      } else if (location === 0) {
-        inSegmentProportion = 0;
-        idx = 0;
-      } else {
-        if (location >= 0.5) {
-          idx = 0;
-          inSegmentProportion = 0;
-          for (i = this.segmentProportions.length - 1; i > -1; i--) {
-            if (this.segmentProportions[i][1] >= location && this.segmentProportions[i][0] <= location) {
-              idx = i;
-              inSegmentProportion = (location - this.segmentProportions[i][0]) / this.segmentProportionalLengths[i];
-              break;
-            }
-          }
-        } else {
-          idx = this.segmentProportions.length - 1;
-          inSegmentProportion = 1;
-          for (i = 0; i < this.segmentProportions.length; i++) {
-            if (this.segmentProportions[i][1] >= location) {
-              idx = i;
-              inSegmentProportion = (location - this.segmentProportions[i][0]) / this.segmentProportionalLengths[i];
-              break;
-            }
-          }
-        }
-      }
-      return {
-        segment: this.segments[idx],
-        proportion: inSegmentProportion,
-        index: idx
-      };
-    }
-  }, {
-    key: "_addSegment",
-    value: function _addSegment(segmentType, params) {
-      if (params.x1 === params.x2 && params.y1 === params.y2) {
-        return;
-      }
-      var handler = Segments.get(segmentType);
-      var s = handler.create(segmentType, params);
-      this.segments.push(s);
-      this.totalLength += handler.getLength(s);
-      this.updateBounds(s);
-    }
-  }, {
-    key: "_clearSegments",
-    value: function _clearSegments() {
-      this.totalLength = 0;
-      this.segments.length = 0;
-      this.segmentProportions.length = 0;
-      this.segmentProportionalLengths.length = 0;
-    }
-  }, {
-    key: "getLength",
-    value: function getLength() {
-      return this.totalLength;
-    }
-  }, {
-    key: "_prepareCompute",
-    value: function _prepareCompute(params) {
-      this.strokeWidth = params.strokeWidth;
-      var x1 = params.sourcePos.curX,
-          x2 = params.targetPos.curX,
-          y1 = params.sourcePos.curY,
-          y2 = params.targetPos.curY,
-          segment = quadrant({
-        x: x1,
-        y: y1
-      }, {
-        x: x2,
-        y: y2
-      }),
-          swapX = x2 < x1,
-          swapY = y2 < y1,
-          so = [params.sourcePos.ox, params.sourcePos.oy],
-          to = [params.targetPos.ox, params.targetPos.oy],
-          x = swapX ? x2 : x1,
-          y = swapY ? y2 : y1,
-          w = Math.abs(x2 - x1),
-          h = Math.abs(y2 - y1);
-      var noSourceOrientation = so[0] === 0 && so[1] === 0;
-      var noTargetOrientation = to[0] === 0 && to[1] === 0;
-      if (noSourceOrientation || noTargetOrientation) {
-        var index = w > h ? 0 : 1,
-            oIndex = [1, 0][index],
-            v1 = index === 0 ? x1 : y1,
-            v2 = index === 0 ? x2 : y2;
-        if (noSourceOrientation) {
-          so[index] = v1 > v2 ? -1 : 1;
-          so[oIndex] = 0;
-        }
-        if (noTargetOrientation) {
-          to[index] = v1 > v2 ? 1 : -1;
-          to[oIndex] = 0;
-        }
-      }
-      var sx = swapX ? w + this.sourceGap * so[0] : this.sourceGap * so[0],
-          sy = swapY ? h + this.sourceGap * so[1] : this.sourceGap * so[1],
-          tx = swapX ? this.targetGap * to[0] : w + this.targetGap * to[0],
-          ty = swapY ? this.targetGap * to[1] : h + this.targetGap * to[1],
-          oProduct = so[0] * to[0] + so[1] * to[1];
-      var result = {
-        sx: sx,
-        sy: sy,
-        tx: tx,
-        ty: ty,
-        xSpan: Math.abs(tx - sx),
-        ySpan: Math.abs(ty - sy),
-        mx: (sx + tx) / 2,
-        my: (sy + ty) / 2,
-        so: so,
-        to: to,
-        x: x,
-        y: y,
-        w: w,
-        h: h,
-        segment: segment,
-        startStubX: sx + so[0] * this.sourceStub,
-        startStubY: sy + so[1] * this.sourceStub,
-        endStubX: tx + to[0] * this.targetStub,
-        endStubY: ty + to[1] * this.targetStub,
-        isXGreaterThanStubTimes2: Math.abs(sx - tx) > this.sourceStub + this.targetStub,
-        isYGreaterThanStubTimes2: Math.abs(sy - ty) > this.sourceStub + this.targetStub,
-        opposite: oProduct === -1,
-        perpendicular: oProduct === 0,
-        orthogonal: oProduct === 1,
-        sourceAxis: so[0] === 0 ? "y" : "x",
-        points: [x, y, w, h, sx, sy, tx, ty],
-        stubs: [this.sourceStub, this.targetStub]
-      };
-      result.anchorOrientation = result.opposite ? "opposite" : result.orthogonal ? "orthogonal" : "perpendicular";
-      return result;
-    }
-  }, {
-    key: "updateBounds",
-    value: function updateBounds(segment) {
-      var segBounds = segment.extents;
-      this.bounds.xmin = Math.min(this.bounds.xmin, segBounds.xmin);
-      this.bounds.xmax = Math.max(this.bounds.xmax, segBounds.xmax);
-      this.bounds.ymin = Math.min(this.bounds.ymin, segBounds.ymin);
-      this.bounds.ymax = Math.max(this.bounds.ymax, segBounds.ymax);
-    }
-  }, {
-    key: "dumpSegmentsToConsole",
-    value: function dumpSegmentsToConsole() {
-      log("SEGMENTS:");
-      for (var i = 0; i < this.segments.length; i++) {
-        log(this.segments[i].type, "" + _getSegmentLength(this.segments[i]), "" + this.segmentProportions[i]);
-      }
-    }
-  }, {
-    key: "pointOnPath",
-    value: function pointOnPath(location, absolute) {
-      var seg = this._findSegmentForLocation(location, absolute);
-      return seg.segment && _getHandler(seg.segment).pointOnPath(seg.segment, seg.proportion, false) || {
-        x: 0,
-        y: 0
-      };
-    }
-  }, {
-    key: "gradientAtPoint",
-    value: function gradientAtPoint(location, absolute) {
-      var seg = this._findSegmentForLocation(location, absolute);
-      return seg.segment && _getHandler(seg.segment).gradientAtPoint(seg.segment, seg.proportion, false) || 0;
-    }
-  }, {
-    key: "pointAlongPathFrom",
-    value: function pointAlongPathFrom(location, distance, absolute) {
-      var seg = this._findSegmentForLocation(location, absolute);
-      return seg.segment && Segments.get(seg.segment.type).pointAlongPathFrom(seg.segment, seg.proportion, distance, false) || {
-        x: 0,
-        y: 0
-      };
-    }
-  }, {
-    key: "compute",
-    value: function compute(params) {
-      this.paintInfo = this._prepareCompute(params);
-      this._clearSegments();
-      this._compute(this.paintInfo, params);
-      this.x = this.paintInfo.points[0];
-      this.y = this.paintInfo.points[1];
-      this.w = this.paintInfo.points[2];
-      this.h = this.paintInfo.points[3];
-      this.segment = this.paintInfo.segment;
-      this._updateSegmentProportions();
-    }
-  }, {
-    key: "setAnchorOrientation",
-    value: function setAnchorOrientation(idx, orientation) {}
-  }]);
-  return AbstractConnector;
-}();
-
-function _pointLiesBetween(q, p1, p2) {
-  return p2 > p1 ? p1 <= q && q <= p2 : p1 >= q && q >= p2;
-}
-function _within(a, b, c) {
-  return c >= Math.min(a, b) && c <= Math.max(a, b);
-}
-function _closest(a, b, c) {
-  return Math.abs(c - a) < Math.abs(c - b) ? a : b;
-}
-function _lineIntersection(segment, _x1, _y1, _x2, _y2) {
-  var m2 = Math.abs(gradient({
-    x: _x1,
-    y: _y1
-  }, {
-    x: _x2,
-    y: _y2
-  })),
-      m1 = Math.abs(segment.m),
-      b = m1 === Infinity ? segment.x1 : segment.y1 - m1 * segment.x1,
-      out = [],
-      b2 = m2 === Infinity ? _x1 : _y1 - m2 * _x1;
-  if (m2 !== m1) {
-    if (m2 === Infinity && m1 === 0) {
-      if (_pointLiesBetween(_x1, segment.x1, segment.x2) && _pointLiesBetween(segment.y1, _y1, _y2)) {
-        out.push({
-          x: _x1,
-          y: segment.y1
-        });
-      }
-    } else if (m2 === 0 && m1 === Infinity) {
-      if (_pointLiesBetween(_y1, segment.y1, segment.y2) && _pointLiesBetween(segment.x1, _x1, _x2)) {
-        out.push({
-          x: segment.x1,
-          y: _y1
-        });
-      }
-    } else {
-      var X, Y;
-      if (m2 === Infinity) {
-        X = _x1;
-        if (_pointLiesBetween(X, segment.x1, segment.x2)) {
-          Y = m1 * _x1 + b;
-          if (_pointLiesBetween(Y, _y1, _y2)) {
-            out.push({
-              x: X,
-              y: Y
-            });
-          }
-        }
-      } else if (m2 === 0) {
-        Y = _y1;
-        if (_pointLiesBetween(Y, segment.y1, segment.y2)) {
-          X = (_y1 - b) / m1;
-          if (_pointLiesBetween(X, _x1, _x2)) {
-            out.push({
-              x: X,
-              y: Y
-            });
-          }
-        }
-      } else {
-        X = (b2 - b) / (m1 - m2);
-        Y = m1 * X + b;
-        if (_pointLiesBetween(X, segment.x1, segment.x2) && _pointLiesBetween(Y, segment.y1, segment.y2)) {
-          out.push({
-            x: X,
-            y: Y
-          });
-        }
-      }
-    }
-  }
-  return out;
-}
-function _boxIntersection(segment, x, y, w, h) {
-  var a = [];
-  a.push.apply(a, _lineIntersection(segment, x, y, x + w, y));
-  a.push.apply(a, _lineIntersection(segment, x + w, y, x + w, y + h));
-  a.push.apply(a, _lineIntersection(segment, x + w, y + h, x, y + h));
-  a.push.apply(a, _lineIntersection(segment, x, y + h, x, y));
-  return a;
-}
-function _findClosestPointOnPath(segment, x, y) {
-  var out = {
-    d: Infinity,
-    x: null,
-    y: null,
-    l: null,
-    x1: segment.x1,
-    x2: segment.x2,
-    y1: segment.y1,
-    y2: segment.y2
-  };
-  if (segment.m === 0) {
-    out.y = segment.y1;
-    out.x = _within(segment.x1, segment.x2, x) ? x : _closest(segment.x1, segment.x2, x);
-  } else if (segment.m === Infinity || segment.m === -Infinity) {
-    out.x = segment.x1;
-    out.y = _within(segment.y1, segment.y2, y) ? y : _closest(segment.y1, segment.y2, y);
-  } else {
-    var b = segment.y1 - segment.m * segment.x1,
-        b2 = y - segment.m2 * x,
-    _x1 = (b2 - b) / (segment.m - segment.m2),
-        _y1 = segment.m * _x1 + b;
-    out.x = _within(segment.x1, segment.x2, _x1) ? _x1 : _closest(segment.x1, segment.x2, _x1);
-    out.y = _within(segment.y1, segment.y2, _y1) ? _y1 : _closest(segment.y1, segment.y2, _y1);
-  }
-  var fractionInSegment = lineLength({
-    x: out.x,
-    y: out.y
-  }, {
-    x: segment.x1,
-    y: segment.y1
-  });
-  out.d = lineLength({
-    x: x,
-    y: y
-  }, out);
-  out.l = fractionInSegment / length;
-  return out;
-}
-function _getLength$1(segment) {
-  return segment.length;
-}
-function _getPath$1(segment, isFirstSegment) {
-  return (isFirstSegment ? "M " + segment.x1 + " " + segment.y1 + " " : "") + "L " + segment.x2 + " " + segment.y2;
-}
-function _recalc(segment) {
-  segment.length = Math.sqrt(Math.pow(segment.x2 - segment.x1, 2) + Math.pow(segment.y2 - segment.y1, 2));
-  segment.m = gradient({
-    x: segment.x1,
-    y: segment.y1
-  }, {
-    x: segment.x2,
-    y: segment.y2
-  });
-  segment.m2 = -1 / segment.m;
-  segment.extents = {
-    xmin: Math.min(segment.x1, segment.x2),
-    ymin: Math.min(segment.y1, segment.y2),
-    xmax: Math.max(segment.x1, segment.x2),
-    ymax: Math.max(segment.y1, segment.y2)
-  };
-}
-function _setCoordinates(segment, coords) {
-  segment.x1 = coords.x1;
-  segment.y1 = coords.y1;
-  segment.x2 = coords.x2;
-  segment.y2 = coords.y2;
-  _recalc(segment);
-}
-function _pointOnPath$1(segment, location, absolute) {
-  if (location === 0 && !absolute) {
-    return {
-      x: segment.x1,
-      y: segment.y1
-    };
-  } else if (location === 1 && !absolute) {
-    return {
-      x: segment.x2,
-      y: segment.y2
-    };
-  } else {
-    var l = absolute ? location > 0 ? location : segment.length + location : location * segment.length;
-    return pointOnLine({
-      x: segment.x1,
-      y: segment.y1
-    }, {
-      x: segment.x2,
-      y: segment.y2
-    }, l);
-  }
-}
-function _gradientAtPoint$1(segment, location, absolute) {
-  return segment.m;
-}
-function _pointAlongPathFrom$1(segment, location, distance, absolute) {
-  var p = _pointOnPath$1(segment, location, absolute),
-      farAwayPoint = distance <= 0 ? {
-    x: segment.x1,
-    y: segment.y1
-  } : {
-    x: segment.x2,
-    y: segment.y2
-  };
-  if (distance <= 0 && Math.abs(distance) > 1) {
-    distance *= -1;
-  }
-  return pointOnLine(p, farAwayPoint, distance);
-}
-function blankStraightSegment() {
-  return {
-    type: SEGMENT_TYPE_STRAIGHT,
-    m: 0,
-    length: 0,
-    m2: 0,
-    x1: 0,
-    x2: 0,
-    y1: 0,
-    y2: 0,
-    extents: {
-      xmin: 0,
-      xmax: 0,
-      ymin: 0,
-      ymax: 0
-    }
-  };
-}
-function _createStraightSegment(params) {
-  var s = blankStraightSegment();
-  _setCoordinates(s, params);
-  return s;
-}
-var SEGMENT_TYPE_STRAIGHT = "Straight";
-var StraightSegmentHandler = {
-  create: function create(segmentType, params) {
-    return _createStraightSegment(params);
-  },
-  findClosestPointOnPath: function findClosestPointOnPath(s, x, y) {
-    return _findClosestPointOnPath(s, x, y);
-  },
-  getLength: function getLength(s) {
-    return _getLength$1(s);
-  },
-  getPath: function getPath(s, isFirstSegment) {
-    return _getPath$1(s, isFirstSegment);
-  },
-  gradientAtPoint: function gradientAtPoint(s, location, absolute) {
-    return _gradientAtPoint$1(s);
-  },
-  lineIntersection: function lineIntersection(s, x1, y1, x2, y2) {
-    return _lineIntersection(s, x1, y1, x2, y2);
-  },
-  pointAlongPathFrom: function pointAlongPathFrom(s, location, distance, absolute) {
-    return _pointAlongPathFrom$1(s, location, distance, absolute);
-  },
-  pointOnPath: function pointOnPath(s, location, absolute) {
-    return _pointOnPath$1(s, location, absolute);
-  },
-  boxIntersection: function boxIntersection(s, x, y, w, h) {
-    return _boxIntersection(s, x, y, w, h);
-  },
-  boundingBoxIntersection: function boundingBoxIntersection(s, box) {
-    return _boxIntersection(s, box.x, box.y, box.w, box.h);
-  }
-};
-Segments.register(SEGMENT_TYPE_STRAIGHT, StraightSegmentHandler);
-
-var StraightConnector = function (_AbstractConnector) {
-  _inherits(StraightConnector, _AbstractConnector);
-  var _super = _createSuper(StraightConnector);
-  function StraightConnector() {
-    var _this;
-    _classCallCheck(this, StraightConnector);
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-    _this = _super.call.apply(_super, [this].concat(args));
-    _defineProperty(_assertThisInitialized(_this), "type", StraightConnector.type);
-    return _this;
-  }
-  _createClass(StraightConnector, [{
-    key: "getDefaultStubs",
-    value: function getDefaultStubs() {
-      return [0, 0];
-    }
-  }, {
-    key: "_compute",
-    value: function _compute(paintInfo, p) {
-      this._addSegment(SEGMENT_TYPE_STRAIGHT, {
-        x1: paintInfo.sx,
-        y1: paintInfo.sy,
-        x2: paintInfo.startStubX,
-        y2: paintInfo.startStubY
-      });
-      this._addSegment(SEGMENT_TYPE_STRAIGHT, {
-        x1: paintInfo.startStubX,
-        y1: paintInfo.startStubY,
-        x2: paintInfo.endStubX,
-        y2: paintInfo.endStubY
-      });
-      this._addSegment(SEGMENT_TYPE_STRAIGHT, {
-        x1: paintInfo.endStubX,
-        y1: paintInfo.endStubY,
-        x2: paintInfo.tx,
-        y2: paintInfo.ty
-      });
-      this.geometry = {
-        source: p.sourcePos,
-        target: p.targetPos
-      };
-    }
-  }, {
-    key: "transformGeometry",
-    value: function transformGeometry(g, dx, dy) {
-      return {
-        source: this.transformAnchorPlacement(g.source, dx, dy),
-        target: this.transformAnchorPlacement(g.target, dx, dy)
-      };
-    }
-  }]);
-  return StraightConnector;
-}(AbstractConnector);
-_defineProperty(StraightConnector, "type", "Straight");
-
-var connectorMap = {};
-var Connectors = {
-  get: function get(connection, name, params) {
-    var c = connectorMap[name];
-    if (!c) {
-      throw {
-        message: "jsPlumb: unknown connector type '" + name + "'"
-      };
-    } else {
-      return new c(connection, params);
-    }
-  },
-  register: function register(name, conn) {
-    connectorMap[name] = conn;
-  }
-};
-
 function cls() {
   for (var _len = arguments.length, className = new Array(_len), _key = 0; _key < _len; _key++) {
     className[_key] = arguments[_key];
@@ -1229,28 +310,6 @@ var ERROR_TARGET_ENDPOINT_FULL = "Cannot establish connection: target endpoint i
 var ERROR_SOURCE_DOES_NOT_EXIST = "Cannot establish connection: source does not exist";
 var ERROR_TARGET_DOES_NOT_EXIST = "Cannot establish connection: target does not exist";
 var KEY_CONNECTION_OVERLAYS = "connectionOverlays";
-
-var DEFAULT_KEY_ALLOW_NESTED_GROUPS = "allowNestedGroups";
-var DEFAULT_KEY_ANCHOR = "anchor";
-var DEFAULT_KEY_ANCHORS = "anchors";
-var DEFAULT_KEY_CONNECTION_OVERLAYS = "connectionOverlays";
-var DEFAULT_KEY_CONNECTIONS_DETACHABLE = "connectionsDetachable";
-var DEFAULT_KEY_CONNECTOR = "connector";
-var DEFAULT_KEY_CONTAINER = "container";
-var DEFAULT_KEY_ENDPOINT = "endpoint";
-var DEFAULT_KEY_ENDPOINT_OVERLAYS = "endpointOverlays";
-var DEFAULT_KEY_ENDPOINTS = "endpoints";
-var DEFAULT_KEY_ENDPOINT_STYLE = "endpointStyle";
-var DEFAULT_KEY_ENDPOINT_STYLES = "endpointStyles";
-var DEFAULT_KEY_ENDPOINT_HOVER_STYLE = "endpointHoverStyle";
-var DEFAULT_KEY_ENDPOINT_HOVER_STYLES = "endpointHoverStyles";
-var DEFAULT_KEY_HOVER_CLASS = "hoverClass";
-var DEFAULT_KEY_HOVER_PAINT_STYLE = "hoverPaintStyle";
-var DEFAULT_KEY_LIST_STYLE = "listStyle";
-var DEFAULT_KEY_MAX_CONNECTIONS = "maxConnections";
-var DEFAULT_KEY_PAINT_STYLE = "paintStyle";
-var DEFAULT_KEY_REATTACH_CONNECTIONS = "reattachConnections";
-var DEFAULT_KEY_SCOPE = "scope";
 
 function isFullOverlaySpec(o) {
   return o.type != null && o.options != null;
@@ -1410,644 +469,46 @@ function isLabelOverlay(o) {
 }
 OverlayFactory.register(LabelOverlay.type, LabelOverlay);
 
-function _splitType(t) {
-  return t == null ? null : t.split(" ").filter(function (t) {
-    return t != null && t.length > 0;
-  });
-}
-function _mapType(map, obj, typeId) {
-  for (var i in obj) {
-    map[i] = typeId;
-  }
-}
-var CONNECTOR = "connector";
-var MERGE_STRATEGY_OVERRIDE = "override";
-var CSS_CLASS = "cssClass";
-var DEFAULT_TYPE_KEY = "__default";
-var ANCHOR = "anchor";
-var ANCHORS = "anchors";
-var _internalLabelOverlayId = "__label";
-var _internalLabelOverlayClass = "jtk-default-label";
-var TYPE_ITEM_OVERLAY = "overlay";
-var LOCATION_ATTRIBUTE = "labelLocation";
-var ACTION_ADD = "add";
-var ACTION_REMOVE = "remove";
-function _applyTypes(component, params) {
-  if (component.getDefaultType) {
-    var td = component.getTypeDescriptor(),
-        map = {};
-    var defType = component.getDefaultType();
-    var o = extend({}, defType);
-    _mapType(map, defType, DEFAULT_TYPE_KEY);
-    component._types.forEach(function (tid) {
-      if (tid !== DEFAULT_TYPE_KEY) {
-        var _t = component.instance.getType(tid, td);
-        if (_t != null) {
-          var overrides = new Set([CONNECTOR, ANCHOR, ANCHORS]);
-          if (_t.mergeStrategy === MERGE_STRATEGY_OVERRIDE) {
-            for (var k in _t) {
-              overrides.add(k);
-            }
-          }
-          o = merge(o, _t, [CSS_CLASS], setToArray(overrides));
-          _mapType(map, _t, tid);
-        }
-      }
-    });
-    if (params) {
-      o = populate(o, params, "_");
-    }
-    component.applyType(o, map);
-  }
-}
-function _removeTypeCssHelper(component, typeId) {
-  var type = component.instance.getType(typeId, component.getTypeDescriptor());
-  if (type != null && type.cssClass) {
-    component.removeClass(type.cssClass);
-  }
-}
-function _updateHoverStyle(component) {
-  if (component.paintStyle && component.hoverPaintStyle) {
-    var mergedHoverStyle = {};
-    extend(mergedHoverStyle, component.paintStyle);
-    extend(mergedHoverStyle, component.hoverPaintStyle);
-    component.hoverPaintStyle = mergedHoverStyle;
-  }
-}
-var ADD_CLASS_ACTION = "add";
-var REMOVE_CLASS_ACTION = "remove";
-function _makeLabelOverlay(component, params) {
-  var _params = {
-    cssClass: params.cssClass,
-    id: _internalLabelOverlayId,
-    component: component
+var connectorHandlerMap = {};
+var defaultConnectorHandler = {
+  exportGeometry: function exportGeometry(connector) {
+    return connector.geometry;
   },
-      mergedParams = extend(_params, params);
-  return new LabelOverlay(component.instance, component, mergedParams);
-}
-function _processOverlay(component, o) {
-  var _newOverlay = null;
-  if (isString(o)) {
-    _newOverlay = OverlayFactory.get(component.instance, o, component, {});
-  } else if (o.type != null && o.options != null) {
-    var oa = o;
-    var p = extend({}, oa.options);
-    _newOverlay = OverlayFactory.get(component.instance, oa.type, component, p);
-  } else {
-    _newOverlay = o;
+  importGeometry: function importGeometry(connector, g) {
+    connector.geometry = g;
+    return true;
   }
-  _newOverlay.id = _newOverlay.id || uuid();
-  component.cacheTypeItem(TYPE_ITEM_OVERLAY, _newOverlay, _newOverlay.id);
-  component.overlays[_newOverlay.id] = _newOverlay;
-  return _newOverlay;
-}
-var Component = function (_EventGenerator) {
-  _inherits(Component, _EventGenerator);
-  var _super = _createSuper(Component);
-  function Component(instance, params) {
-    var _this;
-    _classCallCheck(this, Component);
-    _this = _super.call(this);
-    _this.instance = instance;
-    _defineProperty(_assertThisInitialized(_this), "defaultLabelLocation", 0.5);
-    _defineProperty(_assertThisInitialized(_this), "overlays", {});
-    _defineProperty(_assertThisInitialized(_this), "overlayPositions", {});
-    _defineProperty(_assertThisInitialized(_this), "overlayPlacements", {});
-    _defineProperty(_assertThisInitialized(_this), "clone", void 0);
-    _defineProperty(_assertThisInitialized(_this), "deleted", void 0);
-    _defineProperty(_assertThisInitialized(_this), "segment", void 0);
-    _defineProperty(_assertThisInitialized(_this), "x", void 0);
-    _defineProperty(_assertThisInitialized(_this), "y", void 0);
-    _defineProperty(_assertThisInitialized(_this), "w", void 0);
-    _defineProperty(_assertThisInitialized(_this), "h", void 0);
-    _defineProperty(_assertThisInitialized(_this), "id", void 0);
-    _defineProperty(_assertThisInitialized(_this), "visible", true);
-    _defineProperty(_assertThisInitialized(_this), "typeId", void 0);
-    _defineProperty(_assertThisInitialized(_this), "params", {});
-    _defineProperty(_assertThisInitialized(_this), "paintStyle", void 0);
-    _defineProperty(_assertThisInitialized(_this), "hoverPaintStyle", void 0);
-    _defineProperty(_assertThisInitialized(_this), "paintStyleInUse", void 0);
-    _defineProperty(_assertThisInitialized(_this), "_hover", false);
-    _defineProperty(_assertThisInitialized(_this), "lastPaintedAt", void 0);
-    _defineProperty(_assertThisInitialized(_this), "data", void 0);
-    _defineProperty(_assertThisInitialized(_this), "_defaultType", void 0);
-    _defineProperty(_assertThisInitialized(_this), "events", void 0);
-    _defineProperty(_assertThisInitialized(_this), "parameters", void 0);
-    _defineProperty(_assertThisInitialized(_this), "_types", void 0);
-    _defineProperty(_assertThisInitialized(_this), "_typeCache", void 0);
-    _defineProperty(_assertThisInitialized(_this), "cssClass", void 0);
-    _defineProperty(_assertThisInitialized(_this), "hoverClass", void 0);
-    _defineProperty(_assertThisInitialized(_this), "beforeDetach", void 0);
-    _defineProperty(_assertThisInitialized(_this), "beforeDrop", void 0);
-    params = params || {};
-    _this.cssClass = params.cssClass || "";
-    _this.hoverClass = params.hoverClass || instance.defaults.hoverClass;
-    _this.beforeDetach = params.beforeDetach;
-    _this.beforeDrop = params.beforeDrop;
-    _this._types = new Set();
-    _this._typeCache = {};
-    _this.parameters = clone(params.parameters || {});
-    _this.id = params.id || _this.getIdPrefix() + new Date().getTime();
-    _this._defaultType = {
-      parameters: _this.parameters,
-      scope: params.scope || _this.instance.defaultScope,
-      overlays: {}
-    };
-    if (params.events) {
-      for (var evtName in params.events) {
-        _this.bind(evtName, params.events[evtName]);
-      }
-    }
-    _this.clone = function () {
-      var o = Object.create(_this.constructor.prototype);
-      _this.constructor.apply(o, [instance, params]);
-      return o;
-    };
-    _this.overlays = {};
-    _this.overlayPositions = {};
-    var o = params.overlays || [],
-        oo = {};
-    var defaultOverlayKey = _this.getDefaultOverlayKey();
-    if (defaultOverlayKey) {
-      var defaultOverlays = _this.instance.defaults[defaultOverlayKey];
-      if (defaultOverlays) {
-        o.push.apply(o, _toConsumableArray(defaultOverlays));
-      }
-      for (var i = 0; i < o.length; i++) {
-        var fo = convertToFullOverlaySpec(o[i]);
-        oo[fo.options.id] = fo;
-      }
-    }
-    _this._defaultType.overlays = oo;
-    if (params.label) {
-      _this.getDefaultType().overlays[_internalLabelOverlayId] = {
-        type: LabelOverlay.type,
-        options: {
-          label: params.label,
-          location: params.labelLocation || _this.defaultLabelLocation,
-          id: _internalLabelOverlayId,
-          cssClass: _internalLabelOverlayClass
-        }
+};
+var Connectors = {
+  register: function register(connectorType, connectorHandler) {
+    connectorHandlerMap[connectorType] = connectorHandler;
+  },
+  get: function get(connectorType) {
+    var sh = connectorHandlerMap[connectorType];
+    if (!sh) {
+      throw {
+        message: "jsPlumb: no connector handler found for connector type '" + connectorType + "'"
       };
+    } else {
+      return sh;
     }
-    return _this;
+  },
+  exportGeometry: function exportGeometry(connector) {
+    return this.get(connector.type).exportGeometry(connector);
+  },
+  importGeometry: function importGeometry(connector, g) {
+    return this.get(connector.type).importGeometry(connector, g);
+  },
+  transformGeometry: function transformGeometry(connector, g, dx, dy) {
+    return this.get(connector.type).transformGeometry(connector, g, dx, dy);
+  },
+  create: function create(connection, name, args) {
+    return this.get(name).create(connection, name, args);
+  },
+  setAnchorOrientation: function setAnchorOrientation(connector, idx, orientation) {
+    this.get(connector.type).setAnchorOrientation(connector, idx, orientation);
   }
-  _createClass(Component, [{
-    key: "isDetachAllowed",
-    value: function isDetachAllowed(connection) {
-      var r = true;
-      if (this.beforeDetach) {
-        try {
-          r = this.beforeDetach(connection);
-        } catch (e) {
-          log("jsPlumb: beforeDetach callback failed", e);
-        }
-      }
-      return r;
-    }
-  }, {
-    key: "isDropAllowed",
-    value: function isDropAllowed(sourceId, targetId, scope, connection, dropEndpoint) {
-      var r;
-      var payload = {
-        sourceId: sourceId,
-        targetId: targetId,
-        scope: scope,
-        connection: connection,
-        dropEndpoint: dropEndpoint
-      };
-      if (this.beforeDrop) {
-        try {
-          r = this.beforeDrop(payload);
-        } catch (e) {
-          log("jsPlumb: beforeDrop callback failed", e);
-        }
-      } else {
-        r = this.instance.checkCondition(INTERCEPT_BEFORE_DROP, payload);
-      }
-      return r;
-    }
-  }, {
-    key: "getDefaultType",
-    value: function getDefaultType() {
-      return this._defaultType;
-    }
-  }, {
-    key: "appendToDefaultType",
-    value: function appendToDefaultType(obj) {
-      for (var i in obj) {
-        this._defaultType[i] = obj[i];
-      }
-    }
-  }, {
-    key: "getId",
-    value: function getId() {
-      return this.id;
-    }
-  }, {
-    key: "cacheTypeItem",
-    value: function cacheTypeItem(key, item, typeId) {
-      this._typeCache[typeId] = this._typeCache[typeId] || {};
-      this._typeCache[typeId][key] = item;
-    }
-  }, {
-    key: "getCachedTypeItem",
-    value: function getCachedTypeItem(key, typeId) {
-      return this._typeCache[typeId] ? this._typeCache[typeId][key] : null;
-    }
-  }, {
-    key: "setType",
-    value: function setType(typeId, params) {
-      this.clearTypes();
-      (_splitType(typeId) || []).forEach(this._types.add, this._types);
-      _applyTypes(this, params);
-    }
-  }, {
-    key: "getType",
-    value: function getType() {
-      return Array.from(this._types.keys());
-    }
-  }, {
-    key: "reapplyTypes",
-    value: function reapplyTypes(params) {
-      _applyTypes(this, params);
-    }
-  }, {
-    key: "hasType",
-    value: function hasType(typeId) {
-      return this._types.has(typeId);
-    }
-  }, {
-    key: "addType",
-    value: function addType(typeId, params) {
-      var t = _splitType(typeId),
-          _somethingAdded = false;
-      if (t != null) {
-        for (var i = 0, j = t.length; i < j; i++) {
-          if (!this._types.has(t[i])) {
-            this._types.add(t[i]);
-            _somethingAdded = true;
-          }
-        }
-        if (_somethingAdded) {
-          _applyTypes(this, params);
-        }
-      }
-    }
-  }, {
-    key: "removeType",
-    value: function removeType(typeId, params) {
-      var _this2 = this;
-      var t = _splitType(typeId),
-          _cont = false,
-          _one = function _one(tt) {
-        if (_this2._types.has(tt)) {
-          _removeTypeCssHelper(_this2, tt);
-          _this2._types["delete"](tt);
-          return true;
-        }
-        return false;
-      };
-      if (t != null) {
-        for (var i = 0, j = t.length; i < j; i++) {
-          _cont = _one(t[i]) || _cont;
-        }
-        if (_cont) {
-          _applyTypes(this, params);
-        }
-      }
-    }
-  }, {
-    key: "clearTypes",
-    value: function clearTypes(params) {
-      var _this3 = this;
-      this._types.forEach(function (t) {
-        _removeTypeCssHelper(_this3, t);
-      });
-      this._types.clear();
-      _applyTypes(this, params);
-    }
-  }, {
-    key: "toggleType",
-    value: function toggleType(typeId, params) {
-      var t = _splitType(typeId);
-      if (t != null) {
-        for (var i = 0, j = t.length; i < j; i++) {
-          if (this._types.has(t[i])) {
-            _removeTypeCssHelper(this, t[i]);
-            this._types["delete"](t[i]);
-          } else {
-            this._types.add(t[i]);
-          }
-        }
-        _applyTypes(this, params);
-      }
-    }
-  }, {
-    key: "applyType",
-    value: function applyType(t, params) {
-      this.setPaintStyle(t.paintStyle);
-      this.setHoverPaintStyle(t.hoverPaintStyle);
-      this.mergeParameters(t.parameters);
-      this.paintStyleInUse = this.getPaintStyle();
-      if (t.overlays) {
-        var keep = {},
-            i;
-        for (i in t.overlays) {
-          var existing = this.overlays[t.overlays[i].options.id];
-          if (existing) {
-            existing.updateFrom(t.overlays[i].options);
-            keep[t.overlays[i].options.id] = true;
-            this.instance.reattachOverlay(existing, this);
-          } else {
-            var _c = this.getCachedTypeItem(TYPE_ITEM_OVERLAY, t.overlays[i].options.id);
-            if (_c != null) {
-              this.instance.reattachOverlay(_c, this);
-              _c.setVisible(true);
-              _c.updateFrom(t.overlays[i].options);
-              this.overlays[_c.id] = _c;
-            } else {
-              _c = this.addOverlay(t.overlays[i]);
-            }
-            keep[_c.id] = true;
-          }
-        }
-        for (i in this.overlays) {
-          if (keep[this.overlays[i].id] == null) {
-            this.removeOverlay(this.overlays[i].id, true);
-          }
-        }
-      }
-    }
-  }, {
-    key: "setPaintStyle",
-    value: function setPaintStyle(style) {
-      this.paintStyle = style;
-      this.paintStyleInUse = this.paintStyle;
-      _updateHoverStyle(this);
-    }
-  }, {
-    key: "getPaintStyle",
-    value: function getPaintStyle() {
-      return this.paintStyle;
-    }
-  }, {
-    key: "setHoverPaintStyle",
-    value: function setHoverPaintStyle(style) {
-      this.hoverPaintStyle = style;
-      _updateHoverStyle(this);
-    }
-  }, {
-    key: "getHoverPaintStyle",
-    value: function getHoverPaintStyle() {
-      return this.hoverPaintStyle;
-    }
-  }, {
-    key: "destroy",
-    value: function destroy() {
-      for (var i in this.overlays) {
-        this.instance.destroyOverlay(this.overlays[i]);
-      }
-      this.overlays = {};
-      this.overlayPositions = {};
-      this.unbind();
-      this.clone = null;
-    }
-  }, {
-    key: "isHover",
-    value: function isHover() {
-      return this._hover;
-    }
-  }, {
-    key: "mergeParameters",
-    value: function mergeParameters(p) {
-      if (p != null) {
-        extend(this.parameters, p);
-      }
-    }
-  }, {
-    key: "setVisible",
-    value: function setVisible(v) {
-      this.visible = v;
-      if (v) {
-        this.showOverlays();
-      } else {
-        this.hideOverlays();
-      }
-    }
-  }, {
-    key: "isVisible",
-    value: function isVisible() {
-      return this.visible;
-    }
-  }, {
-    key: "setAbsoluteOverlayPosition",
-    value: function setAbsoluteOverlayPosition(overlay, xy) {
-      this.overlayPositions[overlay.id] = xy;
-    }
-  }, {
-    key: "getAbsoluteOverlayPosition",
-    value: function getAbsoluteOverlayPosition(overlay) {
-      return this.overlayPositions ? this.overlayPositions[overlay.id] : null;
-    }
-  }, {
-    key: "_clazzManip",
-    value: function _clazzManip(action, clazz) {
-      for (var i in this.overlays) {
-        if (action === ACTION_ADD) {
-          this.instance.addOverlayClass(this.overlays[i], clazz);
-        } else if (action === ACTION_REMOVE) {
-          this.instance.removeOverlayClass(this.overlays[i], clazz);
-        }
-      }
-    }
-  }, {
-    key: "addClass",
-    value: function addClass(clazz, cascade) {
-      var parts = (this.cssClass || "").split(" ");
-      parts.push(clazz);
-      this.cssClass = parts.join(" ");
-      this._clazzManip(ACTION_ADD, clazz);
-    }
-  }, {
-    key: "removeClass",
-    value: function removeClass(clazz, cascade) {
-      var parts = (this.cssClass || "").split(" ");
-      this.cssClass = parts.filter(function (p) {
-        return p !== clazz;
-      }).join(" ");
-      this._clazzManip(ACTION_REMOVE, clazz);
-    }
-  }, {
-    key: "getClass",
-    value: function getClass() {
-      return this.cssClass;
-    }
-  }, {
-    key: "shouldFireEvent",
-    value: function shouldFireEvent(event, value, originalEvent) {
-      return true;
-    }
-  }, {
-    key: "getData",
-    value: function getData() {
-      return this.data;
-    }
-  }, {
-    key: "setData",
-    value: function setData(d) {
-      this.data = d || {};
-    }
-  }, {
-    key: "mergeData",
-    value: function mergeData(d) {
-      this.data = extend(this.data, d);
-    }
-  }, {
-    key: "addOverlay",
-    value: function addOverlay(overlay) {
-      var o = _processOverlay(this, overlay);
-      if (this.getData && o.type === LabelOverlay.type && !isString(overlay)) {
-        var d = this.getData(),
-            p = overlay.options;
-        if (d) {
-          var locationAttribute = p.labelLocationAttribute || LOCATION_ATTRIBUTE;
-          var loc = d[locationAttribute];
-          if (loc) {
-            o.location = loc;
-          }
-        }
-      }
-      return o;
-    }
-  }, {
-    key: "getOverlay",
-    value: function getOverlay(id) {
-      return this.overlays[id];
-    }
-  }, {
-    key: "getOverlays",
-    value: function getOverlays() {
-      return this.overlays;
-    }
-  }, {
-    key: "hideOverlay",
-    value: function hideOverlay(id) {
-      var o = this.getOverlay(id);
-      if (o) {
-        o.setVisible(false);
-      }
-    }
-  }, {
-    key: "hideOverlays",
-    value: function hideOverlays() {
-      for (var _len = arguments.length, ids = new Array(_len), _key = 0; _key < _len; _key++) {
-        ids[_key] = arguments[_key];
-      }
-      ids = ids || [];
-      for (var i in this.overlays) {
-        if (ids.length === 0 || ids.indexOf(i) !== -1) {
-          this.overlays[i].setVisible(false);
-        }
-      }
-    }
-  }, {
-    key: "showOverlay",
-    value: function showOverlay(id) {
-      var o = this.getOverlay(id);
-      if (o) {
-        o.setVisible(true);
-      }
-    }
-  }, {
-    key: "showOverlays",
-    value: function showOverlays() {
-      for (var _len2 = arguments.length, ids = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        ids[_key2] = arguments[_key2];
-      }
-      ids = ids || [];
-      for (var i in this.overlays) {
-        if (ids.length === 0 || ids.indexOf(i) !== -1) {
-          this.overlays[i].setVisible(true);
-        }
-      }
-    }
-  }, {
-    key: "removeAllOverlays",
-    value: function removeAllOverlays() {
-      for (var i in this.overlays) {
-        this.instance.destroyOverlay(this.overlays[i]);
-      }
-      this.overlays = {};
-      this.overlayPositions = null;
-      this.overlayPlacements = {};
-    }
-  }, {
-    key: "removeOverlay",
-    value: function removeOverlay(overlayId, dontCleanup) {
-      var o = this.overlays[overlayId];
-      if (o) {
-        o.setVisible(false);
-        if (!dontCleanup) {
-          this.instance.destroyOverlay(o);
-        }
-        delete this.overlays[overlayId];
-        if (this.overlayPositions) {
-          delete this.overlayPositions[overlayId];
-        }
-        if (this.overlayPlacements) {
-          delete this.overlayPlacements[overlayId];
-        }
-      }
-    }
-  }, {
-    key: "removeOverlays",
-    value: function removeOverlays() {
-      for (var _len3 = arguments.length, overlays = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        overlays[_key3] = arguments[_key3];
-      }
-      for (var i = 0, j = overlays.length; i < j; i++) {
-        this.removeOverlay(arguments[i]);
-      }
-    }
-  }, {
-    key: "getLabel",
-    value: function getLabel() {
-      var lo = this.getLabelOverlay();
-      return lo != null ? lo.getLabel() : null;
-    }
-  }, {
-    key: "getLabelOverlay",
-    value: function getLabelOverlay() {
-      return this.getOverlay(_internalLabelOverlayId);
-    }
-  }, {
-    key: "setLabel",
-    value: function setLabel(l) {
-      var lo = this.getLabelOverlay();
-      if (!lo) {
-        var _params2 = isString(l) || isFunction(l) ? {
-          label: l
-        } : l;
-        lo = _makeLabelOverlay(this, _params2);
-        this.overlays[_internalLabelOverlayId] = lo;
-      } else {
-        if (isString(l) || isFunction(l)) {
-          lo.setLabel(l);
-        } else {
-          var ll = l;
-          if (ll.label) {
-            lo.setLabel(ll.label);
-          }
-          if (ll.location) {
-            lo.location = ll.location;
-          }
-        }
-      }
-    }
-  }]);
-  return Component;
-}(EventGenerator);
+};
 
 var _opposites, _clockwiseOptions, _antiClockwiseOptions;
 var FaceValues;
@@ -2494,13 +955,13 @@ function _createPerimeterAnchor(params) {
   return aa;
 }
 
-var TYPE_ITEM_ANCHORS = "anchors";
-var TYPE_ITEM_CONNECTOR = "connector";
+var TYPE_DESCRIPTOR_CONNECTION = "connection";
+var DEFAULT_LABEL_LOCATION_CONNECTION = 0.5;
 function prepareEndpoint(conn, existing, index, anchor, element, elementId, endpoint) {
   var e;
   if (existing) {
     conn.endpoints[index] = existing;
-    existing.addConnection(conn);
+    Endpoints.addConnection(existing, conn);
   } else {
     var ep = endpoint || conn.endpointSpec || conn.endpointsSpec[index] || conn.instance.defaults.endpoints[index] || conn.instance.defaults.endpoint;
     var es = conn.endpointStyles[index] || conn.endpointStyle || conn.instance.defaults.endpointStyles[index] || conn.instance.defaults.endpointStyle;
@@ -2544,723 +1005,1334 @@ function prepareEndpoint(conn, existing, index, anchor, element, elementId, endp
   }
   return e;
 }
-var Connection = function (_Component) {
-  _inherits(Connection, _Component);
-  var _super = _createSuper(Connection);
-  function Connection(instance, params) {
-    var _this;
-    _classCallCheck(this, Connection);
-    _this = _super.call(this, instance, params);
-    _this.instance = instance;
-    _defineProperty(_assertThisInitialized(_this), "connector", void 0);
-    _defineProperty(_assertThisInitialized(_this), "defaultLabelLocation", 0.5);
-    _defineProperty(_assertThisInitialized(_this), "scope", void 0);
-    _defineProperty(_assertThisInitialized(_this), "typeId", "_jsplumb_connection");
-    _defineProperty(_assertThisInitialized(_this), "previousConnection", void 0);
-    _defineProperty(_assertThisInitialized(_this), "sourceId", void 0);
-    _defineProperty(_assertThisInitialized(_this), "targetId", void 0);
-    _defineProperty(_assertThisInitialized(_this), "source", void 0);
-    _defineProperty(_assertThisInitialized(_this), "target", void 0);
-    _defineProperty(_assertThisInitialized(_this), "detachable", true);
-    _defineProperty(_assertThisInitialized(_this), "reattach", false);
-    _defineProperty(_assertThisInitialized(_this), "uuids", void 0);
-    _defineProperty(_assertThisInitialized(_this), "cost", 1);
-    _defineProperty(_assertThisInitialized(_this), "directed", void 0);
-    _defineProperty(_assertThisInitialized(_this), "endpoints", [null, null]);
-    _defineProperty(_assertThisInitialized(_this), "endpointStyles", void 0);
-    _defineProperty(_assertThisInitialized(_this), "endpointSpec", void 0);
-    _defineProperty(_assertThisInitialized(_this), "endpointsSpec", void 0);
-    _defineProperty(_assertThisInitialized(_this), "endpointStyle", {});
-    _defineProperty(_assertThisInitialized(_this), "endpointHoverStyle", {});
-    _defineProperty(_assertThisInitialized(_this), "endpointHoverStyles", void 0);
-    _defineProperty(_assertThisInitialized(_this), "suspendedEndpoint", void 0);
-    _defineProperty(_assertThisInitialized(_this), "suspendedIndex", void 0);
-    _defineProperty(_assertThisInitialized(_this), "suspendedElement", void 0);
-    _defineProperty(_assertThisInitialized(_this), "suspendedElementId", void 0);
-    _defineProperty(_assertThisInitialized(_this), "suspendedElementType", void 0);
-    _defineProperty(_assertThisInitialized(_this), "_forceReattach", void 0);
-    _defineProperty(_assertThisInitialized(_this), "_forceDetach", void 0);
-    _defineProperty(_assertThisInitialized(_this), "proxies", []);
-    _defineProperty(_assertThisInitialized(_this), "pending", false);
-    _this.id = params.id;
-    _this.previousConnection = params.previousConnection;
-    _this.source = params.source;
-    _this.target = params.target;
-    if (params.sourceEndpoint) {
-      _this.source = params.sourceEndpoint.element;
-      _this.sourceId = params.sourceEndpoint.elementId;
-    } else {
-      _this.sourceId = instance.getId(_this.source);
+var TYPE_ITEM_ANCHORS = "anchors";
+var TYPE_ITEM_CONNECTOR = "connector";
+function setPreparedConnector(connection, connector, doNotRepaint, doNotChangeListenerComponent, typeId) {
+  if (connection.connector !== connector) {
+    var instance = connection.instance;
+    var previous,
+        previousClasses = "";
+    if (connection.connector != null) {
+      previous = connection.connector;
+      previousClasses = instance.getConnectorClass(connection.connector);
+      instance.destroyConnector(connection);
     }
-    if (params.targetEndpoint) {
-      _this.target = params.targetEndpoint.element;
-      _this.targetId = params.targetEndpoint.elementId;
-    } else {
-      _this.targetId = instance.getId(_this.target);
+    connection.connector = connector;
+    if (typeId) {
+      Components.cacheTypeItem(connection, TYPE_ITEM_CONNECTOR, connector, typeId);
     }
-    _this.scope = params.scope;
-    var sourceAnchor = params.anchors ? params.anchors[0] : params.anchor;
-    var targetAnchor = params.anchors ? params.anchors[1] : params.anchor;
-    instance.manage(_this.source);
-    instance.manage(_this.target);
-    _this.visible = true;
-    _this.params = {
-      cssClass: params.cssClass,
-      hoverClass: params.hoverClass,
-      "pointer-events": params["pointer-events"],
-      overlays: params.overlays
-    };
-    _this.lastPaintedAt = null;
-    if (params.type) {
-      params.endpoints = params.endpoints || _this.instance._deriveEndpointAndAnchorSpec(params.type).endpoints;
+    Connections.addClass(connection, previousClasses);
+    if (previous != null) {
+      var o = connection.overlays;
+      for (var i in o) {
+        instance.reattachOverlay(o[i], connection);
+      }
     }
-    _this.endpointSpec = params.endpoint;
-    _this.endpointsSpec = params.endpoints || [null, null];
-    _this.endpointStyle = params.endpointStyle;
-    _this.endpointHoverStyle = params.endpointHoverStyle;
-    _this.endpointStyles = params.endpointStyles || [null, null];
-    _this.endpointHoverStyles = params.endpointHoverStyles || [null, null];
-    _this.paintStyle = params.paintStyle;
-    _this.hoverPaintStyle = params.hoverPaintStyle;
-    _this.uuids = params.uuids;
-    _this.makeEndpoint(true, _this.source, _this.sourceId, sourceAnchor, params.sourceEndpoint);
-    _this.makeEndpoint(false, _this.target, _this.targetId, targetAnchor, params.targetEndpoint);
-    if (!_this.scope) {
-      _this.scope = _this.endpoints[0].scope;
+    if (!doNotRepaint) {
+      instance._paintConnection(connection);
     }
-    if (params.deleteEndpointsOnEmpty != null) {
-      _this.endpoints[0].deleteOnEmpty = params.deleteEndpointsOnEmpty;
-      _this.endpoints[1].deleteOnEmpty = params.deleteEndpointsOnEmpty;
-    }
-    var _detachable = _this.instance.defaults.connectionsDetachable;
-    if (params.detachable === false) {
-      _detachable = false;
-    }
-    if (_this.endpoints[0].connectionsDetachable === false) {
-      _detachable = false;
-    }
-    if (_this.endpoints[1].connectionsDetachable === false) {
-      _detachable = false;
-    }
-    _this.endpointsSpec = params.endpoints || [null, null];
-    _this.endpointSpec = params.endpoint || null;
-    var _reattach = params.reattach || _this.endpoints[0].reattachConnections || _this.endpoints[1].reattachConnections || _this.instance.defaults.reattachConnections;
-    var initialPaintStyle = extend({}, _this.endpoints[0].connectorStyle || _this.endpoints[1].connectorStyle || params.paintStyle || _this.instance.defaults.paintStyle);
-    _this.appendToDefaultType({
-      detachable: _detachable,
-      reattach: _reattach,
-      paintStyle: initialPaintStyle,
-      hoverPaintStyle: extend({}, _this.endpoints[0].connectorHoverStyle || _this.endpoints[1].connectorHoverStyle || params.hoverPaintStyle || _this.instance.defaults.hoverPaintStyle)
-    });
-    if (params.outlineWidth) {
-      initialPaintStyle.outlineWidth = params.outlineWidth;
-    }
-    if (params.outlineColor) {
-      initialPaintStyle.outlineStroke = params.outlineColor;
-    }
-    if (params.lineWidth) {
-      initialPaintStyle.strokeWidth = params.lineWidth;
-    }
-    if (params.color) {
-      initialPaintStyle.stroke = params.color;
-    }
-    if (!_this.instance._suspendDrawing) {
-      var initialTimestamp = _this.instance._suspendedAt || uuid();
-      _this.instance._paintEndpoint(_this.endpoints[0], {
-        timestamp: initialTimestamp
-      });
-      _this.instance._paintEndpoint(_this.endpoints[1], {
-        timestamp: initialTimestamp
-      });
-    }
-    _this.cost = params.cost || _this.endpoints[0].connectionCost;
-    _this.directed = params.directed;
-    if (params.directed == null) {
-      _this.directed = _this.endpoints[0].connectionsDirected;
-    }
-    var _p = extend({}, _this.endpoints[1].parameters);
-    extend(_p, _this.endpoints[0].parameters);
-    extend(_p, _this.parameters);
-    _this.parameters = _p;
-    _this.paintStyleInUse = _this.getPaintStyle() || {};
-    _this._setConnector(_this.endpoints[0].connector || _this.endpoints[1].connector || params.connector || _this.instance.defaults.connector, true);
-    var data = params.data == null || !isObject(params.data) ? {} : params.data;
-    _this.setData(data);
-    var _types = [DEFAULT, _this.endpoints[0].edgeType, _this.endpoints[1].edgeType, params.type].join(" ");
-    if (/[^\s]/.test(_types)) {
-      _this.addType(_types, params.data);
-    }
-    return _this;
   }
-  _createClass(Connection, [{
-    key: "getIdPrefix",
-    value: function getIdPrefix() {
-      return "_jsPlumb_c";
+}
+var Connections = {
+  isReattach: function isReattach(connection, alsoCheckForced) {
+    var ra = connection.reattach === true || connection.endpoints[0].reattachConnections === true || connection.endpoints[1].reattachConnections === true;
+    var fa = alsoCheckForced ? connection._forceReattach : false;
+    return ra || fa;
+  },
+  isDetachable: function isDetachable(connection, ep) {
+    return connection.detachable === false ? false : ep != null ? ep.connectionsDetachable === true : connection.detachable === true;
+  },
+  setDetachable: function setDetachable(connection, detachable) {
+    connection.detachable = detachable === true;
+  },
+  setReattach: function setReattach(connection, reattach) {
+    connection.reattach = reattach === true;
+  },
+  prepareConnector: function prepareConnector(connection, connectorSpec, typeId) {
+    var connectorArgs = {
+      cssClass: connection.params.cssClass,
+      hoverClass: connection.params.hoverClass,
+      "pointer-events": connection.params["pointer-events"]
+    },
+        connector;
+    if (isString(connectorSpec)) {
+      connector = Connectors.create(connection, connectorSpec, connectorArgs);
+    } else {
+      var co = connectorSpec;
+      connector = Connectors.create(connection, co.type, merge(co.options || {}, connectorArgs));
     }
-  }, {
-    key: "getDefaultOverlayKey",
-    value: function getDefaultOverlayKey() {
-      return KEY_CONNECTION_OVERLAYS;
+    if (typeId != null) {
+      connector.typeId = typeId;
     }
-  }, {
-    key: "getXY",
-    value: function getXY() {
-      return {
-        x: this.connector.x,
-        y: this.connector.y
-      };
-    }
-  }, {
-    key: "makeEndpoint",
-    value: function makeEndpoint(isSource, el, elId, anchor, ep) {
-      elId = elId || this.instance.getId(el);
-      return prepareEndpoint(this, ep, isSource ? 0 : 1, anchor, el);
-    }
-  }, {
-    key: "getTypeDescriptor",
-    value: function getTypeDescriptor() {
-      return Connection.type;
-    }
-  }, {
-    key: "isDetachable",
-    value: function isDetachable(ep) {
-      return this.detachable === false ? false : ep != null ? ep.connectionsDetachable === true : this.detachable === true;
-    }
-  }, {
-    key: "setDetachable",
-    value: function setDetachable(detachable) {
-      this.detachable = detachable === true;
-    }
-  }, {
-    key: "isReattach",
-    value: function isReattach() {
-      return this.reattach === true || this.endpoints[0].reattachConnections === true || this.endpoints[1].reattachConnections === true;
-    }
-  }, {
-    key: "setReattach",
-    value: function setReattach(reattach) {
-      this.reattach = reattach === true;
-    }
-  }, {
-    key: "applyType",
-    value: function applyType(t, typeMap) {
-      var _connector = null;
-      if (t.connector != null) {
-        _connector = this.getCachedTypeItem(TYPE_ITEM_CONNECTOR, typeMap.connector);
-        if (_connector == null) {
-          _connector = this.prepareConnector(t.connector, typeMap.connector);
-          this.cacheTypeItem(TYPE_ITEM_CONNECTOR, _connector, typeMap.connector);
-        }
-        this.setPreparedConnector(_connector);
+    return connector;
+  },
+  setConnector: function setConnector(connection, connectorSpec, doNotRepaint, doNotChangeListenerComponent, typeId) {
+    var connector = Connections.prepareConnector(connection, connectorSpec, typeId);
+    setPreparedConnector(connection, connector, doNotRepaint, doNotChangeListenerComponent, typeId);
+  },
+  getUuids: function getUuids(connection) {
+    return [connection.endpoints[0].uuid, connection.endpoints[1].uuid];
+  },
+  replaceEndpoint: function replaceEndpoint(connection, idx, endpointDef) {
+    var current = connection.endpoints[idx],
+        elId = current.elementId,
+        ebe = connection.instance.getEndpoints(current.element),
+        _idx = ebe.indexOf(current),
+        _new = prepareEndpoint(connection, null, idx, null, current.element, elId, endpointDef);
+    connection.endpoints[idx] = _new;
+    ebe.splice(_idx, 1, _new);
+    Endpoints.detachFromConnection(current, connection);
+    connection.instance.deleteEndpoint(current);
+    connection.instance.fire(EVENT_ENDPOINT_REPLACED, {
+      previous: current,
+      current: _new
+    });
+  },
+  makeEndpoint: function makeEndpoint(connection, isSource, el, elId, anchor, ep) {
+    elId = elId || connection.instance.getId(el);
+    return prepareEndpoint(connection, ep, isSource ? 0 : 1, anchor, el);
+  },
+  applyType: function applyType(connection, t, typeMap) {
+    var _connector = null;
+    if (t.connector != null) {
+      _connector = Components.getCachedTypeItem(connection, TYPE_ITEM_CONNECTOR, typeMap.connector);
+      if (_connector == null) {
+        _connector = Connections.prepareConnector(connection, t.connector, typeMap.connector);
+        Components.cacheTypeItem(connection, TYPE_ITEM_CONNECTOR, _connector, typeMap.connector);
       }
-      _get(_getPrototypeOf(Connection.prototype), "applyType", this).call(this, t, typeMap);
-      if (t.detachable != null) {
-        this.setDetachable(t.detachable);
-      }
-      if (t.reattach != null) {
-        this.setReattach(t.reattach);
-      }
-      if (t.scope) {
-        this.scope = t.scope;
-      }
-      var _anchors = null;
-      if (t.anchor) {
-        _anchors = this.getCachedTypeItem(TYPE_ITEM_ANCHORS, typeMap.anchor);
-        if (_anchors == null) {
-          _anchors = [makeLightweightAnchorFromSpec(t.anchor), makeLightweightAnchorFromSpec(t.anchor)];
-          this.cacheTypeItem(TYPE_ITEM_ANCHORS, _anchors, typeMap.anchor);
-        }
-      } else if (t.anchors) {
-        _anchors = this.getCachedTypeItem(TYPE_ITEM_ANCHORS, typeMap.anchors);
-        if (_anchors == null) {
-          _anchors = [makeLightweightAnchorFromSpec(t.anchors[0]), makeLightweightAnchorFromSpec(t.anchors[1])];
-          this.cacheTypeItem(TYPE_ITEM_ANCHORS, _anchors, typeMap.anchors);
-        }
-      }
-      if (_anchors != null) {
-        this.instance.router.setConnectionAnchors(this, _anchors);
-        if (this.instance.router.isDynamicAnchor(this.endpoints[1])) {
-          this.instance.repaint(this.endpoints[1].element);
-        }
-      }
-      this.instance.applyConnectorType(this.connector, t);
+      setPreparedConnector(connection, _connector);
     }
-  }, {
-    key: "addClass",
-    value: function addClass(c, cascade) {
-      _get(_getPrototypeOf(Connection.prototype), "addClass", this).call(this, c);
-      if (cascade) {
-        this.endpoints[0].addClass(c);
-        this.endpoints[1].addClass(c);
-        if (this.suspendedEndpoint) {
-          this.suspendedEndpoint.addClass(c);
-        }
+    Components.applyBaseType(connection, t, typeMap);
+    if (t.detachable != null) {
+      Connections.setDetachable(connection, t.detachable);
+    }
+    if (t.reattach != null) {
+      Connections.setReattach(connection, t.reattach);
+    }
+    if (t.scope) {
+      connection.scope = t.scope;
+    }
+    var _anchors = null;
+    if (t.anchor) {
+      _anchors = Components.getCachedTypeItem(connection, TYPE_ITEM_ANCHORS, typeMap.anchor);
+      if (_anchors == null) {
+        _anchors = [makeLightweightAnchorFromSpec(t.anchor), makeLightweightAnchorFromSpec(t.anchor)];
+        Components.cacheTypeItem(connection, TYPE_ITEM_ANCHORS, _anchors, typeMap.anchor);
       }
-      if (this.connector) {
-        this.instance.addConnectorClass(this.connector, c);
+    } else if (t.anchors) {
+      _anchors = this.getCachedTypeItem(TYPE_ITEM_ANCHORS, typeMap.anchors);
+      if (_anchors == null) {
+        _anchors = [makeLightweightAnchorFromSpec(t.anchors[0]), makeLightweightAnchorFromSpec(t.anchors[1])];
+        Components.cacheTypeItem(connection, TYPE_ITEM_ANCHORS, _anchors, typeMap.anchors);
       }
     }
-  }, {
-    key: "removeClass",
-    value: function removeClass(c, cascade) {
-      _get(_getPrototypeOf(Connection.prototype), "removeClass", this).call(this, c);
-      if (cascade) {
-        this.endpoints[0].removeClass(c);
-        this.endpoints[1].removeClass(c);
-        if (this.suspendedEndpoint) {
-          this.suspendedEndpoint.removeClass(c);
-        }
-      }
-      if (this.connector) {
-        this.instance.removeConnectorClass(this.connector, c);
+    if (_anchors != null) {
+      connection.instance.router.setConnectionAnchors(connection, _anchors);
+      if (connection.instance.router.isDynamicAnchor(connection.endpoints[1])) {
+        connection.instance.repaint(connection.endpoints[1].element);
       }
     }
-  }, {
-    key: "setVisible",
-    value: function setVisible(v) {
-      _get(_getPrototypeOf(Connection.prototype), "setVisible", this).call(this, v);
-      if (this.connector) {
-        this.instance.setConnectorVisible(this.connector, v);
-      }
-      this.instance._paintConnection(this);
+    connection.instance.applyConnectorType(connection.connector, t);
+  },
+  destroy: function destroy(connection) {
+    Components.destroy(connection);
+    connection.endpoints = null;
+    connection.endpointStyles = null;
+    connection.source = null;
+    connection.target = null;
+    connection.instance.destroyConnector(connection);
+    connection.connector = null;
+    connection.deleted = true;
+  },
+  setVisible: function setVisible(connection, v) {
+    Components._setComponentVisible(connection, v);
+    if (connection.connector) {
+      connection.instance.setConnectorVisible(connection.connector, v);
     }
-  }, {
-    key: "destroy",
-    value: function destroy() {
-      _get(_getPrototypeOf(Connection.prototype), "destroy", this).call(this);
-      this.endpoints = null;
-      this.endpointStyles = null;
-      this.source = null;
-      this.target = null;
-      this.instance.destroyConnector(this);
-      this.connector = null;
-      this.deleted = true;
-    }
-  }, {
-    key: "getUuids",
-    value: function getUuids() {
-      return [this.endpoints[0].getUuid(), this.endpoints[1].getUuid()];
-    }
-  }, {
-    key: "prepareConnector",
-    value: function prepareConnector(connectorSpec, typeId) {
-      var connectorArgs = {
-        cssClass: this.params.cssClass,
-        hoverClass: this.params.hoverClass,
-        "pointer-events": this.params["pointer-events"]
-      },
-          connector;
-      if (isString(connectorSpec)) {
-        connector = this.instance._makeConnector(this, connectorSpec, connectorArgs);
-      } else {
-        var co = connectorSpec;
-        connector = this.instance._makeConnector(this, co.type, merge(co.options || {}, connectorArgs));
-      }
-      if (typeId != null) {
-        connector.typeId = typeId;
-      }
-      return connector;
-    }
-  }, {
-    key: "setPreparedConnector",
-    value: function setPreparedConnector(connector, doNotRepaint, doNotChangeListenerComponent, typeId) {
-      if (this.connector !== connector) {
-        var previous,
-            previousClasses = "";
-        if (this.connector != null) {
-          previous = this.connector;
-          previousClasses = this.instance.getConnectorClass(this.connector);
-          this.instance.destroyConnector(this);
-        }
-        this.connector = connector;
-        if (typeId) {
-          this.cacheTypeItem(TYPE_ITEM_CONNECTOR, connector, typeId);
-        }
-        this.addClass(previousClasses);
-        if (previous != null) {
-          var o = this.getOverlays();
-          for (var i in o) {
-            this.instance.reattachOverlay(o[i], this);
-          }
-        }
-        if (!doNotRepaint) {
-          this.instance._paintConnection(this);
-        }
+    connection.instance._paintConnection(connection);
+  },
+  addClass: function addClass(connection, c, cascade) {
+    Components.addBaseClass(connection, c);
+    if (cascade) {
+      Endpoints.addClass(connection.endpoints[0], c);
+      Endpoints.addClass(connection.endpoints[1], c);
+      if (connection.suspendedEndpoint) {
+        Endpoints.addClass(connection.suspendedEndpoint, c);
       }
     }
-  }, {
-    key: "_setConnector",
-    value: function _setConnector(connectorSpec, doNotRepaint, doNotChangeListenerComponent, typeId) {
-      var connector = this.prepareConnector(connectorSpec, typeId);
-      this.setPreparedConnector(connector, doNotRepaint, doNotChangeListenerComponent, typeId);
+    if (connection.connector) {
+      connection.instance.addConnectorClass(connection.connector, c);
     }
-  }, {
-    key: "replaceEndpoint",
-    value: function replaceEndpoint(idx, endpointDef) {
-      var current = this.endpoints[idx],
-          elId = current.elementId,
-          ebe = this.instance.getEndpoints(current.element),
-          _idx = ebe.indexOf(current),
-          _new = prepareEndpoint(this, null, idx, null, current.element, elId, endpointDef);
-      this.endpoints[idx] = _new;
-      ebe.splice(_idx, 1, _new);
-      current.detachFromConnection(this);
-      this.instance.deleteEndpoint(current);
-      this.instance.fire(EVENT_ENDPOINT_REPLACED, {
-        previous: current,
-        current: _new
-      });
+  },
+  removeClass: function removeClass(connection, c, cascade) {
+    Components.removeBaseClass(connection, c);
+    if (cascade) {
+      Endpoints.removeClass(connection.endpoints[0], c);
+      Endpoints.removeClass(connection.endpoints[1], c);
+      if (connection.suspendedEndpoint) {
+        Endpoints.removeClass(connection.suspendedEndpoint, c);
+      }
     }
-  }]);
-  return Connection;
-}(Component);
-_defineProperty(Connection, "type", "connection");
+    if (connection.connector) {
+      connection.instance.removeConnectorClass(connection.connector, c);
+    }
+  },
+  isConnection: function isConnection(component) {
+    return component._typeDescriptor != null && component._typeDescriptor == TYPE_DESCRIPTOR_CONNECTION;
+  }
+};
 
-var typeParameters = ["connectorStyle", "connectorHoverStyle", "connectorOverlays", "connector", "connectionType", "connectorClass", "connectorHoverClass"];
-var Endpoint = function (_Component) {
-  _inherits(Endpoint, _Component);
-  var _super = _createSuper(Endpoint);
-  function Endpoint(instance, params) {
-    var _this;
-    _classCallCheck(this, Endpoint);
-    _this = _super.call(this, instance, params);
-    _this.instance = instance;
-    _defineProperty(_assertThisInitialized(_this), "connections", []);
-    _defineProperty(_assertThisInitialized(_this), "endpoint", void 0);
-    _defineProperty(_assertThisInitialized(_this), "element", void 0);
-    _defineProperty(_assertThisInitialized(_this), "elementId", void 0);
-    _defineProperty(_assertThisInitialized(_this), "dragAllowedWhenFull", true);
-    _defineProperty(_assertThisInitialized(_this), "timestamp", void 0);
-    _defineProperty(_assertThisInitialized(_this), "portId", void 0);
-    _defineProperty(_assertThisInitialized(_this), "maxConnections", void 0);
-    _defineProperty(_assertThisInitialized(_this), "proxiedBy", void 0);
-    _defineProperty(_assertThisInitialized(_this), "connectorClass", void 0);
-    _defineProperty(_assertThisInitialized(_this), "connectorHoverClass", void 0);
-    _defineProperty(_assertThisInitialized(_this), "finalEndpoint", void 0);
-    _defineProperty(_assertThisInitialized(_this), "enabled", true);
-    _defineProperty(_assertThisInitialized(_this), "isSource", void 0);
-    _defineProperty(_assertThisInitialized(_this), "isTarget", void 0);
-    _defineProperty(_assertThisInitialized(_this), "isTemporarySource", void 0);
-    _defineProperty(_assertThisInitialized(_this), "connectionCost", 1);
-    _defineProperty(_assertThisInitialized(_this), "connectionsDirected", void 0);
-    _defineProperty(_assertThisInitialized(_this), "connectionsDetachable", void 0);
-    _defineProperty(_assertThisInitialized(_this), "reattachConnections", void 0);
-    _defineProperty(_assertThisInitialized(_this), "currentAnchorClass", void 0);
-    _defineProperty(_assertThisInitialized(_this), "referenceEndpoint", void 0);
-    _defineProperty(_assertThisInitialized(_this), "edgeType", void 0);
-    _defineProperty(_assertThisInitialized(_this), "connector", void 0);
-    _defineProperty(_assertThisInitialized(_this), "connectorOverlays", void 0);
-    _defineProperty(_assertThisInitialized(_this), "connectorStyle", void 0);
-    _defineProperty(_assertThisInitialized(_this), "connectorHoverStyle", void 0);
-    _defineProperty(_assertThisInitialized(_this), "deleteOnEmpty", void 0);
-    _defineProperty(_assertThisInitialized(_this), "uuid", void 0);
-    _defineProperty(_assertThisInitialized(_this), "scope", void 0);
-    _defineProperty(_assertThisInitialized(_this), "_anchor", void 0);
-    _defineProperty(_assertThisInitialized(_this), "defaultLabelLocation", [0.5, 0.5]);
-    _this.appendToDefaultType({
-      edgeType: params.edgeType,
-      maxConnections: params.maxConnections == null ? _this.instance.defaults.maxConnections : params.maxConnections,
-      paintStyle: params.paintStyle || _this.instance.defaults.endpointStyle,
-      hoverPaintStyle: params.hoverPaintStyle || _this.instance.defaults.endpointHoverStyle,
-      connectorStyle: params.connectorStyle,
-      connectorHoverStyle: params.connectorHoverStyle,
-      connectorClass: params.connectorClass,
-      connectorHoverClass: params.connectorHoverClass,
-      connectorOverlays: params.connectorOverlays,
-      connector: params.connector
-    });
-    _this.enabled = !(params.enabled === false);
-    _this.visible = true;
-    _this.element = params.element;
-    _this.uuid = params.uuid;
-    _this.portId = params.portId;
-    _this.elementId = params.elementId;
-    _this.connectionCost = params.connectionCost == null ? 1 : params.connectionCost;
-    _this.connectionsDirected = params.connectionsDirected;
-    _this.currentAnchorClass = "";
-    _this.events = {};
-    _this.connectorOverlays = params.connectorOverlays;
-    _this.connectorStyle = params.connectorStyle;
-    _this.connectorHoverStyle = params.connectorHoverStyle;
-    _this.connector = params.connector;
-    _this.edgeType = params.edgeType;
-    _this.connectorClass = params.connectorClass;
-    _this.connectorHoverClass = params.connectorHoverClass;
-    _this.deleteOnEmpty = params.deleteOnEmpty === true;
-    _this.isSource = params.source || false;
-    _this.isTemporarySource = params.isTemporarySource || false;
-    _this.isTarget = params.target || false;
-    _this.connections = params.connections || [];
-    _this.scope = params.scope || instance.defaultScope;
-    _this.timestamp = null;
-    _this.reattachConnections = params.reattachConnections || instance.defaults.reattachConnections;
-    _this.connectionsDetachable = instance.defaults.connectionsDetachable;
-    if (params.connectionsDetachable === false) {
-      _this.connectionsDetachable = false;
-    }
-    _this.dragAllowedWhenFull = params.dragAllowedWhenFull !== false;
-    if (params.onMaxConnections) {
-      _this.bind(EVENT_MAX_CONNECTIONS, params.onMaxConnections);
-    }
-    var ep = params.endpoint || params.existingEndpoint || instance.defaults.endpoint;
-    _this.setEndpoint(ep);
-    if (params.preparedAnchor != null) {
-      _this.setPreparedAnchor(params.preparedAnchor);
-    } else {
-      var anchorParamsToUse = params.anchor ? params.anchor : params.anchors ? params.anchors : instance.defaults.anchor || AnchorLocations.Top;
-      _this.setAnchor(anchorParamsToUse);
-    }
-    var type = [DEFAULT, params.type || ""].join(" ");
-    _this.addType(type, params.data);
-    return _this;
+function _splitType(t) {
+  return t == null ? null : t.split(" ").filter(function (t) {
+    return t != null && t.length > 0;
+  });
+}
+function _mapType(map, obj, typeId) {
+  for (var i in obj) {
+    map[i] = typeId;
   }
-  _createClass(Endpoint, [{
-    key: "getIdPrefix",
-    value: function getIdPrefix() {
-      return "_jsplumb_e";
+}
+var CONNECTOR = "connector";
+var MERGE_STRATEGY_OVERRIDE = "override";
+var CSS_CLASS = "cssClass";
+var DEFAULT_TYPE_KEY = "__default";
+var ANCHOR = "anchor";
+var ANCHORS = "anchors";
+var _internalLabelOverlayId = "__label";
+var _internalLabelOverlayClass = "jtk-default-label";
+var TYPE_ITEM_OVERLAY = "overlay";
+var LOCATION_ATTRIBUTE = "labelLocation";
+var ACTION_ADD = "add";
+var ACTION_REMOVE = "remove";
+function _applyTypes(component, params) {
+  var td = component._typeDescriptor,
+      map = {};
+  var defType = component._defaultType;
+  var o = extend({}, defType);
+  _mapType(map, defType, DEFAULT_TYPE_KEY);
+  component._types.forEach(function (tid) {
+    if (tid !== DEFAULT_TYPE_KEY) {
+      var _t = component.instance.getType(tid, td);
+      if (_t != null) {
+        var overrides = new Set([CONNECTOR, ANCHOR, ANCHORS]);
+        if (_t.mergeStrategy === MERGE_STRATEGY_OVERRIDE) {
+          for (var k in _t) {
+            overrides.add(k);
+          }
+        }
+        o = merge(o, _t, [CSS_CLASS], setToArray(overrides));
+        _mapType(map, _t, tid);
+      }
     }
-  }, {
-    key: "getTypeDescriptor",
-    value: function getTypeDescriptor() {
-      return "endpoint";
+  });
+  if (params) {
+    o = populate(o, params, "_");
+  }
+  Components.applyType(component, o, map);
+}
+function _removeTypeCssHelper(component, typeId) {
+  var type = component.instance.getType(typeId, component._typeDescriptor);
+  if (type != null && type.cssClass) {
+    Components.removeClass(component, type.cssClass);
+  }
+}
+function _updateHoverStyle(component) {
+  if (component.paintStyle && component.hoverPaintStyle) {
+    var mergedHoverStyle = {};
+    extend(mergedHoverStyle, component.paintStyle);
+    extend(mergedHoverStyle, component.hoverPaintStyle);
+    component.hoverPaintStyle = mergedHoverStyle;
+  }
+}
+var ADD_CLASS_ACTION = "add";
+var REMOVE_CLASS_ACTION = "remove";
+function _makeLabelOverlay(component, params) {
+  var _params = {
+    cssClass: params.cssClass,
+    id: _internalLabelOverlayId,
+    component: component
+  },
+      mergedParams = extend(_params, params);
+  return new LabelOverlay(component.instance, component, mergedParams);
+}
+function _processOverlay(component, o) {
+  var _newOverlay = null;
+  if (isString(o)) {
+    _newOverlay = OverlayFactory.get(component.instance, o, component, {});
+  } else if (o.type != null && o.options != null) {
+    var oa = o;
+    var p = extend({}, oa.options);
+    _newOverlay = OverlayFactory.get(component.instance, oa.type, component, p);
+  } else {
+    _newOverlay = o;
+  }
+  _newOverlay.id = _newOverlay.id || uuid();
+  Components.cacheTypeItem(component, TYPE_ITEM_OVERLAY, _newOverlay, _newOverlay.id);
+  component.overlays[_newOverlay.id] = _newOverlay;
+  return _newOverlay;
+}
+function createComponentBase(instance, idPrefix, typeDescriptor, defaultOverlayKey, defaultType, defaultLabelLocation, params) {
+  params = params || {};
+  var cssClass = params.cssClass || "";
+  var hoverClass = params.hoverClass || instance.defaults.hoverClass;
+  var beforeDetach = params.beforeDetach;
+  var beforeDrop = params.beforeDrop;
+  var _types = new Set();
+  var _typeCache = {};
+  var parameters = clone(params.parameters || {});
+  var cParams = {};
+  var data = {};
+  var id = params.id || idPrefix + new Date().getTime();
+  var _defaultType = {
+    parameters: params.parameters,
+    scope: params.scope || instance.defaultScope,
+    overlays: {}
+  };
+  extend(_defaultType, defaultType || {});
+  var overlays = {};
+  var overlayPositions = {};
+  var overlayPlacements = {};
+  var o = params.overlays || [],
+      oo = {};
+  if (defaultOverlayKey) {
+    var defaultOverlays = instance.defaults[defaultOverlayKey];
+    if (defaultOverlays) {
+      o.push.apply(o, _toConsumableArray(defaultOverlays));
     }
-  }, {
-    key: "getXY",
-    value: function getXY() {
+    for (var i = 0; i < o.length; i++) {
+      var fo = convertToFullOverlaySpec(o[i]);
+      oo[fo.options.id] = fo;
+    }
+  }
+  _defaultType.overlays = oo;
+  if (params.label) {
+    _defaultType.overlays[_internalLabelOverlayId] = {
+      type: LabelOverlay.type,
+      options: {
+        label: params.label,
+        location: params.labelLocation || defaultLabelLocation,
+        id: _internalLabelOverlayId,
+        cssClass: _internalLabelOverlayClass
+      }
+    };
+  }
+  return {
+    cssClass: cssClass,
+    hoverClass: hoverClass,
+    beforeDetach: beforeDetach,
+    beforeDrop: beforeDrop,
+    _typeDescriptor: typeDescriptor,
+    _types: _types,
+    _typeCache: _typeCache,
+    parameters: parameters,
+    id: id,
+    overlays: overlays,
+    overlayPositions: overlayPositions,
+    overlayPlacements: overlayPlacements,
+    instance: instance,
+    visible: true,
+    getIdPrefix: function getIdPrefix() {
+      return idPrefix;
+    },
+    getDefaultOverlayKey: function getDefaultOverlayKey() {
+      return defaultOverlayKey;
+    },
+    getXY: function getXY() {
       return {
-        x: this.endpoint.x,
-        y: this.endpoint.y
+        x: 0,
+        y: 0
       };
+    },
+    deleted: false,
+    _hover: false,
+    paintStyle: {},
+    hoverPaintStyle: {},
+    paintStyleInUse: {},
+    lastPaintedAt: null,
+    data: data,
+    params: cParams,
+    events: {},
+    _defaultType: _defaultType
+  };
+}
+function _clazzManip(component, action, clazz) {
+  for (var i in component.overlays) {
+    if (action === ACTION_ADD) {
+      component.instance.addOverlayClass(component.overlays[i], clazz);
+    } else if (action === ACTION_REMOVE) {
+      component.instance.removeOverlayClass(component.overlays[i], clazz);
     }
-  }, {
-    key: "getDefaultOverlayKey",
-    value: function getDefaultOverlayKey() {
-      return "endpointOverlays";
+  }
+}
+var Components = {
+  applyType: function applyType(component, t, params) {
+    if (component._typeDescriptor === TYPE_DESCRIPTOR_ENDPOINT) {
+      Endpoints.applyType(component, t, params);
+    } else if (component._typeDescriptor === TYPE_DESCRIPTOR_CONNECTION) {
+      Connections.applyType(component, t, params);
     }
-  }, {
-    key: "_updateAnchorClass",
-    value: function _updateAnchorClass() {
-      var ac = this._anchor && this._anchor.cssClass;
-      if (ac != null && ac.length > 0) {
-        var oldAnchorClass = this.instance.endpointAnchorClassPrefix + "-" + this.currentAnchorClass;
-        this.currentAnchorClass = ac;
-        var anchorClass = this.instance.endpointAnchorClassPrefix + (this.currentAnchorClass ? "-" + this.currentAnchorClass : "");
-        if (oldAnchorClass !== anchorClass) {
-          this.removeClass(oldAnchorClass);
-          this.addClass(anchorClass);
-          this.instance.removeClass(this.element, oldAnchorClass);
-          this.instance.addClass(this.element, anchorClass);
-        }
-      }
-    }
-  }, {
-    key: "setPreparedAnchor",
-    value: function setPreparedAnchor(anchor) {
-      this.instance.router.setAnchor(this, anchor);
-      this._updateAnchorClass();
-      return this;
-    }
-  }, {
-    key: "_anchorLocationChanged",
-    value: function _anchorLocationChanged(currentAnchor) {
-      this.fire(EVENT_ANCHOR_CHANGED, {
-        endpoint: this,
-        anchor: currentAnchor
-      });
-      this._updateAnchorClass();
-    }
-  }, {
-    key: "setAnchor",
-    value: function setAnchor(anchorParams) {
-      var a = this.instance.router.prepareAnchor(anchorParams);
-      this.setPreparedAnchor(a);
-      return this;
-    }
-  }, {
-    key: "addConnection",
-    value: function addConnection(conn) {
-      this.connections.push(conn);
-      this.instance._refreshEndpoint(this);
-    }
-  }, {
-    key: "detachFromConnection",
-    value: function detachFromConnection(connection, idx, transientDetach) {
-      idx = idx == null ? this.connections.indexOf(connection) : idx;
-      if (idx >= 0) {
-        this.connections.splice(idx, 1);
-        this.instance._refreshEndpoint(this);
-      }
-      if (!transientDetach && this.deleteOnEmpty && this.connections.length === 0) {
-        this.instance.deleteEndpoint(this);
-      }
-    }
-  }, {
-    key: "deleteEveryConnection",
-    value: function deleteEveryConnection(params) {
-      var c = this.connections.length;
-      for (var i = 0; i < c; i++) {
-        this.instance.deleteConnection(this.connections[0], params);
-      }
-    }
-  }, {
-    key: "detachFrom",
-    value: function detachFrom(otherEndpoint) {
-      var c = [];
-      for (var i = 0; i < this.connections.length; i++) {
-        if (this.connections[i].endpoints[1] === otherEndpoint || this.connections[i].endpoints[0] === otherEndpoint) {
-          c.push(this.connections[i]);
-        }
-      }
-      for (var j = 0, count = c.length; j < count; j++) {
-        this.instance.deleteConnection(c[0]);
-      }
-      return this;
-    }
-  }, {
-    key: "setVisible",
-    value: function setVisible(v, doNotChangeConnections, doNotNotifyOtherEndpoint) {
-      _get(_getPrototypeOf(Endpoint.prototype), "setVisible", this).call(this, v);
-      this.endpoint.setVisible(v);
-      if (v) {
-        this.showOverlays();
-      } else {
-        this.hideOverlays();
-      }
-      if (!doNotChangeConnections) {
-        for (var i = 0; i < this.connections.length; i++) {
-          this.connections[i].setVisible(v);
-          if (!doNotNotifyOtherEndpoint) {
-            var oIdx = this === this.connections[i].endpoints[0] ? 1 : 0;
-            if (this.connections[i].endpoints[oIdx].connections.length === 1) {
-              this.connections[i].endpoints[oIdx].setVisible(v, true, true);
-            }
+  },
+  applyBaseType: function applyBaseType(component, t, params) {
+    this.setPaintStyle(component, t.paintStyle);
+    this.setHoverPaintStyle(component, t.hoverPaintStyle);
+    this.mergeParameters(component, t.parameters);
+    component.paintStyleInUse = component.paintStyle;
+    if (t.overlays) {
+      var keep = {},
+          i;
+      for (i in t.overlays) {
+        var existing = component.overlays[t.overlays[i].options.id];
+        if (existing) {
+          existing.updateFrom(t.overlays[i].options);
+          keep[t.overlays[i].options.id] = true;
+          component.instance.reattachOverlay(existing, component);
+        } else {
+          var _c = this.getCachedTypeItem(component, TYPE_ITEM_OVERLAY, t.overlays[i].options.id);
+          if (_c != null) {
+            component.instance.reattachOverlay(_c, component);
+            _c.setVisible(true);
+            _c.updateFrom(t.overlays[i].options);
+            component.overlays[_c.id] = _c;
+          } else {
+            _c = this.addOverlay(component, t.overlays[i]);
           }
+          keep[_c.id] = true;
+        }
+      }
+      for (i in component.overlays) {
+        if (keep[component.overlays[i].id] == null) {
+          this.removeOverlay(component, component.overlays[i].id, true);
         }
       }
     }
-  }, {
-    key: "applyType",
-    value: function applyType(t, typeMap) {
-      _get(_getPrototypeOf(Endpoint.prototype), "applyType", this).call(this, t, typeMap);
-      this.setPaintStyle(t.endpointStyle || t.paintStyle);
-      this.setHoverPaintStyle(t.endpointHoverStyle || t.hoverPaintStyle);
-      this.connectorStyle = t.connectorStyle;
-      this.connectorHoverStyle = t.connectorHoverStyle;
-      this.connector = t.connector;
-      this.connectorOverlays = t.connectorOverlays;
-      this.edgeType = t.edgeType;
-      if (t.maxConnections != null) {
-        this.maxConnections = t.maxConnections;
+  },
+  destroy: function destroy(component) {
+    for (var i in component.overlays) {
+      component.instance.destroyOverlay(component.overlays[i]);
+    }
+    component.overlays = {};
+    component.overlayPositions = {};
+  },
+  _setComponentVisible: function _setComponentVisible(component, v) {
+    component.visible = v;
+    if (v) {
+      this.showOverlays(component);
+    } else {
+      this.hideOverlays(component);
+    }
+  },
+  setVisible: function setVisible(component, v) {
+    if (component._typeDescriptor === TYPE_DESCRIPTOR_ENDPOINT) {
+      Endpoints.setVisible(component, v);
+    } else if (component._typeDescriptor === TYPE_DESCRIPTOR_CONNECTION) {
+      Connections.setVisible(component, v);
+    }
+  },
+  isVisible: function isVisible(component) {
+    return component.visible;
+  },
+  addBaseClass: function addBaseClass(component, clazz, cascade) {
+    var parts = (component.cssClass || "").split(" ");
+    parts.push(clazz);
+    component.cssClass = parts.join(" ");
+    _clazzManip(component, ACTION_ADD, clazz);
+  },
+  removeBaseClass: function removeBaseClass(component, clazz, cascade) {
+    var parts = (component.cssClass || "").split(" ");
+    component.cssClass = parts.filter(function (p) {
+      return p !== clazz;
+    }).join(" ");
+    _clazzManip(component, ACTION_REMOVE, clazz);
+  },
+  addClass: function addClass(component, clazz, cascade) {
+    if (component._typeDescriptor === TYPE_DESCRIPTOR_ENDPOINT) {
+      Endpoints.addClass(component, clazz, cascade);
+    } else if (component._typeDescriptor === TYPE_DESCRIPTOR_CONNECTION) {
+      Connections.addClass(component, clazz, cascade);
+    }
+  },
+  removeClass: function removeClass(component, clazz, cascade) {
+    if (component._typeDescriptor === TYPE_DESCRIPTOR_ENDPOINT) {
+      Endpoints.removeClass(component, clazz, cascade);
+    } else if (component._typeDescriptor === TYPE_DESCRIPTOR_CONNECTION) {
+      Connections.removeClass(component, clazz, cascade);
+    }
+  },
+  showOverlays: function showOverlays(component) {
+    for (var _len = arguments.length, ids = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      ids[_key - 1] = arguments[_key];
+    }
+    ids = ids || [];
+    for (var i in component.overlays) {
+      if (ids.length === 0 || ids.indexOf(i) !== -1) {
+        component.overlays[i].setVisible(true);
       }
-      if (t.scope) {
-        this.scope = t.scope;
-      }
-      extend(t, typeParameters);
-      this.instance.applyEndpointType(this, t);
     }
-  }, {
-    key: "destroy",
-    value: function destroy() {
-      _get(_getPrototypeOf(Endpoint.prototype), "destroy", this).call(this);
-      this.deleted = true;
-      if (this.endpoint != null) {
-        this.instance.destroyEndpoint(this);
+  },
+  hideOverlays: function hideOverlays(component) {
+    for (var _len2 = arguments.length, ids = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+      ids[_key2 - 1] = arguments[_key2];
+    }
+    ids = ids || [];
+    for (var i in component.overlays) {
+      if (ids.length === 0 || ids.indexOf(i) !== -1) {
+        component.overlays[i].setVisible(false);
       }
     }
-  }, {
-    key: "isFull",
-    value: function isFull() {
-      return this.maxConnections === 0 ? true : !(this.isFloating() || this.maxConnections < 0 || this.connections.length < this.maxConnections);
+  },
+  setPaintStyle: function setPaintStyle(component, style) {
+    component.paintStyle = style;
+    component.paintStyleInUse = component.paintStyle;
+    _updateHoverStyle(component);
+  },
+  setHoverPaintStyle: function setHoverPaintStyle(component, style) {
+    component.hoverPaintStyle = style;
+    _updateHoverStyle(component);
+  },
+  mergeParameters: function mergeParameters(component, p) {
+    if (p != null) {
+      extend(component.parameters, p);
     }
-  }, {
-    key: "isFloating",
-    value: function isFloating() {
-      return this.instance.router.isFloating(this);
-    }
-  }, {
-    key: "isConnectedTo",
-    value: function isConnectedTo(otherEndpoint) {
-      var found = false;
-      if (otherEndpoint) {
-        for (var i = 0; i < this.connections.length; i++) {
-          if (this.connections[i].endpoints[1] === otherEndpoint || this.connections[i].endpoints[0] === otherEndpoint) {
-            found = true;
-            break;
-          }
+  },
+  addOverlay: function addOverlay(component, overlay) {
+    var o = _processOverlay(component, overlay);
+    if (component.data != null && o.type === LabelOverlay.type && !isString(overlay)) {
+      var d = component.data,
+          p = overlay.options;
+      if (d) {
+        var locationAttribute = p.labelLocationAttribute || LOCATION_ATTRIBUTE;
+        var loc = d[locationAttribute];
+        if (loc) {
+          o.location = loc;
         }
       }
-      return found;
     }
-  }, {
-    key: "setDragAllowedWhenFull",
-    value: function setDragAllowedWhenFull(allowed) {
-      this.dragAllowedWhenFull = allowed;
+    return o;
+  },
+  getOverlay: function getOverlay(component, id) {
+    return component.overlays[id];
+  },
+  hideOverlay: function hideOverlay(component, id) {
+    var o = this.getOverlay(component, id);
+    if (o) {
+      o.setVisible(false);
     }
-  }, {
-    key: "getUuid",
-    value: function getUuid() {
-      return this.uuid;
+  },
+  showOverlay: function showOverlay(component, id) {
+    var o = this.getOverlay(component, id);
+    if (o) {
+      o.setVisible(true);
     }
-  }, {
-    key: "connectorSelector",
-    value: function connectorSelector() {
-      return this.connections[0];
+  },
+  removeAllOverlays: function removeAllOverlays(component) {
+    for (var i in component.overlays) {
+      component.instance.destroyOverlay(component.overlays[i]);
     }
-  }, {
-    key: "prepareEndpoint",
-    value: function prepareEndpoint(ep, typeId) {
-      var endpointArgs = {
-        cssClass: this.cssClass,
-        endpoint: this
-      };
-      var endpoint;
-      if (isAssignableFrom(ep, EndpointRepresentation)) {
-        var epr = ep;
-        endpoint = EndpointFactory.clone(epr);
-        endpoint.classes = endpointArgs.cssClass.split(" ");
-      } else if (isString(ep)) {
-        endpoint = EndpointFactory.get(this, ep, endpointArgs);
+    component.overlays = {};
+    component.overlayPositions = null;
+    component.overlayPlacements = {};
+  },
+  removeOverlay: function removeOverlay(component, overlayId, dontCleanup) {
+    var o = component.overlays[overlayId];
+    if (o) {
+      o.setVisible(false);
+      if (!dontCleanup) {
+        component.instance.destroyOverlay(o);
+      }
+      delete component.overlays[overlayId];
+      if (component.overlayPositions) {
+        delete component.overlayPositions[overlayId];
+      }
+      if (component.overlayPlacements) {
+        delete component.overlayPlacements[overlayId];
+      }
+    }
+  },
+  removeOverlays: function removeOverlays(component) {
+    for (var i = 0, j = arguments.length <= 1 ? 0 : arguments.length - 1; i < j; i++) {
+      this.removeOverlay(component, i + 1 < 1 || arguments.length <= i + 1 ? undefined : arguments[i + 1]);
+    }
+  },
+  getLabel: function getLabel(component) {
+    var lo = this.getLabelOverlay(component);
+    return lo != null ? lo.getLabel() : null;
+  },
+  getLabelOverlay: function getLabelOverlay(component) {
+    return this.getOverlay(component, _internalLabelOverlayId);
+  },
+  setLabel: function setLabel(component, l) {
+    var lo = this.getLabelOverlay(component);
+    if (!lo) {
+      var _params2 = isString(l) || isFunction(l) ? {
+        label: l
+      } : l;
+      lo = _makeLabelOverlay(component, _params2);
+      component.overlays[_internalLabelOverlayId] = lo;
+    } else {
+      if (isString(l) || isFunction(l)) {
+        lo.setLabel(l);
       } else {
-        var fep = ep;
-        extend(endpointArgs, fep.options || {});
-        endpoint = EndpointFactory.get(this, fep.type, endpointArgs);
+        var ll = l;
+        if (ll.label) {
+          lo.setLabel(ll.label);
+        }
+        if (ll.location) {
+          lo.location = ll.location;
+        }
       }
-      endpoint.typeId = typeId;
-      return endpoint;
     }
-  }, {
-    key: "setEndpoint",
-    value: function setEndpoint(ep) {
-      var _ep = this.prepareEndpoint(ep);
-      this.setPreparedEndpoint(_ep);
+  },
+  getDefaultType: function getDefaultType(component) {
+    return component._defaultType;
+  },
+  appendToDefaultType: function appendToDefaultType(component, obj) {
+    for (var i in obj) {
+      component._defaultType[i] = obj[i];
     }
-  }, {
-    key: "setPreparedEndpoint",
-    value: function setPreparedEndpoint(ep) {
-      if (this.endpoint != null) {
-        this.instance.destroyEndpoint(this);
+  },
+  cacheTypeItem: function cacheTypeItem(component, key, item, typeId) {
+    component._typeCache[typeId] = component._typeCache[typeId] || {};
+    component._typeCache[typeId][key] = item;
+  },
+  getCachedTypeItem: function getCachedTypeItem(component, key, typeId) {
+    return component._typeCache[typeId] ? component._typeCache[typeId][key] : null;
+  },
+  setType: function setType(component, typeId, params) {
+    this.clearTypes(component);
+    (_splitType(typeId) || []).forEach(component._types.add, component._types);
+    _applyTypes(component, params);
+  },
+  getType: function getType(component) {
+    return Array.from(component._types.keys());
+  },
+  reapplyTypes: function reapplyTypes(component, params) {
+    _applyTypes(component, params);
+  },
+  hasType: function hasType(component, typeId) {
+    return component._types.has(typeId);
+  },
+  addType: function addType(component, typeId, params) {
+    var t = _splitType(typeId),
+        _somethingAdded = false;
+    if (t != null) {
+      for (var i = 0, j = t.length; i < j; i++) {
+        if (!component._types.has(t[i])) {
+          component._types.add(t[i]);
+          _somethingAdded = true;
+        }
       }
-      this.endpoint = ep;
+      if (_somethingAdded) {
+        _applyTypes(component, params);
+      }
     }
-  }, {
+  },
+  removeType: function removeType(component, typeId, params) {
+    var t = _splitType(typeId),
+        _cont = false,
+        _one = function _one(tt) {
+      if (component._types.has(tt)) {
+        _removeTypeCssHelper(component, tt);
+        component._types["delete"](tt);
+        return true;
+      }
+      return false;
+    };
+    if (t != null) {
+      for (var i = 0, j = t.length; i < j; i++) {
+        _cont = _one(t[i]) || _cont;
+      }
+      if (_cont) {
+        _applyTypes(component, params);
+      }
+    }
+  },
+  clearTypes: function clearTypes(component, params) {
+    component._types.forEach(function (t) {
+      _removeTypeCssHelper(component, t);
+    });
+    component._types.clear();
+    _applyTypes(component, params);
+  },
+  toggleType: function toggleType(component, typeId, params) {
+    var t = _splitType(typeId);
+    if (t != null) {
+      for (var i = 0, j = t.length; i < j; i++) {
+        if (component._types.has(t[i])) {
+          _removeTypeCssHelper(component, t[i]);
+          component._types["delete"](t[i]);
+        } else {
+          component._types.add(t[i]);
+        }
+      }
+      _applyTypes(component, params);
+    }
+  },
+  isDetachAllowed: function isDetachAllowed(component, connection) {
+    var r = true;
+    if (component.beforeDetach) {
+      try {
+        r = component.beforeDetach(connection);
+      } catch (e) {
+        log("jsPlumb: beforeDetach callback failed", e);
+      }
+    }
+    return r;
+  },
+  isDropAllowed: function isDropAllowed(component, sourceId, targetId, scope, connection, dropEndpoint) {
+    var r;
+    var payload = {
+      sourceId: sourceId,
+      targetId: targetId,
+      scope: scope,
+      connection: connection,
+      dropEndpoint: dropEndpoint
+    };
+    if (component.beforeDrop) {
+      try {
+        r = component.beforeDrop(payload);
+      } catch (e) {
+        log("jsPlumb: beforeDrop callback failed", e);
+      }
+    } else {
+      r = component.instance.checkCondition(INTERCEPT_BEFORE_DROP, payload);
+    }
+    return r;
+  },
+  getData: function getData(component) {
+    if (component.data = null) {
+      component.data = {};
+    }
+    return component.data;
+  },
+  setData: function setData(component, d) {
+    component.data = d || {};
+  },
+  mergeData: function mergeData(component, d) {
+    component.data = extend(component.data, d);
+  },
+  setAbsoluteOverlayPosition: function setAbsoluteOverlayPosition(component, overlay, xy) {
+    component.overlayPositions[overlay.id] = xy;
+  },
+  getAbsoluteOverlayPosition: function getAbsoluteOverlayPosition(component, overlay) {
+    return component.overlayPositions ? component.overlayPositions[overlay.id] : null;
+  }
+};
+
+var EndpointRepresentation = function () {
+  function EndpointRepresentation(endpoint, params) {
+    _classCallCheck(this, EndpointRepresentation);
+    this.endpoint = endpoint;
+    _defineProperty(this, "typeId", void 0);
+    _defineProperty(this, "x", void 0);
+    _defineProperty(this, "y", void 0);
+    _defineProperty(this, "w", void 0);
+    _defineProperty(this, "h", void 0);
+    _defineProperty(this, "computedValue", void 0);
+    _defineProperty(this, "bounds", EMPTY_BOUNDS());
+    _defineProperty(this, "classes", []);
+    _defineProperty(this, "instance", void 0);
+    _defineProperty(this, "canvas", void 0);
+    _defineProperty(this, "type", void 0);
+    params = params || {};
+    this.instance = endpoint.instance;
+    if (endpoint.cssClass) {
+      this.classes.push(endpoint.cssClass);
+    }
+    if (params.cssClass) {
+      this.classes.push(params.cssClass);
+    }
+  }
+  _createClass(EndpointRepresentation, [{
     key: "addClass",
-    value: function addClass(clazz, cascade) {
-      _get(_getPrototypeOf(Endpoint.prototype), "addClass", this).call(this, clazz, cascade);
-      if (this.endpoint != null) {
-        this.endpoint.addClass(clazz);
-      }
+    value: function addClass(c) {
+      this.classes.push(c);
+      this.instance.addEndpointClass(this.endpoint, c);
     }
   }, {
     key: "removeClass",
-    value: function removeClass(clazz, cascade) {
-      _get(_getPrototypeOf(Endpoint.prototype), "removeClass", this).call(this, clazz, cascade);
-      if (this.endpoint != null) {
-        this.endpoint.removeClass(clazz);
-      }
+    value: function removeClass(c) {
+      this.classes = this.classes.filter(function (_c) {
+        return _c !== c;
+      });
+      this.instance.removeEndpointClass(this.endpoint, c);
+    }
+  }, {
+    key: "compute",
+    value: function compute(anchorPoint, orientation, endpointStyle) {
+      this.computedValue = EndpointFactory.compute(this, anchorPoint, orientation, endpointStyle);
+      this.bounds.xmin = this.x;
+      this.bounds.ymin = this.y;
+      this.bounds.xmax = this.x + this.w;
+      this.bounds.ymax = this.y + this.h;
     }
   }]);
-  return Endpoint;
-}(Component);
+  return EndpointRepresentation;
+}();
+var TYPE_DESCRIPTOR_ENDPOINT = "endpoint";
+var typeParameters = ["connectorStyle", "connectorHoverStyle", "connectorOverlays", "connector", "connectionType", "connectorClass", "connectorHoverClass"];
+var Endpoints = {
+  applyType: function applyType(endpoint, t, typeMap) {
+    Components.applyBaseType(endpoint, t, typeMap);
+    Components.setPaintStyle(endpoint, t.endpointStyle || t.paintStyle);
+    Components.setHoverPaintStyle(endpoint, t.endpointHoverStyle || t.hoverPaintStyle);
+    endpoint.connectorStyle = t.connectorStyle;
+    endpoint.connectorHoverStyle = t.connectorHoverStyle;
+    endpoint.connector = t.connector;
+    endpoint.connectorOverlays = t.connectorOverlays;
+    endpoint.edgeType = t.edgeType;
+    if (t.maxConnections != null) {
+      endpoint.maxConnections = t.maxConnections;
+    }
+    if (t.scope) {
+      endpoint.scope = t.scope;
+    }
+    extend(t, typeParameters);
+    endpoint.instance.applyEndpointType(endpoint, t);
+  },
+  destroy: function destroy(endpoint) {
+    Components.destroy(endpoint);
+    endpoint.deleted = true;
+    if (endpoint.representation != null) {
+      endpoint.instance.destroyEndpoint(endpoint);
+    }
+  },
+  setVisible: function setVisible(endpoint, v, doNotChangeConnections, doNotNotifyOtherEndpoint) {
+    Components._setComponentVisible(endpoint, v);
+    endpoint.instance.setEndpointVisible(endpoint, v);
+    if (v) {
+      Components.showOverlays(endpoint);
+    } else {
+      Components.hideOverlays(endpoint);
+    }
+    if (!doNotChangeConnections) {
+      for (var i = 0; i < endpoint.connections.length; i++) {
+        Connections.setVisible(endpoint.connections[i], v);
+        if (!doNotNotifyOtherEndpoint) {
+          var oIdx = endpoint === endpoint.connections[i].endpoints[0] ? 1 : 0;
+          if (endpoint.connections[i].endpoints[oIdx].connections.length === 1) {
+            Endpoints.setVisible(endpoint.connections[i].endpoints[oIdx], v, true, true);
+          }
+        }
+      }
+    }
+  },
+  addClass: function addClass(endpoint, clazz, cascade) {
+    Components.addBaseClass(endpoint, clazz, cascade);
+    if (endpoint.representation != null) {
+      endpoint.representation.addClass(clazz);
+    }
+  },
+  removeClass: function removeClass(endpoint, clazz, cascade) {
+    Components.removeBaseClass(endpoint, clazz, cascade);
+    if (endpoint.representation != null) {
+      endpoint.representation.removeClass(clazz);
+    }
+  },
+  _setPreparedAnchor: function _setPreparedAnchor(endpoint, anchor) {
+    endpoint.instance.router.setAnchor(endpoint, anchor);
+    this._updateAnchorClass(endpoint);
+    return endpoint;
+  },
+  _updateAnchorClass: function _updateAnchorClass(endpoint) {
+    var ac = endpoint._anchor && endpoint._anchor.cssClass;
+    if (ac != null && ac.length > 0) {
+      var oldAnchorClass = endpoint.instance.endpointAnchorClassPrefix + "-" + endpoint.currentAnchorClass;
+      endpoint.currentAnchorClass = ac;
+      var anchorClass = endpoint.instance.endpointAnchorClassPrefix + (endpoint.currentAnchorClass ? "-" + endpoint.currentAnchorClass : "");
+      if (oldAnchorClass !== anchorClass) {
+        this.removeClass(endpoint, oldAnchorClass);
+        this.addClass(endpoint, anchorClass);
+        endpoint.instance.removeClass(endpoint.element, oldAnchorClass);
+        endpoint.instance.addClass(endpoint.element, anchorClass);
+      }
+    }
+  },
+  _anchorLocationChanged: function _anchorLocationChanged(endpoint, currentAnchor) {
+    endpoint.instance.fire(EVENT_ANCHOR_CHANGED$1, {
+      endpoint: endpoint,
+      anchor: currentAnchor
+    });
+    this._updateAnchorClass(endpoint);
+  },
+  setAnchor: function setAnchor(endpoint, anchorParams) {
+    var a = endpoint.instance.router.prepareAnchor(anchorParams);
+    this._setPreparedAnchor(endpoint, a);
+    return endpoint;
+  },
+  addConnection: function addConnection(endpoint, conn) {
+    endpoint.connections.push(conn);
+    endpoint.instance._refreshEndpoint(endpoint);
+  },
+  deleteEveryConnection: function deleteEveryConnection(endpoint, params) {
+    var c = endpoint.connections.length;
+    for (var i = 0; i < c; i++) {
+      endpoint.instance.deleteConnection(endpoint.connections[0], params);
+    }
+  },
+  detachFrom: function detachFrom(endpoint, otherEndpoint) {
+    var c = [];
+    for (var i = 0; i < endpoint.connections.length; i++) {
+      if (endpoint.connections[i].endpoints[1] === otherEndpoint || endpoint.connections[i].endpoints[0] === otherEndpoint) {
+        c.push(endpoint.connections[i]);
+      }
+    }
+    for (var j = 0, count = c.length; j < count; j++) {
+      endpoint.instance.deleteConnection(c[0]);
+    }
+    return endpoint;
+  },
+  detachFromConnection: function detachFromConnection(endpoint, connection, idx, transientDetach) {
+    idx = idx == null ? endpoint.connections.indexOf(connection) : idx;
+    if (idx >= 0) {
+      endpoint.connections.splice(idx, 1);
+      endpoint.instance._refreshEndpoint(endpoint);
+    }
+    if (!transientDetach && endpoint.deleteOnEmpty && endpoint.connections.length === 0) {
+      endpoint.instance.deleteEndpoint(endpoint);
+    }
+  },
+  isFull: function isFull(endpoint) {
+    return endpoint.maxConnections === 0 ? true : !(this.isFloating(endpoint) || endpoint.maxConnections < 0 || endpoint.connections.length < endpoint.maxConnections);
+  },
+  isFloating: function isFloating(endpoint) {
+    return endpoint.instance.router.isFloating(endpoint);
+  },
+  isConnectedTo: function isConnectedTo(endpoint, otherEndpoint) {
+    var found = false;
+    if (otherEndpoint) {
+      for (var i = 0; i < endpoint.connections.length; i++) {
+        if (endpoint.connections[i].endpoints[1] === otherEndpoint || endpoint.connections[i].endpoints[0] === otherEndpoint) {
+          found = true;
+          break;
+        }
+      }
+    }
+    return found;
+  },
+  isEndpoint: function isEndpoint(component) {
+    return component._typeDescriptor != null && component._typeDescriptor == TYPE_DESCRIPTOR_ENDPOINT;
+  },
+  prepareEndpoint: function prepareEndpoint(endpoint, ep, typeId) {
+    var endpointArgs = {
+      cssClass: endpoint.cssClass,
+      endpoint: endpoint
+    };
+    var endpointRep;
+    if (isAssignableFrom(ep, EndpointRepresentation)) {
+      var epr = ep;
+      endpointRep = EndpointFactory.clone(epr);
+      endpointRep.classes = endpointArgs.cssClass.split(" ");
+    } else if (isString(ep)) {
+      endpointRep = EndpointFactory.get(endpoint, ep, endpointArgs);
+    } else {
+      var fep = ep;
+      extend(endpointArgs, fep.options || {});
+      endpointRep = EndpointFactory.get(endpoint, fep.type, endpointArgs);
+    }
+    endpointRep.typeId = typeId;
+    return endpointRep;
+  },
+  setEndpoint: function setEndpoint(endpoint, ep) {
+    var _ep = this.prepareEndpoint(endpoint, ep);
+    this.setPreparedEndpoint(endpoint, _ep);
+  },
+  setPreparedEndpoint: function setPreparedEndpoint(endpoint, ep) {
+    if (endpoint.representation != null) {
+      endpoint.instance.destroyEndpoint(endpoint);
+    }
+    endpoint.representation = ep;
+  }
+};
+
+var DotEndpoint = function (_EndpointRepresentati) {
+  _inherits(DotEndpoint, _EndpointRepresentati);
+  var _super = _createSuper(DotEndpoint);
+  function DotEndpoint(endpoint, params) {
+    var _this;
+    _classCallCheck(this, DotEndpoint);
+    _this = _super.call(this, endpoint, params);
+    _defineProperty(_assertThisInitialized(_this), "radius", void 0);
+    _defineProperty(_assertThisInitialized(_this), "defaultOffset", void 0);
+    _defineProperty(_assertThisInitialized(_this), "defaultInnerRadius", void 0);
+    _defineProperty(_assertThisInitialized(_this), "type", DotEndpoint.type);
+    params = params || {};
+    _this.radius = params.radius || 5;
+    _this.defaultOffset = 0.5 * _this.radius;
+    _this.defaultInnerRadius = _this.radius / 3;
+    return _this;
+  }
+  return DotEndpoint;
+}(EndpointRepresentation);
+_defineProperty(DotEndpoint, "type", "Dot");
+var DotEndpointHandler = {
+  type: DotEndpoint.type,
+  cls: DotEndpoint,
+  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
+    var x = anchorPoint.curX - ep.radius,
+        y = anchorPoint.curY - ep.radius,
+        w = ep.radius * 2,
+        h = ep.radius * 2;
+    if (endpointStyle && endpointStyle.stroke) {
+      var lw = endpointStyle.strokeWidth || 1;
+      x -= lw;
+      y -= lw;
+      w += lw * 2;
+      h += lw * 2;
+    }
+    ep.x = x;
+    ep.y = y;
+    ep.w = w;
+    ep.h = h;
+    return [x, y, w, h, ep.radius];
+  },
+  getParams: function getParams(ep) {
+    return {
+      radius: ep.radius
+    };
+  }
+};
+
+var BlankEndpoint = function (_EndpointRepresentati) {
+  _inherits(BlankEndpoint, _EndpointRepresentati);
+  var _super = _createSuper(BlankEndpoint);
+  function BlankEndpoint(endpoint, params) {
+    var _this;
+    _classCallCheck(this, BlankEndpoint);
+    _this = _super.call(this, endpoint, params);
+    _defineProperty(_assertThisInitialized(_this), "type", BlankEndpoint.type);
+    return _this;
+  }
+  return BlankEndpoint;
+}(EndpointRepresentation);
+_defineProperty(BlankEndpoint, "type", "Blank");
+var BlankEndpointHandler = {
+  type: BlankEndpoint.type,
+  cls: BlankEndpoint,
+  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
+    ep.x = anchorPoint.curX;
+    ep.y = anchorPoint.curY;
+    ep.w = 10;
+    ep.h = 0;
+    return [anchorPoint.curX, anchorPoint.curY, 10, 0];
+  },
+  getParams: function getParams(ep) {
+    return {};
+  }
+};
+
+var RectangleEndpoint = function (_EndpointRepresentati) {
+  _inherits(RectangleEndpoint, _EndpointRepresentati);
+  var _super = _createSuper(RectangleEndpoint);
+  function RectangleEndpoint(endpoint, params) {
+    var _this;
+    _classCallCheck(this, RectangleEndpoint);
+    _this = _super.call(this, endpoint, params);
+    _defineProperty(_assertThisInitialized(_this), "width", void 0);
+    _defineProperty(_assertThisInitialized(_this), "height", void 0);
+    _defineProperty(_assertThisInitialized(_this), "type", RectangleEndpoint.type);
+    params = params || {};
+    _this.width = params.width || 10;
+    _this.height = params.height || 10;
+    return _this;
+  }
+  _createClass(RectangleEndpoint, null, [{
+    key: "_getParams",
+    value: function _getParams(ep) {
+      return {
+        width: ep.width,
+        height: ep.height
+      };
+    }
+  }]);
+  return RectangleEndpoint;
+}(EndpointRepresentation);
+_defineProperty(RectangleEndpoint, "type", "Rectangle");
+var RectangleEndpointHandler = {
+  type: RectangleEndpoint.type,
+  cls: RectangleEndpoint,
+  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
+    var width = endpointStyle.width || ep.width,
+        height = endpointStyle.height || ep.height,
+        x = anchorPoint.curX - width / 2,
+        y = anchorPoint.curY - height / 2;
+    ep.x = x;
+    ep.y = y;
+    ep.w = width;
+    ep.h = height;
+    return [x, y, width, height];
+  },
+  getParams: function getParams(ep) {
+    return {
+      width: ep.width,
+      height: ep.height
+    };
+  }
+};
+
+var DEFAULT_KEY_ALLOW_NESTED_GROUPS = "allowNestedGroups";
+var DEFAULT_KEY_ANCHOR = "anchor";
+var DEFAULT_KEY_ANCHORS = "anchors";
+var DEFAULT_KEY_CONNECTION_OVERLAYS = "connectionOverlays";
+var DEFAULT_KEY_CONNECTIONS_DETACHABLE = "connectionsDetachable";
+var DEFAULT_KEY_CONNECTOR = "connector";
+var DEFAULT_KEY_CONTAINER = "container";
+var DEFAULT_KEY_ENDPOINT = "endpoint";
+var DEFAULT_KEY_ENDPOINT_OVERLAYS = "endpointOverlays";
+var DEFAULT_KEY_ENDPOINTS = "endpoints";
+var DEFAULT_KEY_ENDPOINT_STYLE = "endpointStyle";
+var DEFAULT_KEY_ENDPOINT_STYLES = "endpointStyles";
+var DEFAULT_KEY_ENDPOINT_HOVER_STYLE = "endpointHoverStyle";
+var DEFAULT_KEY_ENDPOINT_HOVER_STYLES = "endpointHoverStyles";
+var DEFAULT_KEY_HOVER_CLASS = "hoverClass";
+var DEFAULT_KEY_HOVER_PAINT_STYLE = "hoverPaintStyle";
+var DEFAULT_KEY_LIST_STYLE = "listStyle";
+var DEFAULT_KEY_MAX_CONNECTIONS = "maxConnections";
+var DEFAULT_KEY_PAINT_STYLE = "paintStyle";
+var DEFAULT_KEY_REATTACH_CONNECTIONS = "reattachConnections";
+var DEFAULT_KEY_SCOPE = "scope";
+
+var TYPE_ID_CONNECTION = "_jsplumb_connection";
+var ID_PREFIX_CONNECTION = "_jsPlumb_c";
+function createConnection(instance, params) {
+  var componentBase = createComponentBase(instance, ID_PREFIX_CONNECTION, TYPE_DESCRIPTOR_CONNECTION, KEY_CONNECTION_OVERLAYS, {}, DEFAULT_LABEL_LOCATION_CONNECTION, params);
+  var previousConnection = params.previousConnection;
+  var source = params.source;
+  var target = params.target;
+  var sourceId, targetId;
+  if (params.sourceEndpoint) {
+    source = params.sourceEndpoint.element;
+    sourceId = params.sourceEndpoint.elementId;
+  } else {
+    sourceId = instance.getId(source);
+  }
+  if (params.targetEndpoint) {
+    target = params.targetEndpoint.element;
+    targetId = params.targetEndpoint.elementId;
+  } else {
+    targetId = instance.getId(target);
+  }
+  var scope = params.scope;
+  var sourceAnchor = params.anchors ? params.anchors[0] : params.anchor;
+  var targetAnchor = params.anchors ? params.anchors[1] : params.anchor;
+  instance.manage(source);
+  instance.manage(target);
+  var cParams = {
+    cssClass: params.cssClass,
+    hoverClass: params.hoverClass,
+    "pointer-events": params["pointer-events"],
+    overlays: params.overlays
+  };
+  if (params.type) {
+    params.endpoints = params.endpoints || instance._deriveEndpointAndAnchorSpec(params.type).endpoints;
+  }
+  var endpointSpec = params.endpoint;
+  var endpointsSpec = params.endpoints || [null, null];
+  var endpointStyle = params.endpointStyle;
+  var endpointHoverStyle = params.endpointHoverStyle;
+  var endpointStyles = params.endpointStyles || [null, null];
+  var endpointHoverStyles = params.endpointHoverStyles || [null, null];
+  var paintStyle = params.paintStyle;
+  var hoverPaintStyle = params.hoverPaintStyle;
+  var uuids = params.uuids;
+  var connection = extend(componentBase, {
+    previousConnection: previousConnection,
+    source: source,
+    target: target,
+    sourceId: sourceId,
+    targetId: targetId,
+    scope: scope,
+    params: cParams,
+    lastPaintedAt: null,
+    endpointSpec: endpointSpec,
+    endpointsSpec: endpointsSpec,
+    endpointStyle: endpointStyle,
+    endpointHoverStyle: endpointHoverStyle,
+    endpointStyles: endpointStyles,
+    endpointHoverStyles: endpointHoverStyles,
+    paintStyle: paintStyle,
+    hoverPaintStyle: hoverPaintStyle,
+    uuids: uuids,
+    deleted: false,
+    idPrefix: ID_PREFIX_CONNECTION,
+    typeId: TYPE_ID_CONNECTION,
+    defaultOverlayKey: KEY_CONNECTION_OVERLAYS,
+    detachable: true,
+    reattach: true,
+    cost: 1,
+    directed: false,
+    endpoints: [null, null],
+    proxies: []
+  });
+  Connections.makeEndpoint(connection, true, connection.source, connection.sourceId, sourceAnchor, params.sourceEndpoint);
+  Connections.makeEndpoint(connection, false, connection.target, connection.targetId, targetAnchor, params.targetEndpoint);
+  if (!connection.scope) {
+    connection.scope = connection.endpoints[0].scope;
+  }
+  if (params.deleteEndpointsOnEmpty != null) {
+    connection.endpoints[0].deleteOnEmpty = params.deleteEndpointsOnEmpty;
+    connection.endpoints[1].deleteOnEmpty = params.deleteEndpointsOnEmpty;
+  }
+  var _detachable = instance.defaults.connectionsDetachable;
+  if (params.detachable === false) {
+    _detachable = false;
+  }
+  if (connection.endpoints[0].connectionsDetachable === false) {
+    _detachable = false;
+  }
+  if (connection.endpoints[1].connectionsDetachable === false) {
+    _detachable = false;
+  }
+  var _reattach = params.reattach || connection.endpoints[0].reattachConnections || connection.endpoints[1].reattachConnections || instance.defaults.reattachConnections;
+  var initialPaintStyle = extend({}, connection.endpoints[0].connectorStyle || connection.endpoints[1].connectorStyle || params.paintStyle || instance.defaults.paintStyle);
+  Components.appendToDefaultType(connection, {
+    detachable: _detachable,
+    reattach: _reattach,
+    paintStyle: initialPaintStyle,
+    hoverPaintStyle: extend({}, connection.endpoints[0].connectorHoverStyle || connection.endpoints[1].connectorHoverStyle || params.hoverPaintStyle || instance.defaults.hoverPaintStyle)
+  });
+  if (params.outlineWidth) {
+    initialPaintStyle.outlineWidth = params.outlineWidth;
+  }
+  if (params.outlineColor) {
+    initialPaintStyle.outlineStroke = params.outlineColor;
+  }
+  if (params.lineWidth) {
+    initialPaintStyle.strokeWidth = params.lineWidth;
+  }
+  if (params.color) {
+    initialPaintStyle.stroke = params.color;
+  }
+  if (!instance._suspendDrawing) {
+    var initialTimestamp = instance._suspendedAt || uuid();
+    instance._paintEndpoint(connection.endpoints[0], {
+      timestamp: initialTimestamp
+    });
+    instance._paintEndpoint(connection.endpoints[1], {
+      timestamp: initialTimestamp
+    });
+  }
+  connection.cost = params.cost || connection.endpoints[0].connectionCost;
+  connection.directed = params.directed;
+  if (params.directed == null) {
+    connection.directed = connection.endpoints[0].connectionsDirected;
+  }
+  var _p = extend({}, connection.endpoints[1].parameters);
+  extend(_p, connection.endpoints[0].parameters);
+  extend(_p, connection.parameters);
+  connection.parameters = _p;
+  connection.paintStyleInUse = connection.paintStyle || {};
+  Connections.setConnector(connection, connection.endpoints[0].connector || connection.endpoints[1].connector || params.connector || instance.defaults.connector, true);
+  var data = params.data == null || !isObject(params.data) ? {} : params.data;
+  Components.setData(connection, data);
+  var _types = [DEFAULT, connection.endpoints[0].edgeType, connection.endpoints[1].edgeType, params.type].join(" ");
+  if (/[^\s]/.test(_types)) {
+    Components.addType(connection, _types, params.data);
+  }
+  connection.getXY = function () {
+    return {
+      x: this.connector.x,
+      y: this.connector.y
+    };
+  };
+  return connection;
+}
+
+var ID_PREFIX_ENDPOINT = "_jsplumb_e";
+var DEFAULT_OVERLAY_KEY_ENDPOINTS = "endpointOverlays";
+var DEFAULT_LABEL_LOCATION_ENDPOINT = [0.5, 0.5];
+function createEndpoint(instance, params) {
+  var baseComponent = createComponentBase(instance, ID_PREFIX_ENDPOINT, TYPE_DESCRIPTOR_ENDPOINT, DEFAULT_OVERLAY_KEY_ENDPOINTS, {
+    edgeType: params.edgeType,
+    maxConnections: params.maxConnections == null ? instance.defaults.maxConnections : params.maxConnections,
+    paintStyle: params.paintStyle || instance.defaults.endpointStyle,
+    hoverPaintStyle: params.hoverPaintStyle || instance.defaults.endpointHoverStyle,
+    connectorStyle: params.connectorStyle,
+    connectorHoverStyle: params.connectorHoverStyle,
+    connectorClass: params.connectorClass,
+    connectorHoverClass: params.connectorHoverClass,
+    connectorOverlays: params.connectorOverlays,
+    connector: params.connector
+  }, DEFAULT_LABEL_LOCATION_ENDPOINT, params);
+  var enabled = !(params.enabled === false);
+  var visible = true;
+  var element = params.element;
+  var uuid = params.uuid;
+  var portId = params.portId;
+  var elementId = params.elementId;
+  var connectionCost = params.connectionCost == null ? 1 : params.connectionCost;
+  var connectionsDirected = params.connectionsDirected;
+  var currentAnchorClass = "";
+  var events = {};
+  var connectorOverlays = params.connectorOverlays;
+  var connectorStyle = params.connectorStyle;
+  var connectorHoverStyle = params.connectorHoverStyle;
+  var connector = params.connector;
+  var edgeType = params.edgeType;
+  var connectorClass = params.connectorClass;
+  var connectorHoverClass = params.connectorHoverClass;
+  var deleteOnEmpty = params.deleteOnEmpty === true;
+  var isSource = params.source || false;
+  var isTemporarySource = params.isTemporarySource || false;
+  var isTarget = params.target || false;
+  var connections = params.connections || [];
+  var scope = params.scope || instance.defaultScope;
+  var timestamp = null;
+  var reattachConnections = params.reattachConnections || instance.defaults.reattachConnections;
+  var connectionsDetachable = instance.defaults.connectionsDetachable;
+  if (params.connectionsDetachable === false) {
+    connectionsDetachable = false;
+  }
+  var dragAllowedWhenFull = params.dragAllowedWhenFull !== false;
+  var endpoint = extend(baseComponent, {
+    enabled: enabled,
+    visible: visible,
+    element: element,
+    uuid: uuid,
+    portId: portId,
+    elementId: elementId,
+    connectionCost: connectionCost,
+    connectionsDirected: connectionsDirected,
+    currentAnchorClass: currentAnchorClass,
+    events: events,
+    connectorOverlays: connectorOverlays,
+    connectorStyle: connectorStyle,
+    connectorHoverStyle: connectorHoverStyle,
+    connector: connector,
+    edgeType: edgeType,
+    connectorClass: connectorClass,
+    connectorHoverClass: connectorHoverClass,
+    deleteOnEmpty: deleteOnEmpty,
+    isSource: isSource,
+    isTemporarySource: isTemporarySource,
+    isTarget: isTarget,
+    connections: connections,
+    scope: scope,
+    timestamp: timestamp,
+    reattachConnections: reattachConnections,
+    connectionsDetachable: connectionsDetachable,
+    dragAllowedWhenFull: dragAllowedWhenFull,
+    connectorSelector: function connectorSelector() {
+      return this.connections[0];
+    },
+    getXY: function getXY() {
+      return {
+        x: this.representation.x,
+        y: this.representation.y
+      };
+    }
+  });
+  var ep = params.endpoint || params.existingEndpoint || instance.defaults.endpoint;
+  Endpoints.setEndpoint(endpoint, ep);
+  if (params.preparedAnchor != null) {
+    Endpoints._setPreparedAnchor(endpoint, params.preparedAnchor);
+  } else {
+    var anchorParamsToUse = params.anchor ? params.anchor : params.anchors ? params.anchors : instance.defaults.anchor || AnchorLocations.Top;
+    Endpoints.setAnchor(endpoint, anchorParamsToUse);
+  }
+  var type = [DEFAULT, params.type || ""].join(" ");
+  Components.addType(endpoint, type, params.data);
+  return endpoint;
+}
 
 var UINode = function UINode(instance, el) {
   _classCallCheck(this, UINode);
@@ -3944,7 +3016,7 @@ var GroupManager = function () {
               _collapseSet(group.connections.source, 0);
               _collapseSet(group.connections.target, 1);
               forEach(group.connections.internal, function (c) {
-                return c.setVisible(false);
+                return Connections.setVisible(c, false);
               });
               forEach(group.getGroups(), function (g) {
                 return _expandNestedGroup(g, true);
@@ -4018,12 +3090,12 @@ var GroupManager = function () {
             var handleDroppedConnections = function handleDroppedConnections(list, index) {
               var oidx = index === 0 ? 1 : 0;
               list.each(function (c) {
-                c.setVisible(false);
+                Connections.setVisible(c, false);
                 if (c.endpoints[oidx].element._jsPlumbGroup === actualGroup) {
-                  c.endpoints[oidx].setVisible(false);
+                  Endpoints.setVisible(c.endpoints[oidx], false);
                   _this7._expandConnection(c, oidx, actualGroup);
                 } else {
-                  c.endpoints[index].setVisible(false);
+                  Endpoints.setVisible(c.endpoints[index], false);
                   _this7._collapseConnection(c, index, actualGroup);
                 }
               });
@@ -4036,7 +3108,6 @@ var GroupManager = function () {
                 target: el
               }), 1);
             }
-            _this7.instance.getId(el);
             var newPosition = {
               x: elpos.x - cpos.x,
               y: elpos.y - cpos.y
@@ -4179,7 +3250,7 @@ var SelectionBase = function () {
     key: "addClass",
     value: function addClass(clazz, cascade) {
       this.each(function (c) {
-        return c.addClass(clazz, cascade);
+        return Components.addClass(c, clazz, cascade);
       });
       return this;
     }
@@ -4187,7 +3258,7 @@ var SelectionBase = function () {
     key: "removeClass",
     value: function removeClass(clazz, cascade) {
       this.each(function (c) {
-        return c.removeClass(clazz, cascade);
+        return Components.removeClass(c, clazz, cascade);
       });
       return this;
     }
@@ -4195,7 +3266,7 @@ var SelectionBase = function () {
     key: "removeAllOverlays",
     value: function removeAllOverlays() {
       this.each(function (c) {
-        return c.removeAllOverlays();
+        return Components.removeAllOverlays(c);
       });
       return this;
     }
@@ -4203,7 +3274,7 @@ var SelectionBase = function () {
     key: "setLabel",
     value: function setLabel(label) {
       this.each(function (c) {
-        return c.setLabel(label);
+        return Components.setLabel(c, label);
       });
       return this;
     }
@@ -4226,7 +3297,7 @@ var SelectionBase = function () {
     key: "addOverlay",
     value: function addOverlay(spec) {
       this.each(function (c) {
-        return c.addOverlay(spec);
+        return Components.addOverlay(c, spec);
       });
       return this;
     }
@@ -4234,7 +3305,7 @@ var SelectionBase = function () {
     key: "removeOverlay",
     value: function removeOverlay(id) {
       this.each(function (c) {
-        return c.removeOverlay(id);
+        return Components.removeOverlay(c, id);
       });
       return this;
     }
@@ -4242,7 +3313,7 @@ var SelectionBase = function () {
     key: "removeOverlays",
     value: function removeOverlays() {
       this.each(function (c) {
-        return c.removeOverlays();
+        return Components.removeOverlays(c);
       });
       return this;
     }
@@ -4250,7 +3321,7 @@ var SelectionBase = function () {
     key: "showOverlay",
     value: function showOverlay(id) {
       this.each(function (c) {
-        return c.showOverlay(id);
+        return Components.showOverlay(c, id);
       });
       return this;
     }
@@ -4258,7 +3329,7 @@ var SelectionBase = function () {
     key: "hideOverlay",
     value: function hideOverlay(id) {
       this.each(function (c) {
-        return c.hideOverlay(id);
+        return Components.hideOverlay(c, id);
       });
       return this;
     }
@@ -4266,7 +3337,7 @@ var SelectionBase = function () {
     key: "setPaintStyle",
     value: function setPaintStyle(style) {
       this.each(function (c) {
-        return c.setPaintStyle(style);
+        return Components.setPaintStyle(c, style);
       });
       return this;
     }
@@ -4274,15 +3345,7 @@ var SelectionBase = function () {
     key: "setHoverPaintStyle",
     value: function setHoverPaintStyle(style) {
       this.each(function (c) {
-        return c.setHoverPaintStyle(style);
-      });
-      return this;
-    }
-  }, {
-    key: "setSuspendEvents",
-    value: function setSuspendEvents(suspend) {
-      this.each(function (c) {
-        return c.setSuspendEvents(suspend);
+        return Components.setHoverPaintStyle(c, style);
       });
       return this;
     }
@@ -4306,7 +3369,7 @@ var SelectionBase = function () {
     key: "setVisible",
     value: function setVisible(v) {
       this.each(function (c) {
-        return c.setVisible(v);
+        return Components.setVisible(c, v);
       });
       return this;
     }
@@ -4314,7 +3377,7 @@ var SelectionBase = function () {
     key: "addType",
     value: function addType(name) {
       this.each(function (c) {
-        return c.addType(name);
+        return Components.addType(c, name);
       });
       return this;
     }
@@ -4322,7 +3385,7 @@ var SelectionBase = function () {
     key: "toggleType",
     value: function toggleType(name) {
       this.each(function (c) {
-        return c.toggleType(name);
+        return Components.toggleType(c, name);
       });
       return this;
     }
@@ -4330,23 +3393,7 @@ var SelectionBase = function () {
     key: "removeType",
     value: function removeType(name) {
       this.each(function (c) {
-        return c.removeType(name);
-      });
-      return this;
-    }
-  }, {
-    key: "bind",
-    value: function bind(evt, handler) {
-      this.each(function (c) {
-        return c.bind(evt, handler);
-      });
-      return this;
-    }
-  }, {
-    key: "unbind",
-    value: function unbind(evt, handler) {
-      this.each(function (c) {
-        return c.unbind(evt, handler);
+        return Components.removeType(c, name);
       });
       return this;
     }
@@ -4382,7 +3429,7 @@ var EndpointSelection = function (_SelectionBase) {
     key: "setAnchor",
     value: function setAnchor(a) {
       this.each(function (ep) {
-        return ep.setAnchor(a);
+        return Endpoints.setAnchor(ep, a);
       });
       return this;
     }
@@ -4390,7 +3437,7 @@ var EndpointSelection = function (_SelectionBase) {
     key: "deleteEveryConnection",
     value: function deleteEveryConnection() {
       this.each(function (ep) {
-        return ep.deleteEveryConnection();
+        return Endpoints.deleteEveryConnection(ep);
       });
       return this;
     }
@@ -4419,7 +3466,7 @@ var ConnectionSelection = function (_SelectionBase) {
     key: "setDetachable",
     value: function setDetachable(d) {
       this.each(function (c) {
-        return c.setDetachable(d);
+        return Connections.setDetachable(c, d);
       });
       return this;
     }
@@ -4427,7 +3474,7 @@ var ConnectionSelection = function (_SelectionBase) {
     key: "setReattach",
     value: function setReattach(d) {
       this.each(function (c) {
-        return c.setReattach(d);
+        return Connections.setReattach(c, d);
       });
       return this;
     }
@@ -4435,7 +3482,7 @@ var ConnectionSelection = function (_SelectionBase) {
     key: "setConnector",
     value: function setConnector(spec) {
       this.each(function (c) {
-        return c._setConnector(spec);
+        return Connections.setConnector(c, spec);
       });
       return this;
     }
@@ -4814,6 +3861,330 @@ var Viewport = function (_EventGenerator) {
   return Viewport;
 }(EventGenerator);
 
+var segmentMap = {};
+var Segments = {
+  register: function register(segmentType, segmentHandler) {
+    segmentMap[segmentType] = segmentHandler;
+  },
+  get: function get(segmentType) {
+    var sh = segmentMap[segmentType];
+    if (!sh) {
+      throw {
+        message: "jsPlumb: no segment handler found for segment type '" + segmentType + "'"
+      };
+    } else {
+      return sh;
+    }
+  }
+};
+
+function _getHandler(segment) {
+  return Segments.get(segment.type);
+}
+function _getSegmentLength(segment) {
+  return _getHandler(segment).getLength(segment);
+}
+function transformAnchorPlacement(a, dx, dy) {
+  return {
+    x: a.x,
+    y: a.y,
+    ox: a.ox,
+    oy: a.oy,
+    curX: a.curX + dx,
+    curY: a.curY + dy
+  };
+}
+function findSegmentForPoint(connector, x, y) {
+  var out = {
+    d: Infinity,
+    s: null,
+    x: null,
+    y: null,
+    l: null,
+    x1: null,
+    y1: null,
+    x2: null,
+    y2: null,
+    index: null,
+    connectorLocation: null
+  };
+  for (var i = 0; i < connector.segments.length; i++) {
+    var _s = _getHandler(connector.segments[i]).findClosestPointOnPath(connector.segments[i], x, y);
+    if (_s.d < out.d) {
+      out.d = _s.d;
+      out.l = _s.l;
+      out.x = _s.x;
+      out.y = _s.y;
+      out.s = connector.segments[i];
+      out.x1 = _s.x1;
+      out.x2 = _s.x2;
+      out.y1 = _s.y1;
+      out.y2 = _s.y2;
+      out.index = i;
+      out.connectorLocation = connector.segmentProportions[i][0] + _s.l * (connector.segmentProportions[i][1] - connector.segmentProportions[i][0]);
+    }
+  }
+  return out;
+}
+function lineIntersection(connector, x1, y1, x2, y2) {
+  var out = [];
+  for (var i = 0; i < connector.segments.length; i++) {
+    out.push.apply(out, _getHandler(connector.segments[i]).lineIntersection(connector.segments[i], x1, y1, x2, y2));
+  }
+  return out;
+}
+function connectorBoxIntersection(connector, x, y, w, h) {
+  var out = [];
+  for (var i = 0; i < connector.segments.length; i++) {
+    out.push.apply(out, _getHandler(connector.segments[i]).boxIntersection(connector.segments[i], x, y, w, h));
+  }
+  return out;
+}
+function connectorBoundingBoxIntersection(connector, box) {
+  var out = [];
+  for (var i = 0; i < connector.segments.length; i++) {
+    out.push.apply(out, _getHandler(connector.segments[i]).boundingBoxIntersection(connector.segments[i], box));
+  }
+  return out;
+}
+function _findSegmentForLocation(connector, location, absolute) {
+  var idx, i, inSegmentProportion;
+  if (absolute) {
+    location = location > 0 ? location / connector.totalLength : (connector.totalLength + location) / connector.totalLength;
+  }
+  if (location === 1) {
+    idx = connector.segments.length - 1;
+    inSegmentProportion = 1;
+  } else if (location === 0) {
+    inSegmentProportion = 0;
+    idx = 0;
+  } else {
+    if (location >= 0.5) {
+      idx = 0;
+      inSegmentProportion = 0;
+      for (i = connector.segmentProportions.length - 1; i > -1; i--) {
+        if (connector.segmentProportions[i][1] >= location && connector.segmentProportions[i][0] <= location) {
+          idx = i;
+          inSegmentProportion = (location - connector.segmentProportions[i][0]) / connector.segmentProportionalLengths[i];
+          break;
+        }
+      }
+    } else {
+      idx = connector.segmentProportions.length - 1;
+      inSegmentProportion = 1;
+      for (i = 0; i < connector.segmentProportions.length; i++) {
+        if (connector.segmentProportions[i][1] >= location) {
+          idx = i;
+          inSegmentProportion = (location - connector.segmentProportions[i][0]) / connector.segmentProportionalLengths[i];
+          break;
+        }
+      }
+    }
+  }
+  return {
+    segment: connector.segments[idx],
+    proportion: inSegmentProportion,
+    index: idx
+  };
+}
+function pointOnComponentPath(connector, location, absolute) {
+  var seg = _findSegmentForLocation(connector, location, absolute);
+  return seg.segment && _getHandler(seg.segment).pointOnPath(seg.segment, seg.proportion, false) || {
+    x: 0,
+    y: 0
+  };
+}
+function gradientAtComponentPoint(connector, location, absolute) {
+  var seg = _findSegmentForLocation(connector, location, absolute);
+  return seg.segment && _getHandler(seg.segment).gradientAtPoint(seg.segment, seg.proportion, false) || 0;
+}
+function pointAlongComponentPathFrom(connector, location, distance, absolute) {
+  var seg = _findSegmentForLocation(connector, location, absolute);
+  return seg.segment && Segments.get(seg.segment.type).pointAlongPathFrom(seg.segment, seg.proportion, distance, false) || {
+    x: 0,
+    y: 0
+  };
+}
+function _updateSegmentProportions(connector) {
+  var curLoc = 0;
+  for (var i = 0; i < connector.segments.length; i++) {
+    var sl = _getSegmentLength(connector.segments[i]);
+    connector.segmentProportionalLengths[i] = sl / connector.totalLength;
+    connector.segmentProportions[i] = [curLoc, curLoc += sl / connector.totalLength];
+  }
+}
+function updateBounds(connector, segment) {
+  var segBounds = segment.extents;
+  connector.bounds.xmin = Math.min(connector.bounds.xmin, segBounds.xmin);
+  connector.bounds.xmax = Math.max(connector.bounds.xmax, segBounds.xmax);
+  connector.bounds.ymin = Math.min(connector.bounds.ymin, segBounds.ymin);
+  connector.bounds.ymax = Math.max(connector.bounds.ymax, segBounds.ymax);
+}
+function _addSegment(connector, segmentType, params) {
+  if (params.x1 === params.x2 && params.y1 === params.y2) {
+    return;
+  }
+  var handler = Segments.get(segmentType);
+  var s = handler.create(segmentType, params);
+  connector.segments.push(s);
+  connector.totalLength += handler.getLength(s);
+  updateBounds(connector, s);
+}
+function _clearSegments(connector) {
+  connector.totalLength = 0;
+  connector.segments.length = 0;
+  connector.segmentProportions.length = 0;
+  connector.segmentProportionalLengths.length = 0;
+}
+function _prepareCompute(connector, params) {
+  connector.strokeWidth = params.strokeWidth;
+  var x1 = params.sourcePos.curX,
+      x2 = params.targetPos.curX,
+      y1 = params.sourcePos.curY,
+      y2 = params.targetPos.curY,
+      segment = quadrant({
+    x: x1,
+    y: y1
+  }, {
+    x: x2,
+    y: y2
+  }),
+      swapX = x2 < x1,
+      swapY = y2 < y1,
+      so = [params.sourcePos.ox, params.sourcePos.oy],
+      to = [params.targetPos.ox, params.targetPos.oy],
+      x = swapX ? x2 : x1,
+      y = swapY ? y2 : y1,
+      w = Math.abs(x2 - x1),
+      h = Math.abs(y2 - y1);
+  var noSourceOrientation = so[0] === 0 && so[1] === 0;
+  var noTargetOrientation = to[0] === 0 && to[1] === 0;
+  if (noSourceOrientation || noTargetOrientation) {
+    var index = w > h ? 0 : 1,
+        oIndex = [1, 0][index],
+        v1 = index === 0 ? x1 : y1,
+        v2 = index === 0 ? x2 : y2;
+    if (noSourceOrientation) {
+      so[index] = v1 > v2 ? -1 : 1;
+      so[oIndex] = 0;
+    }
+    if (noTargetOrientation) {
+      to[index] = v1 > v2 ? 1 : -1;
+      to[oIndex] = 0;
+    }
+  }
+  var sx = swapX ? w + connector.sourceGap * so[0] : connector.sourceGap * so[0],
+      sy = swapY ? h + connector.sourceGap * so[1] : connector.sourceGap * so[1],
+      tx = swapX ? connector.targetGap * to[0] : w + connector.targetGap * to[0],
+      ty = swapY ? connector.targetGap * to[1] : h + connector.targetGap * to[1],
+      oProduct = so[0] * to[0] + so[1] * to[1];
+  var result = {
+    sx: sx,
+    sy: sy,
+    tx: tx,
+    ty: ty,
+    xSpan: Math.abs(tx - sx),
+    ySpan: Math.abs(ty - sy),
+    mx: (sx + tx) / 2,
+    my: (sy + ty) / 2,
+    so: so,
+    to: to,
+    x: x,
+    y: y,
+    w: w,
+    h: h,
+    segment: segment,
+    startStubX: sx + so[0] * connector.sourceStub,
+    startStubY: sy + so[1] * connector.sourceStub,
+    endStubX: tx + to[0] * connector.targetStub,
+    endStubY: ty + to[1] * connector.targetStub,
+    isXGreaterThanStubTimes2: Math.abs(sx - tx) > connector.sourceStub + connector.targetStub,
+    isYGreaterThanStubTimes2: Math.abs(sy - ty) > connector.sourceStub + connector.targetStub,
+    opposite: oProduct === -1,
+    perpendicular: oProduct === 0,
+    orthogonal: oProduct === 1,
+    sourceAxis: so[0] === 0 ? "y" : "x",
+    points: [x, y, w, h, sx, sy, tx, ty],
+    stubs: [connector.sourceStub, connector.targetStub]
+  };
+  result.anchorOrientation = result.opposite ? "opposite" : result.orthogonal ? "orthogonal" : "perpendicular";
+  return result;
+}
+function resetBounds(connector) {
+  connector.bounds = EMPTY_BOUNDS();
+}
+function resetGeometry(connector) {
+  connector.geometry = null;
+  connector.edited = false;
+}
+function compute(connector, params) {
+  connector.paintInfo = _prepareCompute(connector, params);
+  _clearSegments(connector);
+  Connectors.get(connector.type)._compute(connector, connector.paintInfo, params);
+  connector.x = connector.paintInfo.points[0];
+  connector.y = connector.paintInfo.points[1];
+  connector.w = connector.paintInfo.points[2];
+  connector.h = connector.paintInfo.points[3];
+  connector.segment = connector.paintInfo.segment;
+  _updateSegmentProportions(connector);
+}
+function dumpSegmentsToConsole(connector) {
+  log("SEGMENTS:");
+  for (var i = 0; i < this.segments.length; i++) {
+    log(this.segments[i].type, "" + _getSegmentLength(this.segments[i]), "" + this.segmentProportions[i]);
+  }
+}
+function setGeometry(connector, g, internal) {
+  connector.geometry = g;
+  connector.edited = g != null && !internal;
+}
+var TYPE_DESCRIPTOR_CONNECTOR = "connector";
+function createConnectorBase(type, connection, params, defaultStubs) {
+  var stub = params.stub || defaultStubs;
+  var sourceStub = Array.isArray(stub) ? stub[0] : stub;
+  var targetStub = Array.isArray(stub) ? stub[1] : stub;
+  var gap = params.gap || 0;
+  var sourceGap = Array.isArray(gap) ? gap[0] : gap;
+  var targetGap = Array.isArray(gap) ? gap[1] : gap;
+  var maxStub = Math.max(sourceStub, targetStub);
+  var cssClass = params.cssClass || "";
+  var hoverClass = params.hoverClass || "";
+  return {
+    stub: stub,
+    sourceStub: sourceStub,
+    targetStub: targetStub,
+    gap: gap,
+    sourceGap: sourceGap,
+    targetGap: targetGap,
+    maxStub: maxStub,
+    cssClass: cssClass,
+    hoverClass: hoverClass,
+    connection: connection,
+    segments: [],
+    segmentProportions: [],
+    segmentProportionalLengths: [],
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0,
+    edited: false,
+    typeId: null,
+    totalLength: 0,
+    segment: 0,
+    type: type,
+    bounds: EMPTY_BOUNDS(),
+    geometry: null,
+    strokeWidth: 1,
+    paintInfo: null,
+    getTypeDescriptor: function getTypeDescriptor() {
+      return TYPE_DESCRIPTOR_CONNECTOR;
+    },
+    getIdPrefix: function getIdPrefix() {
+      return "_jsplumb_connector";
+    }
+  };
+}
+
 var _edgeSortFunctions;
 function _placeAnchorsOnLine(element, connections, horizontal, otherMultiplier, reverse) {
   var sizeInAxis = horizontal ? element.w : element.h;
@@ -5038,7 +4409,7 @@ var LightweightRouter = function () {
         anchor.currentLocation = newIdx;
         if (newIdx !== currentIdx) {
           anchor.cssClass = newLoc.cls || anchor.cssClass;
-          params.element._anchorLocationChanged(anchor);
+          Endpoints._anchorLocationChanged(params.element, anchor);
         }
         pos = this._computeSingleLocation(newLoc, xy, wh, params);
       }
@@ -5188,8 +4559,8 @@ var LightweightRouter = function () {
         timestamp: timestamp,
         rotation: this.instance._getRotations(connection.targetId)
       });
-      connection.connector.resetBounds();
-      connection.connector.compute({
+      resetBounds(connection.connector);
+      compute(connection.connector, {
         sourcePos: sAnchorP,
         targetPos: tAnchorP,
         sourceEndpoint: connection.endpoints[0],
@@ -5556,6 +4927,302 @@ var LightweightRouter = function () {
   return LightweightRouter;
 }();
 
+function _pointLiesBetween(q, p1, p2) {
+  return p2 > p1 ? p1 <= q && q <= p2 : p1 >= q && q >= p2;
+}
+function _within(a, b, c) {
+  return c >= Math.min(a, b) && c <= Math.max(a, b);
+}
+function _closest(a, b, c) {
+  return Math.abs(c - a) < Math.abs(c - b) ? a : b;
+}
+function _lineIntersection(segment, _x1, _y1, _x2, _y2) {
+  var m2 = Math.abs(gradient({
+    x: _x1,
+    y: _y1
+  }, {
+    x: _x2,
+    y: _y2
+  })),
+      m1 = Math.abs(segment.m),
+      b = m1 === Infinity ? segment.x1 : segment.y1 - m1 * segment.x1,
+      out = [],
+      b2 = m2 === Infinity ? _x1 : _y1 - m2 * _x1;
+  if (m2 !== m1) {
+    if (m2 === Infinity && m1 === 0) {
+      if (_pointLiesBetween(_x1, segment.x1, segment.x2) && _pointLiesBetween(segment.y1, _y1, _y2)) {
+        out.push({
+          x: _x1,
+          y: segment.y1
+        });
+      }
+    } else if (m2 === 0 && m1 === Infinity) {
+      if (_pointLiesBetween(_y1, segment.y1, segment.y2) && _pointLiesBetween(segment.x1, _x1, _x2)) {
+        out.push({
+          x: segment.x1,
+          y: _y1
+        });
+      }
+    } else {
+      var X, Y;
+      if (m2 === Infinity) {
+        X = _x1;
+        if (_pointLiesBetween(X, segment.x1, segment.x2)) {
+          Y = m1 * _x1 + b;
+          if (_pointLiesBetween(Y, _y1, _y2)) {
+            out.push({
+              x: X,
+              y: Y
+            });
+          }
+        }
+      } else if (m2 === 0) {
+        Y = _y1;
+        if (_pointLiesBetween(Y, segment.y1, segment.y2)) {
+          X = (_y1 - b) / m1;
+          if (_pointLiesBetween(X, _x1, _x2)) {
+            out.push({
+              x: X,
+              y: Y
+            });
+          }
+        }
+      } else {
+        X = (b2 - b) / (m1 - m2);
+        Y = m1 * X + b;
+        if (_pointLiesBetween(X, segment.x1, segment.x2) && _pointLiesBetween(Y, segment.y1, segment.y2)) {
+          out.push({
+            x: X,
+            y: Y
+          });
+        }
+      }
+    }
+  }
+  return out;
+}
+function _boxIntersection(segment, x, y, w, h) {
+  var a = [];
+  a.push.apply(a, _lineIntersection(segment, x, y, x + w, y));
+  a.push.apply(a, _lineIntersection(segment, x + w, y, x + w, y + h));
+  a.push.apply(a, _lineIntersection(segment, x + w, y + h, x, y + h));
+  a.push.apply(a, _lineIntersection(segment, x, y + h, x, y));
+  return a;
+}
+function _findClosestPointOnPath(segment, x, y) {
+  var out = {
+    d: Infinity,
+    x: null,
+    y: null,
+    l: null,
+    x1: segment.x1,
+    x2: segment.x2,
+    y1: segment.y1,
+    y2: segment.y2
+  };
+  if (segment.m === 0) {
+    out.y = segment.y1;
+    out.x = _within(segment.x1, segment.x2, x) ? x : _closest(segment.x1, segment.x2, x);
+  } else if (segment.m === Infinity || segment.m === -Infinity) {
+    out.x = segment.x1;
+    out.y = _within(segment.y1, segment.y2, y) ? y : _closest(segment.y1, segment.y2, y);
+  } else {
+    var b = segment.y1 - segment.m * segment.x1,
+        b2 = y - segment.m2 * x,
+    _x1 = (b2 - b) / (segment.m - segment.m2),
+        _y1 = segment.m * _x1 + b;
+    out.x = _within(segment.x1, segment.x2, _x1) ? _x1 : _closest(segment.x1, segment.x2, _x1);
+    out.y = _within(segment.y1, segment.y2, _y1) ? _y1 : _closest(segment.y1, segment.y2, _y1);
+  }
+  var fractionInSegment = lineLength({
+    x: out.x,
+    y: out.y
+  }, {
+    x: segment.x1,
+    y: segment.y1
+  });
+  out.d = lineLength({
+    x: x,
+    y: y
+  }, out);
+  out.l = fractionInSegment / length;
+  return out;
+}
+function _getLength$1(segment) {
+  return segment.length;
+}
+function _getPath$1(segment, isFirstSegment) {
+  return (isFirstSegment ? "M " + segment.x1 + " " + segment.y1 + " " : "") + "L " + segment.x2 + " " + segment.y2;
+}
+function _recalc(segment) {
+  segment.length = Math.sqrt(Math.pow(segment.x2 - segment.x1, 2) + Math.pow(segment.y2 - segment.y1, 2));
+  segment.m = gradient({
+    x: segment.x1,
+    y: segment.y1
+  }, {
+    x: segment.x2,
+    y: segment.y2
+  });
+  segment.m2 = -1 / segment.m;
+  segment.extents = {
+    xmin: Math.min(segment.x1, segment.x2),
+    ymin: Math.min(segment.y1, segment.y2),
+    xmax: Math.max(segment.x1, segment.x2),
+    ymax: Math.max(segment.y1, segment.y2)
+  };
+}
+function _setCoordinates(segment, coords) {
+  segment.x1 = coords.x1;
+  segment.y1 = coords.y1;
+  segment.x2 = coords.x2;
+  segment.y2 = coords.y2;
+  _recalc(segment);
+}
+function _pointOnPath$1(segment, location, absolute) {
+  if (location === 0 && !absolute) {
+    return {
+      x: segment.x1,
+      y: segment.y1
+    };
+  } else if (location === 1 && !absolute) {
+    return {
+      x: segment.x2,
+      y: segment.y2
+    };
+  } else {
+    var l = absolute ? location > 0 ? location : segment.length + location : location * segment.length;
+    return pointOnLine({
+      x: segment.x1,
+      y: segment.y1
+    }, {
+      x: segment.x2,
+      y: segment.y2
+    }, l);
+  }
+}
+function _gradientAtPoint$1(segment, location, absolute) {
+  return segment.m;
+}
+function _pointAlongPathFrom$1(segment, location, distance, absolute) {
+  var p = _pointOnPath$1(segment, location, absolute),
+      farAwayPoint = distance <= 0 ? {
+    x: segment.x1,
+    y: segment.y1
+  } : {
+    x: segment.x2,
+    y: segment.y2
+  };
+  if (distance <= 0 && Math.abs(distance) > 1) {
+    distance *= -1;
+  }
+  return pointOnLine(p, farAwayPoint, distance);
+}
+function blankStraightSegment() {
+  return {
+    type: SEGMENT_TYPE_STRAIGHT,
+    m: 0,
+    length: 0,
+    m2: 0,
+    x1: 0,
+    x2: 0,
+    y1: 0,
+    y2: 0,
+    extents: {
+      xmin: 0,
+      xmax: 0,
+      ymin: 0,
+      ymax: 0
+    }
+  };
+}
+function _createStraightSegment(params) {
+  var s = blankStraightSegment();
+  _setCoordinates(s, params);
+  return s;
+}
+var SEGMENT_TYPE_STRAIGHT = "Straight";
+var StraightSegmentHandler = {
+  create: function create(segmentType, params) {
+    return _createStraightSegment(params);
+  },
+  findClosestPointOnPath: function findClosestPointOnPath(s, x, y) {
+    return _findClosestPointOnPath(s, x, y);
+  },
+  getLength: function getLength(s) {
+    return _getLength$1(s);
+  },
+  getPath: function getPath(s, isFirstSegment) {
+    return _getPath$1(s, isFirstSegment);
+  },
+  gradientAtPoint: function gradientAtPoint(s, location, absolute) {
+    return _gradientAtPoint$1(s);
+  },
+  lineIntersection: function lineIntersection(s, x1, y1, x2, y2) {
+    return _lineIntersection(s, x1, y1, x2, y2);
+  },
+  pointAlongPathFrom: function pointAlongPathFrom(s, location, distance, absolute) {
+    return _pointAlongPathFrom$1(s, location, distance, absolute);
+  },
+  pointOnPath: function pointOnPath(s, location, absolute) {
+    return _pointOnPath$1(s, location, absolute);
+  },
+  boxIntersection: function boxIntersection(s, x, y, w, h) {
+    return _boxIntersection(s, x, y, w, h);
+  },
+  boundingBoxIntersection: function boundingBoxIntersection(s, box) {
+    return _boxIntersection(s, box.x, box.y, box.w, box.h);
+  }
+};
+Segments.register(SEGMENT_TYPE_STRAIGHT, StraightSegmentHandler);
+
+var CONNECTOR_TYPE_STRAIGHT = "Straight";
+var StraightConnectorHandler = {
+  _compute: function _compute(connector, paintInfo, p) {
+    _addSegment(connector, SEGMENT_TYPE_STRAIGHT, {
+      x1: paintInfo.sx,
+      y1: paintInfo.sy,
+      x2: paintInfo.startStubX,
+      y2: paintInfo.startStubY
+    });
+    _addSegment(connector, SEGMENT_TYPE_STRAIGHT, {
+      x1: paintInfo.startStubX,
+      y1: paintInfo.startStubY,
+      x2: paintInfo.endStubX,
+      y2: paintInfo.endStubY
+    });
+    _addSegment(connector, SEGMENT_TYPE_STRAIGHT, {
+      x1: paintInfo.endStubX,
+      y1: paintInfo.endStubY,
+      x2: paintInfo.tx,
+      y2: paintInfo.ty
+    });
+    connector.geometry = {
+      source: p.sourcePos,
+      target: p.targetPos
+    };
+  },
+  create: function create(connection, connectorType, params) {
+    var base = createConnectorBase(connectorType, connection, params, [0, 0]);
+    return extend(base, {
+      type: CONNECTOR_TYPE_STRAIGHT
+    });
+  },
+  exportGeometry: function exportGeometry(connector) {
+    return defaultConnectorHandler.exportGeometry(connector);
+  },
+  importGeometry: function importGeometry(connector, g) {
+    return defaultConnectorHandler.importGeometry(connector, g);
+  },
+  transformGeometry: function transformGeometry(connector, g, dx, dy) {
+    return {
+      source: transformAnchorPlacement(g.source, dx, dy),
+      target: transformAnchorPlacement(g.target, dx, dy)
+    };
+  },
+  setAnchorOrientation: function setAnchorOrientation(connector, idx, orientation) {}
+};
+Connectors.register(CONNECTOR_TYPE_STRAIGHT, StraightConnectorHandler);
+
 var ConnectionDragSelector = function () {
   function ConnectionDragSelector(selector, def) {
     var exclude = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
@@ -5726,7 +5393,7 @@ var JsPlumbInstance = function (_EventGenerator) {
       anchors: [null, null],
       connectionsDetachable: true,
       connectionOverlays: [],
-      connector: StraightConnector.type,
+      connector: CONNECTOR_TYPE_STRAIGHT,
       container: null,
       endpoint: DotEndpoint.type,
       endpointOverlays: [],
@@ -5943,20 +5610,20 @@ var JsPlumbInstance = function (_EventGenerator) {
         connection: c,
         newEndpoint: oldEndpoint
       };
-      if (el instanceof Endpoint) {
+      if (Endpoints.isEndpoint(el)) {
         ep = el;
-        ep.addConnection(c);
+        Endpoints.addConnection(ep, c);
       } else {
         sid = this.getId(el);
         if (sid === c[_st.elId]) {
           ep = null;
         } else {
-          ep = c.makeEndpoint(idx === 0, el, sid);
+          ep = Connections.makeEndpoint(c, idx === 0, el, sid);
         }
       }
       if (ep != null) {
         evtParams.newEndpoint = ep;
-        oldEndpoint.detachFromConnection(c);
+        Endpoints.detachFromConnection(oldEndpoint, c);
         c.endpoints[idx] = ep;
         c[_st.el] = ep.element;
         c[_st.elId] = ep.elementId;
@@ -5983,7 +5650,7 @@ var JsPlumbInstance = function (_EventGenerator) {
   }, {
     key: "setConnectionType",
     value: function setConnectionType(connection, type, params) {
-      connection.setType(type, params);
+      Components.setType(connection, type, params);
       this._paintConnection(connection);
     }
   }, {
@@ -6054,21 +5721,21 @@ var JsPlumbInstance = function (_EventGenerator) {
     value: function deleteConnection(connection, params) {
       if (connection != null && connection.deleted !== true) {
         params = params || {};
-        if (params.force || functionChain(true, false, [[connection.endpoints[0], IS_DETACH_ALLOWED, [connection]], [connection.endpoints[1], IS_DETACH_ALLOWED, [connection]], [connection, IS_DETACH_ALLOWED, [connection]], [this, CHECK_CONDITION, [INTERCEPT_BEFORE_DETACH, connection]]])) {
+        if (params.force || functionChain(true, false, [[Components, IS_DETACH_ALLOWED, [connection.endpoints[0], connection]], [Components, IS_DETACH_ALLOWED, [connection.endpoints[1], connection]], [Components, IS_DETACH_ALLOWED, [connection, connection]], [this, CHECK_CONDITION, [INTERCEPT_BEFORE_DETACH, connection]]])) {
           removeManagedConnection(connection, this._managedElements[connection.sourceId], this._managedElements[connection.targetId]);
           this.fireDetachEvent(connection, !connection.pending && params.fireEvent !== false, params.originalEvent);
           var _sourceEndpoint = connection.endpoints[0];
           var targetEndpoint = connection.endpoints[1];
           if (_sourceEndpoint !== params.endpointToIgnore) {
-            _sourceEndpoint.detachFromConnection(connection, null, true);
+            Endpoints.detachFromConnection(_sourceEndpoint, connection, null, true);
           }
           if (targetEndpoint !== params.endpointToIgnore) {
-            targetEndpoint.detachFromConnection(connection, null, true);
+            Endpoints.detachFromConnection(targetEndpoint, connection, null, true);
           }
           removeWithFunction(this.connections, function (_c) {
             return connection.id === _c.id;
           });
-          connection.destroy();
+          Connections.destroy(connection);
           if (_sourceEndpoint !== params.endpointToIgnore && _sourceEndpoint.deleteOnEmpty && _sourceEndpoint.connections.length === 0) {
             this.deleteEndpoint(_sourceEndpoint);
           }
@@ -6302,7 +5969,7 @@ var JsPlumbInstance = function (_EventGenerator) {
       var managedElement = this.manage(_p.element);
       _p.elementId = this.getId(_p.element);
       _p.id = "ep_" + this._idstamp();
-      var ep = new Endpoint(this, _p);
+      var ep = createEndpoint(this, _p);
       addManagedEndpoint(managedElement, ep);
       if (params.uuid) {
         this.endpointsByUUID.set(params.uuid, ep);
@@ -6421,7 +6088,7 @@ var JsPlumbInstance = function (_EventGenerator) {
   }, {
     key: "unregisterEndpoint",
     value: function unregisterEndpoint(endpoint) {
-      var uuid = endpoint.getUuid();
+      var uuid = endpoint.uuid;
       if (uuid) {
         this.endpointsByUUID["delete"](uuid);
       }
@@ -6457,10 +6124,10 @@ var JsPlumbInstance = function (_EventGenerator) {
         var proxy = endpoint.proxiedBy;
         var connectionsToDelete = endpoint.connections.slice();
         forEach(connectionsToDelete, function (connection) {
-          endpoint.detachFromConnection(connection, null, true);
+          Endpoints.detachFromConnection(endpoint, connection, null, true);
         });
         this.unregisterEndpoint(endpoint);
-        endpoint.destroy();
+        Endpoints.destroy(endpoint);
         forEach(connectionsToDelete, function (connection) {
           _this5.deleteConnection(connection, {
             force: true,
@@ -6558,12 +6225,12 @@ var JsPlumbInstance = function (_EventGenerator) {
       }
       var _p = temp;
       if (_p.source) {
-        if (_p.source.endpoint) {
+        if (_p.source.representation) {
           _p.sourceEndpoint = _p.source;
         }
       }
       if (_p.target) {
-        if (_p.target.endpoint) {
+        if (_p.target.representation) {
           _p.targetEndpoint = _p.target;
         }
       }
@@ -6572,7 +6239,7 @@ var JsPlumbInstance = function (_EventGenerator) {
         _p.targetEndpoint = this.getEndpoint(params.uuids[1]);
       }
       if (_p.sourceEndpoint != null) {
-        if (_p.sourceEndpoint.isFull()) {
+        if (Endpoints.isFull(_p.sourceEndpoint)) {
           throw ERROR_SOURCE_ENDPOINT_FULL;
         }
         if (!_p.type) {
@@ -6593,7 +6260,7 @@ var JsPlumbInstance = function (_EventGenerator) {
         }
       }
       if (_p.targetEndpoint != null) {
-        if (_p.targetEndpoint.isFull()) {
+        if (Endpoints.isFull(_p.targetEndpoint)) {
           throw ERROR_TARGET_ENDPOINT_FULL;
         }
       } else {
@@ -6612,7 +6279,7 @@ var JsPlumbInstance = function (_EventGenerator) {
     key: "_newConnection",
     value: function _newConnection(params) {
       params.id = "con_" + this._idstamp();
-      var c = new Connection(this, params);
+      var c = createConnection(this, params);
       addManagedConnection(c, this._managedElements[c.sourceId], this._managedElements[c.targetId]);
       this._paintConnection(c);
       return c;
@@ -6747,18 +6414,18 @@ var JsPlumbInstance = function (_EventGenerator) {
       var endpointFunc = null;
       if (alsoChangeEndpoints) {
         endpointFunc = function endpointFunc(ep) {
-          ep.setVisible(visible, true, true);
+          Endpoints.setVisible(ep, visible, true, true);
         };
       }
       var id = this.getId(el);
       this._operation(el, function (jpc) {
         if (visible && alsoChangeEndpoints) {
           var oidx = jpc.sourceId === id ? 1 : 0;
-          if (jpc.endpoints[oidx].isVisible()) {
-            jpc.setVisible(true);
+          if (jpc.endpoints[oidx].visible) {
+            Connections.setVisible(jpc, true);
           }
         } else {
-          jpc.setVisible(visible);
+          Connections.setVisible(jpc, visible);
         }
       }, endpointFunc);
       return this;
@@ -6769,13 +6436,13 @@ var JsPlumbInstance = function (_EventGenerator) {
       var endpointFunc = null;
       if (changeEndpoints) {
         endpointFunc = function endpointFunc(ep) {
-          var state = ep.isVisible();
-          ep.setVisible(!state);
+          var state = ep.visible;
+          Endpoints.setVisible(ep, !state);
         };
       }
       this._operation(el, function (jpc) {
-        var state = jpc.isVisible();
-        jpc.setVisible(!state);
+        var state = jpc.visible;
+        Connections.setVisible(jpc, !state);
       }, endpointFunc);
     }
   }, {
@@ -6889,7 +6556,7 @@ var JsPlumbInstance = function (_EventGenerator) {
         if (connection.proxies[index].ep.elementId === proxyElId) {
           proxyEp = connection.proxies[index].ep;
         } else {
-          connection.proxies[index].ep.detachFromConnection(connection, index);
+          Endpoints.detachFromConnection(connection.proxies[index].ep, connection, index);
           proxyEp = this._internal_newEndpoint({
             element: proxyEl,
             endpoint: endpointGenerator(connection, index),
@@ -6915,12 +6582,12 @@ var JsPlumbInstance = function (_EventGenerator) {
         originalEp: originalEndpoint
       };
       this.sourceOrTargetChanged(originalElementId, proxyElId, connection, proxyEl, index);
-      originalEndpoint.detachFromConnection(connection, null, true);
+      Endpoints.detachFromConnection(originalEndpoint, connection, null, true);
       proxyEp.connections = [connection];
       connection.endpoints[index] = proxyEp;
       originalEndpoint.proxiedBy = proxyEp;
-      originalEndpoint.setVisible(false);
-      connection.setVisible(true);
+      Endpoints.setVisible(originalEndpoint, false);
+      Connections.setVisible(connection, true);
       this.revalidate(proxyEl);
     }
   }, {
@@ -6935,10 +6602,10 @@ var JsPlumbInstance = function (_EventGenerator) {
       connection.endpoints[index] = connection.proxies[index].originalEp;
       delete connection.proxies[index].originalEp.proxiedBy;
       this.sourceOrTargetChanged(proxyElId, originalElementId, connection, originalElement, index);
-      connection.proxies[index].ep.detachFromConnection(connection, null);
-      connection.proxies[index].originalEp.addConnection(connection);
-      if (connection.isVisible()) {
-        connection.proxies[index].originalEp.setVisible(true);
+      Endpoints.detachFromConnection(connection.proxies[index].ep, connection, null);
+      Endpoints.addConnection(connection.proxies[index].originalEp, connection);
+      if (connection.visible) {
+        Endpoints.setVisible(connection.proxies[index].originalEp, true);
       }
       connection.proxies[index] = null;
       if (findWithFunction(connection.proxies, function (p) {
@@ -7075,14 +6742,14 @@ var JsPlumbInstance = function (_EventGenerator) {
             anchorParams.rotation = this._getRotations(endpoint.elementId);
             ap = this.router.computeAnchorLocation(endpoint._anchor, anchorParams);
           }
-          endpoint.endpoint.compute(ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse);
+          endpoint.representation.compute(ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse);
           this.renderEndpoint(endpoint, endpoint.paintStyleInUse);
           endpoint.timestamp = timestamp;
           for (var i in endpoint.overlays) {
             if (endpoint.overlays.hasOwnProperty(i)) {
               var _o = endpoint.overlays[i];
               if (_o.isVisible()) {
-                endpoint.overlayPlacements[i] = this.drawOverlay(_o, endpoint.endpoint, endpoint.paintStyleInUse, endpoint.getAbsoluteOverlayPosition(_o));
+                endpoint.overlayPlacements[i] = this.drawOverlay(_o, endpoint.representation, endpoint.paintStyleInUse, Components.getAbsoluteOverlayPosition(endpoint, _o));
                 this._paintOverlay(_o, endpoint.overlayPlacements[i], {
                   xmin: 0,
                   ymin: 0
@@ -7114,7 +6781,7 @@ var JsPlumbInstance = function (_EventGenerator) {
             if (connection.overlays.hasOwnProperty(i)) {
               var _o2 = connection.overlays[i];
               if (_o2.isVisible()) {
-                connection.overlayPlacements[i] = this.drawOverlay(_o2, connection.connector, connection.paintStyleInUse, connection.getAbsoluteOverlayPosition(_o2));
+                connection.overlayPlacements[i] = this.drawOverlay(_o2, connection.connector, connection.paintStyleInUse, Components.getAbsoluteOverlayPosition(connection, _o2));
                 overlayExtents.xmin = Math.min(overlayExtents.xmin, connection.overlayPlacements[i].xmin);
                 overlayExtents.xmax = Math.max(overlayExtents.xmax, connection.overlayPlacements[i].xmax);
                 overlayExtents.ymin = Math.min(overlayExtents.ymin, connection.overlayPlacements[i].ymin);
@@ -7152,7 +6819,7 @@ var JsPlumbInstance = function (_EventGenerator) {
         } else {
           this.removeEndpointClass(endpoint, this.endpointConnectedClass);
         }
-        if (endpoint.isFull()) {
+        if (Endpoints.isFull(endpoint)) {
           this.addEndpointClass(endpoint, this.endpointFullClass);
         } else {
           this.removeEndpointClass(endpoint, this.endpointFullClass);
@@ -7160,24 +6827,19 @@ var JsPlumbInstance = function (_EventGenerator) {
       }
     }
   }, {
-    key: "_makeConnector",
-    value: function _makeConnector(connection, name, args) {
-      return Connectors.get(connection, name, args);
-    }
-  }, {
     key: "addOverlay",
     value: function addOverlay(component, overlay, doNotRevalidate) {
-      component.addOverlay(overlay);
+      Components.addOverlay(component, overlay);
       if (!doNotRevalidate) {
-        var relatedElement = component instanceof Endpoint ? component.element : component.source;
+        var relatedElement = Endpoints.isEndpoint(component) ? component.element : component.source;
         this.revalidate(relatedElement);
       }
     }
   }, {
     key: "removeOverlay",
     value: function removeOverlay(component, overlayId) {
-      component.removeOverlay(overlayId);
-      var relatedElement = component instanceof Endpoint ? component.element : component.source;
+      Components.removeOverlay(component, overlayId);
+      var relatedElement = Endpoints.isEndpoint(component) ? component.element : component.source;
       this.revalidate(relatedElement);
     }
   }, {
@@ -7453,59 +7115,57 @@ var ArrowOverlay = function (_Overlay) {
   _createClass(ArrowOverlay, [{
     key: "draw",
     value: function draw(component, currentConnectionPaintStyle, absolutePosition) {
-      if (component instanceof AbstractConnector) {
-        var connector = component;
-        var hxy, mid, txy, tail, cxy;
-        if (this.location > 1 || this.location < 0) {
-          var fromLoc = this.location < 0 ? 1 : 0;
-          hxy = connector.pointAlongPathFrom(fromLoc, this.location, false);
-          mid = connector.pointAlongPathFrom(fromLoc, this.location - this.direction * this.length / 2, false);
-          txy = pointOnLine(hxy, mid, this.length);
-        } else if (this.location === 1) {
-          hxy = connector.pointOnPath(this.location);
-          mid = connector.pointAlongPathFrom(this.location, -this.length);
-          txy = pointOnLine(hxy, mid, this.length);
-          if (this.direction === -1) {
-            var _ = txy;
-            txy = hxy;
-            hxy = _;
-          }
-        } else if (this.location === 0) {
-          txy = connector.pointOnPath(this.location);
-          mid = connector.pointAlongPathFrom(this.location, this.length);
-          hxy = pointOnLine(txy, mid, this.length);
-          if (this.direction === -1) {
-            var __ = txy;
-            txy = hxy;
-            hxy = __;
-          }
-        } else {
-          hxy = connector.pointAlongPathFrom(this.location, this.direction * this.length / 2);
-          mid = connector.pointOnPath(this.location);
-          txy = pointOnLine(hxy, mid, this.length);
+      var connector = component;
+      var hxy, mid, txy, tail, cxy;
+      if (this.location > 1 || this.location < 0) {
+        var fromLoc = this.location < 0 ? 1 : 0;
+        hxy = pointAlongComponentPathFrom(connector, fromLoc, this.location, false);
+        mid = pointAlongComponentPathFrom(connector, fromLoc, this.location - this.direction * this.length / 2, false);
+        txy = pointOnLine(hxy, mid, this.length);
+      } else if (this.location === 1) {
+        hxy = pointOnComponentPath(connector, this.location);
+        mid = pointAlongComponentPathFrom(connector, this.location, -this.length);
+        txy = pointOnLine(hxy, mid, this.length);
+        if (this.direction === -1) {
+          var _ = txy;
+          txy = hxy;
+          hxy = _;
         }
-        tail = perpendicularLineTo(hxy, txy, this.width);
-        cxy = pointOnLine(hxy, txy, this.foldback * this.length);
-        var d = {
-          hxy: hxy,
-          tail: tail,
-          cxy: cxy
-        },
-            stroke = this.paintStyle.stroke || currentConnectionPaintStyle.stroke,
-            fill = this.paintStyle.fill || currentConnectionPaintStyle.stroke,
-            lineWidth = this.paintStyle.strokeWidth || currentConnectionPaintStyle.strokeWidth;
-        return {
-          component: component,
-          d: d,
-          "stroke-width": lineWidth,
-          stroke: stroke,
-          fill: fill,
-          xmin: Math.min(hxy.x, tail[0].x, tail[1].x),
-          xmax: Math.max(hxy.x, tail[0].x, tail[1].x),
-          ymin: Math.min(hxy.y, tail[0].y, tail[1].y),
-          ymax: Math.max(hxy.y, tail[0].y, tail[1].y)
-        };
+      } else if (this.location === 0) {
+        txy = pointOnComponentPath(connector, this.location);
+        mid = pointAlongComponentPathFrom(connector, this.location, this.length);
+        hxy = pointOnLine(txy, mid, this.length);
+        if (this.direction === -1) {
+          var __ = txy;
+          txy = hxy;
+          hxy = __;
+        }
+      } else {
+        hxy = pointAlongComponentPathFrom(connector, this.location, this.direction * this.length / 2);
+        mid = pointOnComponentPath(connector, this.location);
+        txy = pointOnLine(hxy, mid, this.length);
       }
+      tail = perpendicularLineTo(hxy, txy, this.width);
+      cxy = pointOnLine(hxy, txy, this.foldback * this.length);
+      var d = {
+        hxy: hxy,
+        tail: tail,
+        cxy: cxy
+      },
+          stroke = this.paintStyle.stroke || currentConnectionPaintStyle.stroke,
+          fill = this.paintStyle.fill || currentConnectionPaintStyle.stroke,
+          lineWidth = this.paintStyle.strokeWidth || currentConnectionPaintStyle.strokeWidth;
+      return {
+        component: component,
+        d: d,
+        "stroke-width": lineWidth,
+        stroke: stroke,
+        fill: fill,
+        xmin: Math.min(hxy.x, tail[0].x, tail[1].x),
+        xmax: Math.max(hxy.x, tail[0].x, tail[1].x),
+        ymin: Math.min(hxy.y, tail[0].y, tail[1].y),
+        ymax: Math.max(hxy.y, tail[0].y, tail[1].y)
+      };
     }
   }, {
     key: "updateFrom",
@@ -7589,6 +7249,5 @@ OverlayFactory.register(CustomOverlay.type, CustomOverlay);
 EndpointFactory.registerHandler(DotEndpointHandler);
 EndpointFactory.registerHandler(RectangleEndpointHandler);
 EndpointFactory.registerHandler(BlankEndpointHandler);
-Connectors.register(StraightConnector.type, StraightConnector);
 
-export { ABSOLUTE, ADD_CLASS_ACTION, ATTRIBUTE_GROUP, ATTRIBUTE_MANAGED, ATTRIBUTE_NOT_DRAGGABLE, ATTRIBUTE_SCOPE, ATTRIBUTE_SCOPE_PREFIX, ATTRIBUTE_TABINDEX, AbstractConnector, ArrowOverlay, BLOCK, BOTTOM, BlankEndpoint, BlankEndpointHandler, CHECK_CONDITION, CHECK_DROP_ALLOWED, CLASS_CONNECTED, CLASS_CONNECTOR, CLASS_CONNECTOR_OUTLINE, CLASS_ENDPOINT, CLASS_ENDPOINT_ANCHOR_PREFIX, CLASS_ENDPOINT_CONNECTED, CLASS_ENDPOINT_DROP_ALLOWED, CLASS_ENDPOINT_DROP_FORBIDDEN, CLASS_ENDPOINT_FLOATING, CLASS_ENDPOINT_FULL, CLASS_GROUP_COLLAPSED, CLASS_GROUP_EXPANDED, CLASS_OVERLAY, Component, Connection, ConnectionDragSelector, ConnectionSelection, Connectors, CustomOverlay, DEFAULT_KEY_ALLOW_NESTED_GROUPS, DEFAULT_KEY_ANCHOR, DEFAULT_KEY_ANCHORS, DEFAULT_KEY_CONNECTIONS_DETACHABLE, DEFAULT_KEY_CONNECTION_OVERLAYS, DEFAULT_KEY_CONNECTOR, DEFAULT_KEY_CONTAINER, DEFAULT_KEY_ENDPOINT, DEFAULT_KEY_ENDPOINTS, DEFAULT_KEY_ENDPOINT_HOVER_STYLE, DEFAULT_KEY_ENDPOINT_HOVER_STYLES, DEFAULT_KEY_ENDPOINT_OVERLAYS, DEFAULT_KEY_ENDPOINT_STYLE, DEFAULT_KEY_ENDPOINT_STYLES, DEFAULT_KEY_HOVER_CLASS, DEFAULT_KEY_HOVER_PAINT_STYLE, DEFAULT_KEY_LIST_STYLE, DEFAULT_KEY_MAX_CONNECTIONS, DEFAULT_KEY_PAINT_STYLE, DEFAULT_KEY_REATTACH_CONNECTIONS, DEFAULT_KEY_SCOPE, DiamondOverlay, DotEndpoint, DotEndpointHandler, ERROR_SOURCE_DOES_NOT_EXIST, ERROR_SOURCE_ENDPOINT_FULL, ERROR_TARGET_DOES_NOT_EXIST, ERROR_TARGET_ENDPOINT_FULL, EVENT_ANCHOR_CHANGED, EVENT_CONNECTION, EVENT_CONNECTION_DETACHED, EVENT_CONNECTION_MOVED, EVENT_CONTAINER_CHANGE, EVENT_ENDPOINT_REPLACED, EVENT_GROUP_ADDED, EVENT_GROUP_COLLAPSE, EVENT_GROUP_EXPAND, EVENT_GROUP_MEMBER_ADDED, EVENT_GROUP_MEMBER_REMOVED, EVENT_GROUP_REMOVED, EVENT_INTERNAL_CONNECTION, EVENT_INTERNAL_CONNECTION_DETACHED, EVENT_INTERNAL_ENDPOINT_UNREGISTERED, EVENT_MANAGE_ELEMENT, EVENT_MAX_CONNECTIONS, EVENT_NESTED_GROUP_ADDED, EVENT_NESTED_GROUP_REMOVED, EVENT_UNMANAGE_ELEMENT, EVENT_ZOOM, Endpoint, EndpointFactory, EndpointRepresentation, EndpointSelection, FIXED, GroupManager, INTERCEPT_BEFORE_DETACH, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_DROP, INTERCEPT_BEFORE_START_DETACH, IS_DETACH_ALLOWED, JsPlumbInstance, KEY_CONNECTION_OVERLAYS, LEFT, LabelOverlay, LightweightFloatingAnchor, LightweightRouter, NONE, Overlay, OverlayFactory, PlainArrowOverlay, REDROP_POLICY_ANY, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_SOURCE_OR_TARGET, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_STRICT, REMOVE_CLASS_ACTION, RIGHT, RectangleEndpoint, RectangleEndpointHandler, SEGMENT_TYPE_ARC, SEGMENT_TYPE_STRAIGHT, SELECTOR_MANAGED_ELEMENT, SOURCE, SOURCE_INDEX, STATIC, Segments, StraightConnector, TARGET, TARGET_INDEX, TOP, UIGroup, UINode, Viewport, X_AXIS_FACES, Y_AXIS_FACES, _createPerimeterAnchor, _removeTypeCssHelper, _updateHoverStyle, att, classList, cls, convertToFullOverlaySpec, createFloatingAnchor, getDefaultFace, isArrowOverlay, isContinuous, isCustomOverlay, isDiamondOverlay, isDynamic, isEdgeSupported, _isFloating as isFloating, isFullOverlaySpec, isLabelOverlay, isPlainArrowOverlay, makeLightweightAnchorFromSpec };
+export { ABSOLUTE, ADD_CLASS_ACTION, ATTRIBUTE_GROUP, ATTRIBUTE_MANAGED, ATTRIBUTE_NOT_DRAGGABLE, ATTRIBUTE_SCOPE, ATTRIBUTE_SCOPE_PREFIX, ATTRIBUTE_TABINDEX, ArrowOverlay, BLOCK, BOTTOM, BlankEndpoint, BlankEndpointHandler, CHECK_CONDITION, CHECK_DROP_ALLOWED, CLASS_CONNECTED, CLASS_CONNECTOR, CLASS_CONNECTOR_OUTLINE, CLASS_ENDPOINT, CLASS_ENDPOINT_ANCHOR_PREFIX, CLASS_ENDPOINT_CONNECTED, CLASS_ENDPOINT_DROP_ALLOWED, CLASS_ENDPOINT_DROP_FORBIDDEN, CLASS_ENDPOINT_FLOATING, CLASS_ENDPOINT_FULL, CLASS_GROUP_COLLAPSED, CLASS_GROUP_EXPANDED, CLASS_OVERLAY, CONNECTOR_TYPE_STRAIGHT, Components, ConnectionDragSelector, ConnectionSelection, Connections, Connectors, CustomOverlay, DEFAULT_KEY_ALLOW_NESTED_GROUPS, DEFAULT_KEY_ANCHOR, DEFAULT_KEY_ANCHORS, DEFAULT_KEY_CONNECTIONS_DETACHABLE, DEFAULT_KEY_CONNECTION_OVERLAYS, DEFAULT_KEY_CONNECTOR, DEFAULT_KEY_CONTAINER, DEFAULT_KEY_ENDPOINT, DEFAULT_KEY_ENDPOINTS, DEFAULT_KEY_ENDPOINT_HOVER_STYLE, DEFAULT_KEY_ENDPOINT_HOVER_STYLES, DEFAULT_KEY_ENDPOINT_OVERLAYS, DEFAULT_KEY_ENDPOINT_STYLE, DEFAULT_KEY_ENDPOINT_STYLES, DEFAULT_KEY_HOVER_CLASS, DEFAULT_KEY_HOVER_PAINT_STYLE, DEFAULT_KEY_LIST_STYLE, DEFAULT_KEY_MAX_CONNECTIONS, DEFAULT_KEY_PAINT_STYLE, DEFAULT_KEY_REATTACH_CONNECTIONS, DEFAULT_KEY_SCOPE, DEFAULT_LABEL_LOCATION_CONNECTION, DEFAULT_LABEL_LOCATION_ENDPOINT, DEFAULT_OVERLAY_KEY_ENDPOINTS, DiamondOverlay, DotEndpoint, DotEndpointHandler, ERROR_SOURCE_DOES_NOT_EXIST, ERROR_SOURCE_ENDPOINT_FULL, ERROR_TARGET_DOES_NOT_EXIST, ERROR_TARGET_ENDPOINT_FULL, EVENT_ANCHOR_CHANGED, EVENT_CONNECTION, EVENT_CONNECTION_DETACHED, EVENT_CONNECTION_MOVED, EVENT_CONTAINER_CHANGE, EVENT_ENDPOINT_REPLACED, EVENT_GROUP_ADDED, EVENT_GROUP_COLLAPSE, EVENT_GROUP_EXPAND, EVENT_GROUP_MEMBER_ADDED, EVENT_GROUP_MEMBER_REMOVED, EVENT_GROUP_REMOVED, EVENT_INTERNAL_CONNECTION, EVENT_INTERNAL_CONNECTION_DETACHED, EVENT_INTERNAL_ENDPOINT_UNREGISTERED, EVENT_MANAGE_ELEMENT, EVENT_MAX_CONNECTIONS, EVENT_NESTED_GROUP_ADDED, EVENT_NESTED_GROUP_REMOVED, EVENT_UNMANAGE_ELEMENT, EVENT_ZOOM, EndpointFactory, EndpointRepresentation, EndpointSelection, Endpoints, FIXED, GroupManager, ID_PREFIX_CONNECTION, ID_PREFIX_ENDPOINT, INTERCEPT_BEFORE_DETACH, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_DROP, INTERCEPT_BEFORE_START_DETACH, IS_DETACH_ALLOWED, JsPlumbInstance, KEY_CONNECTION_OVERLAYS, LEFT, LabelOverlay, LightweightFloatingAnchor, LightweightRouter, NONE, Overlay, OverlayFactory, PlainArrowOverlay, REDROP_POLICY_ANY, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_SOURCE_OR_TARGET, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_STRICT, REMOVE_CLASS_ACTION, RIGHT, RectangleEndpoint, RectangleEndpointHandler, SEGMENT_TYPE_ARC, SEGMENT_TYPE_STRAIGHT, SELECTOR_MANAGED_ELEMENT, SOURCE, SOURCE_INDEX, STATIC, Segments, TARGET, TARGET_INDEX, TOP, TYPE_DESCRIPTOR_CONNECTION, TYPE_DESCRIPTOR_CONNECTOR, TYPE_DESCRIPTOR_ENDPOINT, TYPE_ID_CONNECTION, TYPE_ITEM_ANCHORS, TYPE_ITEM_CONNECTOR, UIGroup, UINode, Viewport, X_AXIS_FACES, Y_AXIS_FACES, _addSegment, _clearSegments, _createPerimeterAnchor, _findSegmentForLocation, _removeTypeCssHelper, _updateHoverStyle, _updateSegmentProportions, att, classList, cls, compute, connectorBoundingBoxIntersection, connectorBoxIntersection, convertToFullOverlaySpec, createComponentBase, createConnection, createConnectorBase, createEndpoint, createFloatingAnchor, defaultConnectorHandler, dumpSegmentsToConsole, findSegmentForPoint, getDefaultFace, gradientAtComponentPoint, isArrowOverlay, isContinuous, isCustomOverlay, isDiamondOverlay, isDynamic, isEdgeSupported, _isFloating as isFloating, isFullOverlaySpec, isLabelOverlay, isPlainArrowOverlay, lineIntersection, makeLightweightAnchorFromSpec, pointAlongComponentPathFrom, pointOnComponentPath, resetBounds, resetGeometry, setGeometry, setPreparedConnector, transformAnchorPlacement, updateBounds };

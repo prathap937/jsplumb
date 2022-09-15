@@ -14,7 +14,7 @@ export interface Router<T extends {
     redraw(elementId: string, timestamp?: string, offsetToUI?: PointXY): RedrawResult;
     computePath(connection: Connection, timestamp: string): void;
     computeAnchorLocation(anchor: A, params: AnchorComputeParams): AnchorPlacement;
-    getEndpointLocation(endpoint: Endpoint<any>, params: AnchorComputeParams): AnchorPlacement;
+    getEndpointLocation(endpoint: Endpoint, params: AnchorComputeParams): AnchorPlacement;
     getAnchorOrientation(anchor: A, endpoint?: Endpoint): Orientation;
     getEndpointOrientation(endpoint: Endpoint): Orientation;
     setAnchorOrientation(anchor: A, orientation: Orientation): void;

@@ -17,7 +17,7 @@ import { Viewport, ViewportElement } from "./viewport";
 import { Component } from './component/component';
 import { Overlay } from './overlay/overlay';
 import { LabelOverlay } from './overlay/label-overlay';
-import { AbstractConnector } from './connector/abstract-connector';
+import { ConnectorBase } from './connector/abstract-connector';
 import { PaintStyle, AnchorPlacement, AnchorSpec, EndpointSpec, OverlaySpec } from '@jsplumb/common';
 import { InternalEndpointOptions } from "./endpoint/endpoint-options";
 import { ConnectionDragSelector } from "./source-selector";
@@ -641,14 +641,6 @@ export declare abstract class JsPlumbInstance<T extends {
      */
     _refreshEndpoint(endpoint: Endpoint): void;
     /**
-     * Prepare a connector using the given name and args.
-     * @internal
-     * @param connection
-     * @param name
-     * @param args
-     */
-    _makeConnector(connection: Connection<T["E"]>, name: string, args: any): AbstractConnector;
-    /**
      * Adds an overlay to the given component, repainting the UI as necessary.
      * @param component - A Connection or Endpoint to add the overlay to
      * @param overlay - Spec for the overlay
@@ -742,7 +734,7 @@ export declare abstract class JsPlumbInstance<T extends {
      * @internal
      * @param connector
      */
-    getPathData(connector: AbstractConnector): any;
+    getPathData(connector: ConnectorBase): any;
     /**
      * @internal
      * @param o
@@ -765,7 +757,7 @@ export declare abstract class JsPlumbInstance<T extends {
      * @param paintStyle
      * @param extents
      */
-    abstract paintConnector(connector: AbstractConnector, paintStyle: PaintStyle, extents?: Extents): void;
+    abstract paintConnector(connector: ConnectorBase, paintStyle: PaintStyle, extents?: Extents): void;
     /**
      * @internal
      * @param connection
@@ -778,24 +770,24 @@ export declare abstract class JsPlumbInstance<T extends {
      * @param h
      * @param sourceEndpoint
      */
-    abstract setConnectorHover(connector: AbstractConnector, h: boolean, sourceEndpoint?: Endpoint): void;
+    abstract setConnectorHover(connector: ConnectorBase, h: boolean, sourceEndpoint?: Endpoint): void;
     /**
      * @internal
      * @param connector
      * @param clazz
      */
-    abstract addConnectorClass(connector: AbstractConnector, clazz: string): void;
-    abstract removeConnectorClass(connector: AbstractConnector, clazz: string): void;
-    abstract getConnectorClass(connector: AbstractConnector): string;
-    abstract setConnectorVisible(connector: AbstractConnector, v: boolean): void;
-    abstract applyConnectorType(connector: AbstractConnector, t: TypeDescriptor): void;
-    abstract applyEndpointType(ep: Endpoint<T>, t: TypeDescriptor): void;
-    abstract setEndpointVisible(ep: Endpoint<T>, v: boolean): void;
-    abstract destroyEndpoint(ep: Endpoint<T>): void;
-    abstract renderEndpoint(ep: Endpoint<T>, paintStyle: PaintStyle): void;
-    abstract addEndpointClass(ep: Endpoint<T>, c: string): void;
-    abstract removeEndpointClass(ep: Endpoint<T>, c: string): void;
-    abstract getEndpointClass(ep: Endpoint<T>): string;
-    abstract setEndpointHover(endpoint: Endpoint<T>, h: boolean, endpointIndex: number, doNotCascade?: boolean): void;
+    abstract addConnectorClass(connector: ConnectorBase, clazz: string): void;
+    abstract removeConnectorClass(connector: ConnectorBase, clazz: string): void;
+    abstract getConnectorClass(connector: ConnectorBase): string;
+    abstract setConnectorVisible(connector: ConnectorBase, v: boolean): void;
+    abstract applyConnectorType(connector: ConnectorBase, t: TypeDescriptor): void;
+    abstract applyEndpointType(ep: Endpoint, t: TypeDescriptor): void;
+    abstract setEndpointVisible(ep: Endpoint, v: boolean): void;
+    abstract destroyEndpoint(ep: Endpoint): void;
+    abstract renderEndpoint(ep: Endpoint, paintStyle: PaintStyle): void;
+    abstract addEndpointClass(ep: Endpoint, c: string): void;
+    abstract removeEndpointClass(ep: Endpoint, c: string): void;
+    abstract getEndpointClass(ep: Endpoint): string;
+    abstract setEndpointHover(endpoint: Endpoint, h: boolean, endpointIndex: number, doNotCascade?: boolean): void;
 }
 //# sourceMappingURL=core.d.ts.map
