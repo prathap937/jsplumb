@@ -2128,7 +2128,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                 for (let i in endpoint.overlays) {
                     if (endpoint.overlays.hasOwnProperty(i)) {
                         let o = endpoint.overlays[i]
-                        if (o.isVisible()) {
+                        if (o.visible) {
                             endpoint.overlayPlacements[i] = this.drawOverlay(o, endpoint.representation, endpoint.paintStyleInUse, Components.getAbsoluteOverlayPosition(endpoint, o))
                             this._paintOverlay(o, endpoint.overlayPlacements[i], {xmin:0, ymin:0})
                         }
@@ -2166,7 +2166,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                 for (let i in connection.overlays) {
                     if (connection.overlays.hasOwnProperty(i)) {
                         let o:Overlay = connection.overlays[i]
-                        if (o.isVisible()) {
+                        if (o.visible) {
 
                             connection.overlayPlacements[i] = this.drawOverlay(o, connection.connector, connection.paintStyleInUse, Components.getAbsoluteOverlayPosition(connection, o))
 
@@ -2193,7 +2193,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                 for (let j in connection.overlays) {
                     if (connection.overlays.hasOwnProperty(j)) {
                         let p = connection.overlays[j]
-                        if (p.isVisible()) {
+                        if (p.visible) {
                             this._paintOverlay(p, connection.overlayPlacements[j], extents)
                         }
                     }

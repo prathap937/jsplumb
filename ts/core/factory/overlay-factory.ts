@@ -1,8 +1,16 @@
 import {Overlay} from '../overlay/overlay'
-import { Constructable} from '@jsplumb/util'
+import {Constructable, PointXY} from '@jsplumb/util'
 import { JsPlumbInstance } from "../core"
 import {Component} from '../component/component'
+import {ArrowOverlayOptions, PaintStyle} from "@jsplumb/common"
+import {LabelOverlay} from "@jsplumb/core"
 const overlayMap:Record<string, Constructable<Overlay>> = {}
+
+export interface OverlayHandler<OptionsClass> {
+    draw(overlay:Overlay, component:Component, currentConnectionPaintStyle:PaintStyle, absolutePosition?: PointXY):any
+    create(instance:JsPlumbInstance, component:Component, options:OptionsClass):any
+    updateFrom(overlay: LabelOverlay, d: any): void
+}
 
 export const OverlayFactory = {
     get:(instance:JsPlumbInstance, name:string, component:Component, params:any):Overlay => {

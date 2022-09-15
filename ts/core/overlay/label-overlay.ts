@@ -1,12 +1,15 @@
 
-import { Overlay} from "./overlay"
-import {Size,isFunction} from "@jsplumb/util"
+import {createOverlayBase, Overlay, OverlayBase, Overlays} from "./overlay"
+import {Size, isFunction, PointXY, extend} from "@jsplumb/util"
 import {Component} from "../component/component"
 import {JsPlumbInstance} from "../core"
-import {OverlayFactory} from "../factory/overlay-factory"
-import { LabelOverlayOptions } from "@jsplumb/common"
+import {OverlayFactory, OverlayHandler} from "../factory/overlay-factory"
+import {ArrowOverlayOptions, LabelOverlayOptions, PaintStyle} from "@jsplumb/common"
+import {ArrowOverlayHandler, DEFAULT_LENGTH, DiamondOverlay, PlainArrowOverlay} from "@jsplumb/core"
 
-export class LabelOverlay extends Overlay {
+export const TYPE_OVERLAY_LABEL = "Label"
+
+export class LabelOverlay extends Overlay implements  OverlayBase {
 
     label:string | Function
     labelText:string
@@ -21,21 +24,15 @@ export class LabelOverlay extends Overlay {
 
         super(instance, component, p)
         p = p || { label:""}
-        this.setLabel(p.label)
+        Labels.setLabel(this, p.label)
     }
 
     getLabel(): string {
-        if (isFunction(this.label)) {
-            return (this.label as Function)(this)
-        } else {
-            return this.labelText
-        }
+        return Labels.getLabel(this)
     }
 
     setLabel(l: string | Function): void {
-        this.label = l
-        this.labelText = null
-        this.instance.updateLabel(this)
+        Labels.setLabel(this, l)
     }
 
     getDimensions():Size { return {w:1,h:1} }
@@ -57,3 +54,49 @@ export function isLabelOverlay(o:Overlay):o is LabelOverlay {
 
 
 OverlayFactory.register(LabelOverlay.type, LabelOverlay)
+
+const LabelOverlayHandler:OverlayHandler<LabelOverlayOptions> = {
+    create: function(instance: JsPlumbInstance, component: Component, options: LabelOverlayOptions):LabelOverlay {
+        options = options || { label:""}
+        const overlayBase = createOverlayBase(instance, component, options)
+        const labelOverlay = extend(overlayBase as any, {
+            label:options.label,
+            labelText:"",
+            cachedDimensions:null
+        }) as LabelOverlay
+
+        Labels.setLabel(labelOverlay, options.label)
+        return labelOverlay
+    },
+    draw: function (overlay: LabelOverlay, component: Component, currentConnectionPaintStyle: PaintStyle, absolutePosition?: PointXY) {
+
+    },
+    updateFrom(overlay: LabelOverlay, d: any): void {
+        if(d.label != null){
+            Labels.setLabel(overlay, d.label)
+        }
+        if (d.location != null) {
+            Overlays.setLocation(overlay, d.location)
+            overlay.instance.updateLabel(overlay)
+        }
+    }
+
+
+
+}
+
+export const Labels = {
+    setLabel(overlay:LabelOverlay, l:string|Function) {
+        overlay.label = l
+        overlay.labelText = null
+        overlay.instance.updateLabel(overlay)
+    },
+    getLabel(overlay:LabelOverlay):string {
+        if (isFunction(overlay.label)) {
+            return (overlay.label as Function)(overlay)
+        } else {
+            return overlay.labelText
+        }
+    }
+}
+

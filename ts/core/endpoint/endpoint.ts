@@ -119,10 +119,6 @@ export function createEndpoint<E>(instance:JsPlumbInstance, params:InternalEndpo
         connectionsDetachable = false
     }
     const dragAllowedWhenFull = params.dragAllowedWhenFull !== false
-    // TODO bind on endpoint
-    // if (params.onMaxConnections) {
-    //     this.bind(EVENT_MAX_CONNECTIONS, params.onMaxConnections)
-    // }
 
     const endpoint:Endpoint = extend(baseComponent as any, {
         enabled,

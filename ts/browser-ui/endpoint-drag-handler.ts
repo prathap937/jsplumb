@@ -1002,12 +1002,11 @@ export class EndpointDragHandler implements DragHandler {
                             this._reattachOrDiscard(p.e)
                         } else if (Endpoints.isFull(dropEndpoint)) {
                             // if endpoint full, fire an event, then either reattach or discard
-                            // TODO endpoint bind event
-                            // dropEndpoint.fire(EVENT_MAX_CONNECTIONS, {
-                            //     endpoint: this,
-                            //     connection: this.jpc,
-                            //     maxConnections: this.instance.defaults.maxConnections
-                            // }, originalEvent)
+                            this.instance.fire(EVENT_MAX_CONNECTIONS, {
+                                endpoint: this,
+                                connection: this.jpc,
+                                maxConnections: this.instance.defaults.maxConnections
+                            }, originalEvent)
                             this._reattachOrDiscard(p.e)
                         } else {
                             if (idx === 0) {

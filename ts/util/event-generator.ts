@@ -183,3 +183,28 @@ export class OptimisticEventGenerator extends EventGenerator {
         return true
     }
 }
+
+export interface EventSource {
+    //events:Record<string, (payload:any, originalEvent?:Event)=>any>
+    _listeners: Record<string, Array<Function>>
+}
+
+export const Events = {
+    fire(source:EventSource, eventName:string, payload:any, originalEvent?:Event) {
+        const h = source._listeners[eventName]
+        if (h != null) {
+            for (let i = 0; i < h.length; i++) {
+                try {
+                    h[i](payload, originalEvent)
+                } catch (e) {
+                    log(`Exception thrown in listener for ${eventName} ` + e)
+                }
+            }
+        }
+    },
+    subscribe(source:EventSource, eventName:string, handler:Function) {
+        source._listeners[eventName] = source._listeners[eventName] || []
+        source._listeners[eventName].push(handler)
+    }
+
+}

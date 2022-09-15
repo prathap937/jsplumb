@@ -183,16 +183,16 @@ var testSuite = function () {
         equal(c.connector.canvas, a1.path.parentNode, "arrow's parent is the connector");
         equal(_jsPlumb.getContainer(), l.canvas.parentNode, "label's parent is the container");
 
-        a1.setVisible(false);
+        jsPlumb.Overlays.setVisible(a1, false);
         equal("none", a1.path.style.display, "arrow's style is 'none', as it is hidden");
 
-        l.setVisible(false);
+        jsPlumb.Overlays.setVisible(l, false);
         equal("none", l.canvas.style.display, "label's display is 'none'; it is hidden");
 
-        a1.setVisible(true);
+        jsPlumb.Overlays.setVisible(a1, true);
         equal("block", a1.path.style.display, "arrow's display is 'block'; it is visible");
 
-        l.setVisible(true);
+        jsPlumb.Overlays.setVisible(l, true);
         equal("block", l.canvas.style.display, "label's display is 'block'; it is visible");
 
     });
@@ -578,11 +578,11 @@ var testSuite = function () {
                 { type: "Arrow", options:{ id: "arrowOverlay" } }
         ] });
         var overlay = conn.overlays["arrowOverlay"];
-        ok(overlay.isVisible());
-        overlay.setVisible(false);
-        ok(!overlay.isVisible());
-        overlay.setVisible(true);
-        ok(overlay.isVisible());
+        ok(overlay.visible);
+        jsPlumb.Overlays.setVisible(overlay, false);
+        ok(!overlay.visible);
+        jsPlumb.Overlays.setVisible(overlay, true);
+        ok(overlay.visible);
     });
 
     test(": _jsPlumb.connect (custom label overlay, set on Defaults, return plain DOM element)", function () {
@@ -650,8 +650,10 @@ var testSuite = function () {
             ]
         });
         var l = connection1.overlays["label"];
-        l.fire("click", l);
+        // l.fire("click", l);
+        jsPlumbUtil.Events.fire(l, "click", "")
         equal(clicked, 1, "click event was fired once");
+
     });
 
     test("show/hide Overlays", function() {
@@ -659,12 +661,12 @@ var testSuite = function () {
                 { type: "Label", options:{ "id":"lbl" } }
         ]});
 
-        equal(c.overlays["lbl"].isVisible(), true, "overlay is visible");
+        equal(c.overlays["lbl"].visible, true, "overlay is visible");
         jsPlumb.Components.hideOverlays(c);
         //equal(c.overlays["lbl"].canvas.style.display, "none", "overlay not visible");
-        equal(c.overlays["lbl"].isVisible(), false, "overlay is not visible");
+        equal(c.overlays["lbl"].visible, false, "overlay is not visible");
         jsPlumb.Components.showOverlays(c);
-        equal(c.overlays["lbl"].isVisible(), true, "overlay is visible");
+        equal(c.overlays["lbl"].visible, true, "overlay is visible");
     });
 
     test("show/hide Overlays, supply ids to hide/show", function() {
@@ -673,13 +675,13 @@ var testSuite = function () {
                 { type: "Label", options:{ "id":"lbl2" } }
             ]});
 
-        equal(c.overlays["lbl"].isVisible(), true, "overlay is visible");
+        equal(c.overlays["lbl"].visible, true, "overlay is visible");
         jsPlumb.Components.hideOverlays(c, "lbl");
-        equal(c.overlays["lbl"].isVisible(), false, "overlay is not visible");
-        equal(c.overlays["lbl2"].isVisible(), true, "overlay 2 is visible");
+        equal(c.overlays["lbl"].visible, false, "overlay is not visible");
+        equal(c.overlays["lbl2"].visible, true, "overlay 2 is visible");
         jsPlumb.Components.showOverlays(c, "lbl");
-        equal(c.overlays["lbl"].isVisible(), true, "overlay is visible");
-        equal(c.overlays["lbl2"].isVisible(), true, "overlay 2 is visible");
+        equal(c.overlays["lbl"].visible, true, "overlay is visible");
+        equal(c.overlays["lbl2"].visible, true, "overlay 2 is visible");
     });
 
     //

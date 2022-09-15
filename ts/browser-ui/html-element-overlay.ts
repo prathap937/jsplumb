@@ -44,7 +44,7 @@ export class HTMLElementOverlay {
             (<any>o.canvas.style).oTransform = ts;
             (<any>o.canvas.style).transform = ts
     
-            if (!o.isVisible()) {
+            if (!o.visible) {
                 o.canvas.style.display = NONE
             }
 

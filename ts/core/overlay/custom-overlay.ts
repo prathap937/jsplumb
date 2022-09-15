@@ -1,8 +1,12 @@
-import {Overlay} from "./overlay"
+import {createOverlayBase, Overlay} from "./overlay"
 import { JsPlumbInstance } from "../core"
 import {Component} from '../component/component'
-import { OverlayFactory } from '../factory/overlay-factory'
-import { OverlayOptions } from "@jsplumb/common"
+import {OverlayFactory, OverlayHandler} from '../factory/overlay-factory'
+import {ArrowOverlayOptions, OverlayOptions, PaintStyle} from "@jsplumb/common"
+import {ArrowOverlayHandler, DEFAULT_LENGTH, DiamondOverlay, PlainArrowOverlay} from "@jsplumb/core"
+import {extend, PointXY} from "@jsplumb/util"
+
+export const TYPE_OVERLAY_CUSTOM = "Custom"
 
 /**
  * @public
@@ -33,4 +37,19 @@ export function isCustomOverlay(o:Overlay):o is CustomOverlay {
     return o.type === CustomOverlay.type
 }
 
-OverlayFactory.register(CustomOverlay.type, CustomOverlay)
+OverlayFactory.register(TYPE_OVERLAY_CUSTOM, CustomOverlay)
+
+const CustomOverlayHandler:OverlayHandler<CustomOverlayOptions> = {
+    create: function(instance: JsPlumbInstance, component: Component, options: CustomOverlayOptions):CustomOverlay {
+        const overlayBase = createOverlayBase(instance, component, options)
+        return extend(overlayBase as any, {
+            create:options.create
+        }) as CustomOverlay
+    },
+    draw: function (overlay: DiamondOverlay, component: Component, currentConnectionPaintStyle: PaintStyle, absolutePosition?: PointXY) {
+
+    },
+    updateFrom(d: any): void { }
+
+
+}

@@ -46,7 +46,7 @@ import {
     PointXY,
     Size,
     BoundingBox,
-    Extents, Grid
+    Extents, Grid, Events
 } from "@jsplumb/util"
 
 import { TRUE,
@@ -483,7 +483,8 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
         // set the overlay on the event so that connection/endpoint handlers will know this event has already been fired, and
         // not to fire the event again
         ;(e as any)._jsPlumbOverlay = overlay
-        overlay.fire<OverlayMouseEventParams>(event, { e, overlay })
+        // overlay.fire<OverlayMouseEventParams>(event, { e, overlay })
+        Events.fire(overlay, event, {e, overlay}, e)
         this.fire(mappedEvent, overlay.component, e)
     }
 

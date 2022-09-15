@@ -1,6 +1,6 @@
 import {Extents, EventGenerator,clone, extend, isFunction, isString, log, merge, populate, setToArray, uuid, PointXY } from "@jsplumb/util"
 
-import { Overlay } from '../overlay/overlay'
+import {Overlay, Overlays} from '../overlay/overlay'
 import {ComponentTypeDescriptor} from '../type-descriptors'
 import { JsPlumbInstance } from "../core"
 import {Connection} from "../connector/connection-impl"
@@ -152,7 +152,6 @@ export interface ComponentOptions {
     beforeDetach?:BeforeDetachInterceptor
     beforeDrop?:BeforeDropInterceptor
     hoverClass?:string
-    events?:Record<string, (value:any, event:any) => any>
     scope?:string
     cssClass?:string
     data?:any
@@ -254,153 +253,9 @@ export interface Component {
     data:Record<string, any>
 
     _defaultType:ComponentTypeDescriptor
-
-    events:any
-    
     beforeDetach:BeforeDetachInterceptor
     beforeDrop:BeforeDropInterceptor
 }
-
-/**
- * Base class for Endpoint and Connection.
- * @public
- */
-// export abstract class Component extends EventGenerator implements Component {
-//
-//     abstract getTypeDescriptor():string
-//     abstract getDefaultOverlayKey():string
-//     abstract getIdPrefix():string
-//     // abstract getDefaultType():ComponentTypeDescriptor
-//
-//     abstract getXY():PointXY
-//
-//     defaultLabelLocation:number | [number, number] = 0.5
-//
-//     overlays:Record<string, Overlay> = {}
-//     overlayPositions:Record<string, PointXY> = {}
-//     overlayPlacements:Record<string, Extents> = {}
-//
-//     clone: () => Component
-//
-//     deleted:boolean
-//
-//     segment:number
-//     x:number
-//     y:number
-//     w:number
-//     h:number
-//     id:string
-//
-//     /**
-//      * @internal
-//      */
-//     _visible:boolean = true
-//     /**
-//      * @public
-//      */
-//     get visible() { return this._visible }
-//    
-//     //typeId:string
-//
-//     params:Record<string, any> = {}
-//
-//     paintStyle:PaintStyle
-//     hoverPaintStyle:PaintStyle
-//     paintStyleInUse:PaintStyle
-//
-//     _hover:boolean = false
-//
-//     lastPaintedAt:string
-//
-//     data:Record<string, any>
-//
-//     _defaultType:ComponentTypeDescriptor
-//
-//     events:any
-//
-//     parameters:ComponentParameters
-//
-//     _types:Set<string>
-//     _typeCache:{}
-//
-//     cssClass:string
-//     hoverClass:string
-//     beforeDetach:BeforeDetachInterceptor
-//     beforeDrop:BeforeDropInterceptor
-//
-//     protected constructor(public instance:JsPlumbInstance, params?:ComponentOptions) {
-//
-//         super()
-//
-//         params = params || ({} as ComponentOptions)
-//
-//         this.cssClass = params.cssClass || ""
-//         this.hoverClass = params.hoverClass || instance.defaults.hoverClass
-//
-//         this.beforeDetach = params.beforeDetach
-//         this.beforeDrop = params.beforeDrop
-//
-//         this._types = new Set()
-//         this._typeCache = {}
-//
-//         this.parameters = clone(params.parameters || {})
-//
-//         this.id = params.id || this.getIdPrefix() + (new Date()).getTime()
-//
-//         this._defaultType = {
-//             parameters: this.parameters,
-//             scope: params.scope || this.instance.defaultScope,
-//             overlays:{}
-//         }
-//
-//         if (params.events) {
-//             for (let evtName in params.events) {
-//                 this.bind(evtName, params.events[evtName])
-//             }
-//         }
-//
-//         this.clone = ():Component => {
-//             let o = Object.create(this.constructor.prototype)
-//             this.constructor.apply(o, [instance, params])
-//             return o
-//         }
-//
-//         this.overlays = {}
-//         this.overlayPositions = {}
-//
-//         let o = params.overlays || [], oo:Record<string, OverlaySpec> = {}
-//         let defaultOverlayKey = this.getDefaultOverlayKey()
-//         if (defaultOverlayKey) {
-//
-//             const defaultOverlays = this.instance.defaults[defaultOverlayKey] as Array<OverlaySpec>
-//             if (defaultOverlays) {
-//                 o.push(...defaultOverlays)
-//             }
-//
-//             for (let i = 0; i < o.length; i++) {
-//                 // if a string, convert to object representation so that we can store the typeid on it.
-//                 // also assign an id.
-//                 let fo = convertToFullOverlaySpec(o[i])
-//                 oo[fo.options.id] = fo
-//             }
-//         }
-//
-//         this._defaultType.overlays = oo
-//
-//         if (params.label) {
-//             this.getDefaultType().overlays[_internalLabelOverlayId] = {
-//                 type:LabelOverlay.type,
-//                 options:{
-//                     label: params.label,
-//                     location: params.labelLocation || this.defaultLabelLocation,
-//                     id:_internalLabelOverlayId,
-//                     cssClass:_internalLabelOverlayClass
-//                 }
-//             }
-//         }
-//     }
-//
-//
 
 export function createComponentBase(instance:JsPlumbInstance,
                              idPrefix:string,
@@ -435,13 +290,6 @@ export function createComponentBase(instance:JsPlumbInstance,
 
     extend(_defaultType, defaultType || {})
 
-    // TODO component base events
-    // if (params.events) {
-    //     for (let evtName in params.events) {
-    //         this.bind(evtName, params.events[evtName])
-    //     }
-    // }
-
     // const clone = ():Component => {
     //     let o = Object.create(this.constructor.prototype)
     //     this.constructor.apply(o, [instance, params])
@@ -453,7 +301,6 @@ export function createComponentBase(instance:JsPlumbInstance,
     const overlayPlacements = {}
 
     let o = params.overlays || [], oo:Record<string, OverlaySpec> = {}
-    //let defaultOverlayKey = this.getDefaultOverlayKey()
     if (defaultOverlayKey) {
 
         const defaultOverlays = instance.defaults[defaultOverlayKey] as Array<OverlaySpec>
@@ -509,7 +356,6 @@ export function createComponentBase(instance:JsPlumbInstance,
         lastPaintedAt:null,
         data,
         params:cParams,
-        events:{},
         _defaultType
     }
 }
@@ -559,7 +405,7 @@ export const Components = {
                     let c:Overlay = this.getCachedTypeItem(component, TYPE_ITEM_OVERLAY, t.overlays[i].options.id)
                     if (c != null) {
                         component.instance.reattachOverlay(c, component)
-                        c.setVisible(true)
+                        Overlays.setVisible(c, true)
                         // maybe update from data, if there were parameterised values for instance.
                         c.updateFrom(t.overlays[i].options)
                         component.overlays[c.id] = c
@@ -672,7 +518,7 @@ export const Components = {
         ids = ids || []
         for (let i in component.overlays) {
             if (ids.length === 0 || ids.indexOf(i) !== -1) {
-                component.overlays[i].setVisible(true)
+                Overlays.setVisible(component.overlays[i], true)
             }
         }
     },
@@ -685,7 +531,7 @@ export const Components = {
         ids = ids || []
         for (let i in component.overlays) {
             if (ids.length === 0 || ids.indexOf(i) !== -1) {
-                component.overlays[i].setVisible(false)
+                Overlays.setVisible(component.overlays[i], false)
             }
         }
     },
@@ -752,7 +598,7 @@ export const Components = {
     hideOverlay(component:Component, id:string):void {
         let o = this.getOverlay(component, id)
         if (o) {
-            o.setVisible(false)
+            Overlays.setVisible(o, false)
         }
     },
 
@@ -764,7 +610,7 @@ export const Components = {
     showOverlay(component:Component, id:string):void {
         let o = this.getOverlay(component, id)
         if (o) {
-            o.setVisible(true)
+            Overlays.setVisible(o, true)
         }
     },
 
@@ -791,7 +637,7 @@ export const Components = {
     removeOverlay(component:Component, overlayId:string, dontCleanup?:boolean):void {
         let o = component.overlays[overlayId]
         if (o) {
-            o.setVisible(false)
+            Overlays.setVisible(o, false)
             if (!dontCleanup) {
                 component.instance.destroyOverlay(o)
             }

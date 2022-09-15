@@ -571,23 +571,6 @@ var testSuite = function () {
         support.assertEndpointCount(d2, 1, _jsPlumb);
     });
 
-    test(": jsPlumb.connect, events specified", function () {
-        var d1 = support.addDiv("d1"), _d2 = support.addDiv("d2"),
-            clicked = 0,
-            c = _jsPlumb.connect({
-                source: d1,
-                target: d2,
-                events: {
-                    click: function (conn) {
-                        clicked++;
-                    }
-                }
-            });
-
-        c.fire("click", c);
-        equal(1, clicked, "connection was clicked once");
-    });
-
     test(" detachable parameter defaults to true on _jsPlumb.connect", function () {
         var d1 = support.addDiv("d1"), d2 = support.addDiv("d2"),
             c = _jsPlumb.connect({source: d1, target: d2});
