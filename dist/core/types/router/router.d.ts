@@ -1,4 +1,4 @@
-import { Connection } from '../connector/connection-impl';
+import { Connection } from '../connector/declarations';
 import { Endpoint } from '../endpoint/endpoint';
 import { PointXY } from '@jsplumb/util';
 import { AnchorComputeParams, Face, LightweightContinuousAnchor, Orientation } from "../factory/anchor-record-factory";

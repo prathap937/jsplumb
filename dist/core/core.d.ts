@@ -8,14 +8,10 @@
 import { AnchorPlacement } from '@jsplumb/common';
 import { AnchorSpec } from '@jsplumb/common';
 import { ArrowOverlayOptions } from '@jsplumb/common';
-import { BlankEndpointParams } from '@jsplumb/common';
 import { BoundingBox } from '@jsplumb/util';
-import { Connection as Connection_2 } from '@jsplumb/core';
 import { Connector } from '@jsplumb/common';
 import { ConnectorOptions } from '@jsplumb/common';
 import { ConnectorSpec } from '@jsplumb/common';
-import { Constructable } from '@jsplumb/util';
-import { DotEndpointParams } from '@jsplumb/common';
 import { EndpointRepresentationParams } from '@jsplumb/common';
 import { EndpointSpec } from '@jsplumb/common';
 import { EndpointStyle } from '@jsplumb/common';
@@ -23,7 +19,6 @@ import { EventGenerator } from '@jsplumb/util';
 import { Extents } from '@jsplumb/util';
 import { FullOverlaySpec } from '@jsplumb/common';
 import { Geometry } from '@jsplumb/common';
-import { LabelOverlayOptions } from '@jsplumb/common';
 import { Merge } from '@jsplumb/util';
 import { OverlayOptions } from '@jsplumb/common';
 import { OverlaySpec } from '@jsplumb/common';
@@ -32,7 +27,6 @@ import { PaintStyle } from '@jsplumb/common';
 import { PerimeterAnchorShapes } from '@jsplumb/common';
 import { PointNearPath } from '@jsplumb/common';
 import { PointXY } from '@jsplumb/util';
-import { RectangleEndpointParams } from '@jsplumb/common';
 import { RotatedPointXY } from '@jsplumb/util';
 import { Rotations } from '@jsplumb/util';
 import { Segment } from '@jsplumb/common';
@@ -135,22 +129,17 @@ export declare interface ArcSegmentParams extends SegmentParams {
     endAngle?: number;
 }
 
-export declare class ArrowOverlay extends Overlay {
-    instance: JsPlumbInstance;
-    component: Component;
+export declare interface ArrowOverlay extends OverlayBase {
     width: number;
     length: number;
     foldback: number;
     direction: number;
     location: number;
     paintStyle: PaintStyle;
-    static type: string;
-    type: string;
     cachedDimensions: Size;
-    constructor(instance: JsPlumbInstance, component: Component, p: ArrowOverlayOptions);
-    draw(component: Component, currentConnectionPaintStyle: PaintStyle, absolutePosition?: PointXY): any;
-    updateFrom(d: any): void;
 }
+
+export declare const ArrowOverlayHandler: OverlayHandler<ArrowOverlayOptions>;
 
 export declare function att(...attName: Array<string>): string;
 
@@ -323,10 +312,7 @@ export declare interface BehaviouralTypeDescriptor<T = any> extends EndpointType
     target?: boolean;
 }
 
-export declare class BlankEndpoint extends EndpointRepresentation<ComputedBlankEndpoint> {
-    constructor(endpoint: Endpoint, params?: BlankEndpointParams);
-    static type: string;
-    type: string;
+export declare interface BlankEndpoint extends EndpointRepresentation<ComputedBlankEndpoint> {
 }
 
 export declare const BlankEndpointHandler: EndpointHandler<BlankEndpoint, ComputedBlankEndpoint>;
@@ -380,7 +366,7 @@ export declare function cls(...className: Array<string>): string;
  * @internal
  */
 export declare interface Component {
-    overlays: Record<string, Overlay>;
+    overlays: Record<string, OverlayBase>;
     overlayPositions: Record<string, PointXY>;
     overlayPlacements: Record<string, Extents>;
     instance: JsPlumbInstance;
@@ -404,7 +390,6 @@ export declare interface Component {
     lastPaintedAt: string;
     data: Record<string, any>;
     _defaultType: ComponentTypeDescriptor;
-    events: any;
     beforeDetach: BeforeDetachInterceptor;
     beforeDrop: BeforeDropInterceptor;
 }
@@ -417,7 +402,6 @@ export declare interface ComponentOptions {
     beforeDetach?: BeforeDetachInterceptor;
     beforeDrop?: BeforeDropInterceptor;
     hoverClass?: string;
-    events?: Record<string, (value: any, event: any) => any>;
     scope?: string;
     cssClass?: string;
     data?: any;
@@ -488,7 +472,7 @@ export declare const Components: {
      * @param overlay
      * @internal
      */
-    addOverlay(component: Component, overlay: OverlaySpec): Overlay;
+    addOverlay(component: Component, overlay: OverlaySpec): OverlayBase;
     /**
      * Get the Overlay with the given ID. You can optionally provide a type parameter for this method in order to get
      * a typed return value (such as `LabelOverlay`, `ArrowOverlay`, etc), since some overlays have methods that
@@ -496,7 +480,7 @@ export declare const Components: {
      * @param id ID of the overlay to retrieve.
      * @public
      */
-    getOverlay<T extends Overlay>(component: Component, id: string): T;
+    getOverlay<T extends OverlayBase>(component: Component, id: string): T;
     /**
      * Hide the overlay with the given id.
      * @param id
@@ -625,11 +609,11 @@ export declare const Components: {
      * @public
      */
     mergeData(component: Component, d: any): void;
-    setAbsoluteOverlayPosition(component: Component, overlay: Overlay, xy: PointXY): void;
+    setAbsoluteOverlayPosition(component: Component, overlay: OverlayBase, xy: PointXY): void;
     /**
      * @internal
      */
-    getAbsoluteOverlayPosition(component: Component, overlay: Overlay): PointXY;
+    getAbsoluteOverlayPosition(component: Component, overlay: OverlayBase): PointXY;
 };
 
 /**
@@ -660,6 +644,9 @@ export declare interface ComputedPosition {
 
 export declare type ComputedRectangleEndpoint = [number, number, number, number];
 
+/**
+ * Definition of a connection between two elements.
+ */
 export declare interface Connection<E = any> extends Component {
     connector: ConnectorBase;
     defaultLabelLocation: number;
@@ -835,6 +822,10 @@ export declare type ConnectionOptions<E = any> = Merge<ConnectParams<E>, {
     geometry?: any;
 }>;
 
+/**
+ * Manager for operations on connections.
+ * @internal
+ */
 export declare const Connections: {
     isReattach(connection: Connection, alsoCheckForced: boolean): boolean;
     isDetachable(connection: Connection, ep?: Endpoint): boolean;
@@ -879,6 +870,7 @@ export declare const Connections: {
      */
     removeClass(connection: Connection, c: string, cascade?: boolean): void;
     isConnection(component: any): component is Connection<any>;
+    create(instance: JsPlumbInstance, params: ConnectionOptions): Connection;
 };
 
 export declare class ConnectionSelection extends SelectionBase<Connection> {
@@ -1147,13 +1139,9 @@ export declare interface ConnectParams<E> {
  */
 export declare function convertToFullOverlaySpec(spec: string | OverlaySpec): FullOverlaySpec;
 
-/**
- * Base class for Endpoint and Connection.
- * @public
- */
-export declare function createComponentBase(instance: JsPlumbInstance, idPrefix: string, typeDescriptor: string, defaultOverlayKey: string, defaultType: Record<string, any>, defaultLabelLocation: number | [number, number], params?: ComponentOptions): Component;
+export declare function createBaseRepresentation(type: string, endpoint: Endpoint, params?: EndpointRepresentationParams): EndpointRepresentation<any>;
 
-export declare function createConnection(instance: JsPlumbInstance, params: ConnectionOptions): Connection;
+export declare function createComponentBase(instance: JsPlumbInstance, idPrefix: string, typeDescriptor: string, defaultOverlayKey: string, defaultType: Record<string, any>, defaultLabelLocation: number | [number, number], params?: ComponentOptions): Component;
 
 /**
  * factory method to create a ConnectorBase
@@ -1164,16 +1152,12 @@ export declare function createEndpoint<E>(instance: JsPlumbInstance, params: Int
 
 export declare function createFloatingAnchor(instance: JsPlumbInstance, element: Element, elementId: string): LightweightFloatingAnchor;
 
+export declare function createOverlayBase(instance: JsPlumbInstance, component: Component, p: OverlayOptions): OverlayBase;
+
 export declare function _createPerimeterAnchor(params: Record<string, any>): LightweightPerimeterAnchor;
 
-export declare class CustomOverlay extends Overlay {
-    instance: JsPlumbInstance;
-    component: Component;
+export declare interface CustomOverlay extends OverlayBase {
     create: (c: Component) => any;
-    constructor(instance: JsPlumbInstance, component: Component, p: CustomOverlayOptions);
-    static type: string;
-    type: string;
-    updateFrom(d: any): void;
 }
 
 /**
@@ -1229,6 +1213,8 @@ export declare const DEFAULT_LABEL_LOCATION_CONNECTION = 0.5;
 
 export declare const DEFAULT_LABEL_LOCATION_ENDPOINT: [number, number];
 
+export declare const DEFAULT_LENGTH = 20;
+
 export declare const DEFAULT_OVERLAY_KEY_ENDPOINTS = "endpointOverlays";
 
 /**
@@ -1273,20 +1259,13 @@ export declare type DeleteConnectionOptions = {
     endpointToIgnore?: Endpoint;
 };
 
-export declare class DiamondOverlay extends ArrowOverlay {
-    instance: JsPlumbInstance;
-    static type: string;
-    type: string;
-    constructor(instance: JsPlumbInstance, component: Component, p: ArrowOverlayOptions);
+export declare interface DiamondOverlay extends ArrowOverlay {
 }
 
-export declare class DotEndpoint extends EndpointRepresentation<ComputedDotEndpoint> {
+export declare interface DotEndpoint extends EndpointRepresentation<ComputedDotEndpoint> {
     radius: number;
     defaultOffset: number;
     defaultInnerRadius: number;
-    constructor(endpoint: Endpoint, params?: DotEndpointParams);
-    static type: string;
-    type: string;
 }
 
 export declare const DotEndpointHandler: EndpointHandler<DotEndpoint, ComputedDotEndpoint>;
@@ -1343,7 +1322,7 @@ export declare interface EndpointHandler<EndpointClass, T> {
     type: string;
     compute: EndpointComputeFunction<T>;
     getParams(endpoint: EndpointClass): Record<string, any>;
-    cls: Constructable<EndpointRepresentation<T>>;
+    create(endpoint: Endpoint, params?: EndpointRepresentationParams): EndpointClass;
 }
 
 export declare interface EndpointOptions<E = any> {
@@ -1440,12 +1419,6 @@ export declare interface EndpointOptions<E = any> {
      */
     dragAllowedWhenFull?: boolean;
     /**
-     * Optional callback to fire when the endpoint transitions to the state that it is now full.
-     * @param value
-     * @param event
-     */
-    onMaxConnections?: (value: any, event?: any) => any;
-    /**
      * Optional cost to set for connections that have this endpoint as their source. Defaults to 1.
      */
     connectionCost?: number;
@@ -1462,11 +1435,9 @@ export declare interface EndpointOptions<E = any> {
 }
 
 /**
- * Superclass for all types of Endpoint. This class is renderer
- * agnostic, as are any subclasses of it.
+ * Base interface for all types of Endpoint representation.
  */
-export declare abstract class EndpointRepresentation<C> {
-    endpoint: Endpoint;
+export declare interface EndpointRepresentation<C> {
     typeId: string;
     x: number;
     y: number;
@@ -1477,11 +1448,9 @@ export declare abstract class EndpointRepresentation<C> {
     classes: Array<string>;
     instance: JsPlumbInstance;
     canvas: any;
-    abstract type: string;
-    protected constructor(endpoint: Endpoint, params?: EndpointRepresentationParams);
-    addClass(c: string): void;
-    removeClass(c: string): void;
-    compute(anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any): void;
+    type: string;
+    endpoint: Endpoint;
+    typeDescriptor: typeof TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION;
 }
 
 export declare const Endpoints: {
@@ -1498,7 +1467,7 @@ export declare const Endpoints: {
      */
     _anchorLocationChanged(endpoint: Endpoint, currentAnchor: LightweightAnchor): void;
     setAnchor(endpoint: Endpoint, anchorParams: AnchorSpec | Array<AnchorSpec>): Endpoint;
-    addConnection(endpoint: Endpoint, conn: Connection_2): void;
+    addConnection(endpoint: Endpoint, conn: Connection): void;
     deleteEveryConnection(endpoint: Endpoint, params?: DeleteConnectionOptions): void;
     /**
      * Removes all connections from this endpoint to the given other endpoint.
@@ -1512,7 +1481,7 @@ export declare const Endpoints: {
      * @param idx Optional, used internally to identify if this is the source (0) or target endpoint (1). Sometimes we already know this when we call this method.
      * @param transientDetach For internal use only.
      */
-    detachFromConnection(endpoint: Endpoint, connection: Connection_2, idx?: number, transientDetach?: boolean): void;
+    detachFromConnection(endpoint: Endpoint, connection: Connection, idx?: number, transientDetach?: boolean): void;
     isFull(endpoint: Endpoint): boolean;
     isFloating(endpoint: Endpoint): boolean;
     /**
@@ -1524,6 +1493,7 @@ export declare const Endpoints: {
     prepareEndpoint<C>(endpoint: Endpoint, ep: EndpointSpec | EndpointRepresentation<C>, typeId?: string): EndpointRepresentation<C>;
     setEndpoint<C_1>(endpoint: Endpoint, ep: EndpointSpec | EndpointRepresentation<C_1>): void;
     setPreparedEndpoint<C_2>(endpoint: Endpoint, ep: EndpointRepresentation<C_2>): void;
+    compute(ep: EndpointRepresentation<any>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any): void;
 };
 
 export declare class EndpointSelection extends SelectionBase<Endpoint> {
@@ -1722,6 +1692,10 @@ export declare interface GroupOptions {
     endpoint?: EndpointSpec;
 }
 
+/**
+ * Prefix to use on the ID for connections.
+ * @internal
+ */
 export declare const ID_PREFIX_CONNECTION = "_jsPlumb_c";
 
 export declare const ID_PREFIX_ENDPOINT = "_jsplumb_e";
@@ -1760,13 +1734,13 @@ export declare interface InternalEndpointOptions<E> extends EndpointOptions<E> {
 
 export declare const IS_DETACH_ALLOWED = "isDetachAllowed";
 
-export declare function isArrowOverlay(o: Overlay): o is ArrowOverlay;
+export declare function isArrowOverlay(o: OverlayBase): o is ArrowOverlay;
 
 export declare function isContinuous(a: LightweightAnchor): a is LightweightContinuousAnchor;
 
-export declare function isCustomOverlay(o: Overlay): o is CustomOverlay;
+export declare function isCustomOverlay(o: OverlayBase): o is CustomOverlay;
 
-export declare function isDiamondOverlay(o: Overlay): o is DiamondOverlay;
+export declare function isDiamondOverlay(o: OverlayBase): o is DiamondOverlay;
 
 export declare function isDynamic(a: LightweightAnchor): boolean;
 
@@ -1778,6 +1752,8 @@ export declare function isDynamic(a: LightweightAnchor): boolean;
  */
 export declare function isEdgeSupported(a: LightweightContinuousAnchor, edge: Face): boolean;
 
+export declare function isEndpointRepresentation(ep: any): ep is EndpointRepresentation<any>;
+
 export declare function isFloating(a: LightweightAnchor): a is LightweightFloatingAnchor;
 
 /**
@@ -1786,9 +1762,9 @@ export declare function isFloating(a: LightweightAnchor): a is LightweightFloati
  */
 export declare function isFullOverlaySpec(o: OverlaySpec): o is FullOverlaySpec;
 
-export declare function isLabelOverlay(o: Overlay): o is LabelOverlay;
+export declare function isLabelOverlay(o: OverlayBase): o is LabelOverlay;
 
-export declare function isPlainArrowOverlay(o: Overlay): o is PlainArrowOverlay;
+export declare function isPlainArrowOverlay(o: OverlayBase): o is PlainArrowOverlay;
 
 export declare interface JsPlumbDefaults<E> {
     [DEFAULT_KEY_ENDPOINT]?: EndpointSpec;
@@ -2491,15 +2467,15 @@ export declare abstract class JsPlumbInstance<T extends {
      * @param params
      * @param extents
      */
-    abstract _paintOverlay(o: Overlay, params: any, extents: any): void;
-    abstract addOverlayClass(o: Overlay, clazz: string): void;
-    abstract removeOverlayClass(o: Overlay, clazz: string): void;
-    abstract setOverlayVisible(o: Overlay, visible: boolean): void;
-    abstract destroyOverlay(o: Overlay): void;
+    abstract _paintOverlay(o: OverlayBase, params: any, extents: any): void;
+    abstract addOverlayClass(o: OverlayBase, clazz: string): void;
+    abstract removeOverlayClass(o: OverlayBase, clazz: string): void;
+    abstract setOverlayVisible(o: OverlayBase, visible: boolean): void;
+    abstract destroyOverlay(o: OverlayBase): void;
     abstract updateLabel(o: LabelOverlay): void;
-    abstract drawOverlay(overlay: Overlay, component: any, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
-    abstract reattachOverlay(o: Overlay, c: Component): void;
-    abstract setOverlayHover(o: Overlay, hover: boolean): void;
+    abstract drawOverlay(overlay: OverlayBase, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
+    abstract reattachOverlay(o: OverlayBase, c: Component): void;
+    abstract setOverlayHover(o: OverlayBase, hover: boolean): void;
     abstract setHover(component: Component, hover: boolean): void;
     /**
      * @internal
@@ -2543,20 +2519,16 @@ export declare abstract class JsPlumbInstance<T extends {
 
 export declare const KEY_CONNECTION_OVERLAYS = "connectionOverlays";
 
-export declare class LabelOverlay extends Overlay {
-    instance: JsPlumbInstance;
-    component: Component;
+export declare interface LabelOverlay extends OverlayBase {
     label: string | Function;
     labelText: string;
-    static type: string;
-    type: string;
     cachedDimensions: Size;
-    constructor(instance: JsPlumbInstance, component: Component, p: LabelOverlayOptions);
-    getLabel(): string;
-    setLabel(l: string | Function): void;
-    getDimensions(): Size;
-    updateFrom(d: any): void;
 }
+
+export declare const Labels: {
+    setLabel(overlay: LabelOverlay, l: string | Function): void;
+    getLabel(overlay: LabelOverlay): string;
+};
 
 export declare const LEFT = FaceValues.left;
 
@@ -2742,33 +2714,40 @@ export declare const NONE = "none";
 
 export declare type Orientation = [AnchorOrientationHint, AnchorOrientationHint];
 
-export declare abstract class Overlay extends EventGenerator {
-    instance: JsPlumbInstance;
-    component: Component;
+export declare interface OverlayBase {
+    type: string;
     id: string;
-    abstract type: string;
+    component: Component;
     cssClass: string;
-    visible: boolean;
-    location: number | Array<number>;
-    events: Record<string, (value: any, event?: any) => any>;
     attributes: Record<string, string>;
-    constructor(instance: JsPlumbInstance, component: Component, p: OverlayOptions);
-    setLocation(l: number | string): void;
-    shouldFireEvent(event: string, value: any, originalEvent?: Event): boolean;
-    setVisible(v: boolean): void;
-    isVisible(): boolean;
-    abstract updateFrom(d: any): void;
+    visible: boolean;
+    _listeners: Record<string, Array<Function>>;
+    location: number | Array<number>;
+    instance: JsPlumbInstance;
 }
 
 export declare const OverlayFactory: {
-    get: (instance: JsPlumbInstance, name: string, component: Component, params: any) => Overlay;
-    register: (name: string, overlay: Constructable<Overlay>) => void;
+    get(instance: JsPlumbInstance, name: string, component: Component, params: any): OverlayBase;
+    register(name: string, overlay: OverlayHandler<any>): void;
+    updateFrom(overlay: OverlayBase, d: any): void;
+    draw(overlay: OverlayBase, component: Component, currentConnectionPaintStyle: PaintStyle, absolutePosition?: PointXY): any;
 };
+
+export declare interface OverlayHandler<OptionsClass> {
+    draw(overlay: OverlayBase, component: Component, currentConnectionPaintStyle: PaintStyle, absolutePosition?: PointXY): any;
+    create(instance: JsPlumbInstance, component: Component, options: OptionsClass): OverlayBase;
+    updateFrom(overlay: OverlayBase, d: any): void;
+}
 
 export declare interface OverlayMouseEventParams {
     e: Event;
-    overlay: Overlay;
+    overlay: OverlayBase;
 }
+
+export declare const Overlays: {
+    setLocation(overlay: OverlayBase, l: number | string): void;
+    setVisible(overlay: OverlayBase, v: boolean): void;
+};
 
 /**
  * @internal
@@ -2804,24 +2783,16 @@ export declare interface PaintGeometry {
     anchorOrientation?: string;
 }
 
-export declare class PlainArrowOverlay extends ArrowOverlay {
-    instance: JsPlumbInstance;
-    static type: string;
-    type: string;
-    constructor(instance: JsPlumbInstance, component: Component, p: ArrowOverlayOptions);
+export declare interface PlainArrowOverlay extends ArrowOverlay {
 }
 
 export declare function pointAlongComponentPathFrom(connector: ConnectorBase, location: number, distance: number, absolute?: boolean): PointXY;
 
 export declare function pointOnComponentPath(connector: ConnectorBase, location: number, absolute?: boolean): PointXY;
 
-export declare class RectangleEndpoint extends EndpointRepresentation<ComputedRectangleEndpoint> {
+export declare interface RectangleEndpoint extends EndpointRepresentation<ComputedRectangleEndpoint> {
     width: number;
     height: number;
-    constructor(endpoint: Endpoint, params?: RectangleEndpointParams);
-    static type: string;
-    type: string;
-    static _getParams(ep: RectangleEndpoint): Record<string, any>;
 }
 
 export declare const RectangleEndpointHandler: EndpointHandler<RectangleEndpoint, ComputedRectangleEndpoint>;
@@ -3006,6 +2977,15 @@ export declare const SELECTOR_MANAGED_ELEMENT: string;
  */
 export declare function setGeometry(connector: ConnectorBase, g: Geometry, internal: boolean): void;
 
+/**
+ * Sets a connector that has been prepared on a Connection, removing any previous connector, and caching by type if necessary.
+ * @param connection
+ * @param connector
+ * @param doNotRepaint
+ * @param doNotChangeListenerComponent
+ * @param typeId
+ * @internal
+ */
 export declare function setPreparedConnector(connection: Connection, connector: ConnectorBase, doNotRepaint?: boolean, doNotChangeListenerComponent?: boolean, typeId?: string): void;
 
 export declare const SOURCE = "source";
@@ -3106,6 +3086,14 @@ export declare const TYPE_DESCRIPTOR_CONNECTOR = "connector";
 
 export declare const TYPE_DESCRIPTOR_ENDPOINT = "endpoint";
 
+export declare const TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION = "endpoint-representation";
+
+export declare const TYPE_ENDPOINT_BLANK = "Blank";
+
+export declare const TYPE_ENDPOINT_DOT = "Dot";
+
+export declare const TYPE_ENDPOINT_RECTANGLE = "Rectangle";
+
 export declare const TYPE_ID_CONNECTION = "_jsplumb_connection";
 
 /**
@@ -3117,6 +3105,16 @@ export declare const TYPE_ITEM_ANCHORS = "anchors";
  * @internal
  */
 export declare const TYPE_ITEM_CONNECTOR = "connector";
+
+export declare const TYPE_OVERLAY_ARROW = "Arrow";
+
+export declare const TYPE_OVERLAY_CUSTOM = "Custom";
+
+export declare const TYPE_OVERLAY_DIAMOND = "Diamond";
+
+export declare const TYPE_OVERLAY_LABEL = "Label";
+
+export declare const TYPE_OVERLAY_PLAIN_ARROW = "PlainArrow";
 
 /**
  * Base interface for type descriptors for public methods.

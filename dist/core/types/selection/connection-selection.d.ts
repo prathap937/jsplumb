@@ -1,6 +1,6 @@
 import { SelectionBase } from "./common";
-import { Connection } from "../connector/connection-impl";
 import { ConnectorSpec } from "@jsplumb/common";
+import { Connection } from '../connector/declarations';
 export declare class ConnectionSelection extends SelectionBase<Connection> {
     setDetachable(d: boolean): ConnectionSelection;
     setReattach(d: boolean): ConnectionSelection;

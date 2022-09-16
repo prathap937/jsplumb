@@ -1,5 +1,5 @@
 import { ConnectorBase, ConnectorComputeParams, PaintGeometry } from "./abstract-connector";
-import { Connection } from "./connection-impl";
+import { Connection } from "./declarations";
 import { Geometry } from "@jsplumb/common";
 /**
  * Definition of an object that can create instances of some connector type, and perform a few

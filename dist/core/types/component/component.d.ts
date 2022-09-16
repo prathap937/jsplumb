@@ -1,12 +1,12 @@
 import { Extents, PointXY } from "@jsplumb/util";
-import { Overlay } from '../overlay/overlay';
+import { OverlayBase } from '../overlay/overlay';
 import { ComponentTypeDescriptor } from '../type-descriptors';
 import { JsPlumbInstance } from "../core";
-import { Connection } from "../connector/connection-impl";
 import { Endpoint } from "../endpoint/endpoint";
 import { BeforeDropParams } from '../callbacks';
 import { LabelOverlay } from "../overlay/label-overlay";
 import { OverlaySpec, PaintStyle } from "@jsplumb/common";
+import { Connection } from '../connector/declarations';
 export declare type ComponentParameters = Record<string, any>;
 export declare function _removeTypeCssHelper<E>(component: Component, typeId: string): void;
 export declare function _updateHoverStyle<E>(component: Component): void;
@@ -58,7 +58,6 @@ export interface ComponentOptions {
     beforeDetach?: BeforeDetachInterceptor;
     beforeDrop?: BeforeDropInterceptor;
     hoverClass?: string;
-    events?: Record<string, (value: any, event: any) => any>;
     scope?: string;
     cssClass?: string;
     data?: any;
@@ -77,7 +76,7 @@ export declare type ClassAction = typeof ADD_CLASS_ACTION | typeof REMOVE_CLASS_
  * @internal
  */
 export interface Component {
-    overlays: Record<string, Overlay>;
+    overlays: Record<string, OverlayBase>;
     overlayPositions: Record<string, PointXY>;
     overlayPlacements: Record<string, Extents>;
     instance: JsPlumbInstance;
@@ -101,14 +100,9 @@ export interface Component {
     lastPaintedAt: string;
     data: Record<string, any>;
     _defaultType: ComponentTypeDescriptor;
-    events: any;
     beforeDetach: BeforeDetachInterceptor;
     beforeDrop: BeforeDropInterceptor;
 }
-/**
- * Base class for Endpoint and Connection.
- * @public
- */
 export declare function createComponentBase(instance: JsPlumbInstance, idPrefix: string, typeDescriptor: string, defaultOverlayKey: string, defaultType: Record<string, any>, defaultLabelLocation: number | [number, number], params?: ComponentOptions): Component;
 export declare const Components: {
     applyType(component: Component, t: any, params?: any): void;
@@ -169,7 +163,7 @@ export declare const Components: {
      * @param overlay
      * @internal
      */
-    addOverlay(component: Component, overlay: OverlaySpec): Overlay;
+    addOverlay(component: Component, overlay: OverlaySpec): OverlayBase;
     /**
      * Get the Overlay with the given ID. You can optionally provide a type parameter for this method in order to get
      * a typed return value (such as `LabelOverlay`, `ArrowOverlay`, etc), since some overlays have methods that
@@ -177,7 +171,7 @@ export declare const Components: {
      * @param id ID of the overlay to retrieve.
      * @public
      */
-    getOverlay<T extends Overlay>(component: Component, id: string): T;
+    getOverlay<T extends OverlayBase>(component: Component, id: string): T;
     /**
      * Hide the overlay with the given id.
      * @param id
@@ -306,10 +300,10 @@ export declare const Components: {
      * @public
      */
     mergeData(component: Component, d: any): void;
-    setAbsoluteOverlayPosition(component: Component, overlay: Overlay, xy: PointXY): void;
+    setAbsoluteOverlayPosition(component: Component, overlay: OverlayBase, xy: PointXY): void;
     /**
      * @internal
      */
-    getAbsoluteOverlayPosition(component: Component, overlay: Overlay): PointXY;
+    getAbsoluteOverlayPosition(component: Component, overlay: OverlayBase): PointXY;
 };
 //# sourceMappingURL=component.d.ts.map

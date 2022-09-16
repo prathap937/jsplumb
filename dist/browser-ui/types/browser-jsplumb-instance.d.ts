@@ -1,4 +1,4 @@
-import { JsPlumbDefaults, TypeDescriptor, JsPlumbInstance, Endpoint, Overlay, RedrawResult, LabelOverlay, Connection, Component, DeleteConnectionOptions, BehaviouralTypeDescriptor, UIGroup, ManagedElement, ConnectionDragSelector, ConnectorBase } from '@jsplumb/core';
+import { JsPlumbDefaults, TypeDescriptor, JsPlumbInstance, Endpoint, OverlayBase, RedrawResult, LabelOverlay, Connection, Component, DeleteConnectionOptions, BehaviouralTypeDescriptor, UIGroup, ManagedElement, ConnectionDragSelector, ConnectorBase } from '@jsplumb/core';
 import { PointXY, Size, BoundingBox, Extents, Grid } from "@jsplumb/util";
 import { PaintStyle } from "@jsplumb/common";
 import { ElementAttributes } from './svg-util';
@@ -65,7 +65,7 @@ export interface BrowserJsPlumbDefaults extends JsPlumbDefaults<Element> {
 export interface jsPlumbDOMInformation {
     connector?: ConnectorBase;
     endpoint?: Endpoint;
-    overlay?: Overlay;
+    overlay?: OverlayBase;
 }
 /**
  * Definition of a drag group membership - either just the id of a drag group, or the id of a drag group and whether or not
@@ -501,43 +501,43 @@ export declare class BrowserJsPlumbInstance extends JsPlumbInstance<{
      * @param o
      * @param clazz
      */
-    addOverlayClass(o: Overlay, clazz: string): void;
+    addOverlayClass(o: OverlayBase, clazz: string): void;
     /**
      * @internal
      * @param o
      * @param clazz
      */
-    removeOverlayClass(o: Overlay, clazz: string): void;
+    removeOverlayClass(o: OverlayBase, clazz: string): void;
     /**
      * @internal
      * @param o
      * @param params
      * @param extents
      */
-    _paintOverlay(o: Overlay, params: any, extents: any): void;
+    _paintOverlay(o: OverlayBase, params: any, extents: any): void;
     /**
      * Sets the visibility of some overlay.
      * @param o - Overlay to hide or show
      * @param visible - If true, make the overlay visible, if false, make the overlay invisible.
      */
-    setOverlayVisible(o: Overlay, visible: boolean): void;
+    setOverlayVisible(o: OverlayBase, visible: boolean): void;
     /**
      * @internal
      * @param o
      * @param c
      */
-    reattachOverlay(o: Overlay, c: Component): void;
+    reattachOverlay(o: OverlayBase, c: Component): void;
     /**
      * @internal
      * @param o
      * @param hover
      */
-    setOverlayHover(o: Overlay, hover: boolean): void;
+    setOverlayHover(o: OverlayBase, hover: boolean): void;
     /**
      * @internal
      * @param o
      */
-    destroyOverlay(o: Overlay): void;
+    destroyOverlay(o: OverlayBase): void;
     /**
      * @internal
      * @param o
@@ -545,7 +545,7 @@ export declare class BrowserJsPlumbInstance extends JsPlumbInstance<{
      * @param paintStyle
      * @param absolutePosition
      */
-    drawOverlay(o: Overlay, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
+    drawOverlay(o: OverlayBase, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
     /**
      * @internal
      * @param o

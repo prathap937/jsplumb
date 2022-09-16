@@ -1,5 +1,5 @@
 import { BrowserJsPlumbInstance, EventManager } from "@jsplumb/browser-ui";
-import { Connection, Endpoint, Overlay } from "@jsplumb/core";
+import { Connection, Endpoint, OverlayBase } from "@jsplumb/core";
 /**
  * Defines a set of event handlers that can be supplied to various methods that simulate mouse activity.  Using these
  * you can inject tests into various parts of the lifecycle of a given operation.
@@ -293,7 +293,7 @@ export declare class BrowserUITestSupport {
      * @param overlay
      * @public
      */
-    getOverlayCanvas(overlay: Overlay): any;
+    getOverlayCanvas(overlay: OverlayBase): any;
     /**
      * Fire an event on an connection's overlay
      * @param connection Connection to which the overlay belongs

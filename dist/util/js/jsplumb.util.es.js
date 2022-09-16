@@ -783,6 +783,24 @@ var OptimisticEventGenerator = function (_EventGenerator) {
   }]);
   return OptimisticEventGenerator;
 }(EventGenerator);
+var Events = {
+  fire: function fire(source, eventName, payload, originalEvent) {
+    var h = source._listeners[eventName];
+    if (h != null) {
+      for (var i = 0; i < h.length; i++) {
+        try {
+          h[i](payload, originalEvent);
+        } catch (e) {
+          log("Exception thrown in listener for ".concat(eventName, " ") + e);
+        }
+      }
+    }
+  },
+  subscribe: function subscribe(source, eventName, handler) {
+    source._listeners[eventName] = source._listeners[eventName] || [];
+    source._listeners[eventName].push(handler);
+  }
+};
 
 var segmentMultipliers = [null, [1, -1], [1, 1], [-1, 1], [-1, -1]];
 var inverseSegmentMultipliers = [null, [-1, -1], [-1, 1], [1, 1], [1, -1]];
@@ -966,4 +984,4 @@ function snapToGrid(pos, grid, thresholdX, thresholdY) {
   };
 }
 
-export { EventGenerator, OptimisticEventGenerator, TWO_PI, add, addToDictionary, addToList, addWithFunction, arraysEqual, clone, each, encloses, extend, fastTrim, filterList, filterNull, findAllWithFunction, findWithFunction, fixPrecision, forEach, fromArray, functionChain, getAllWithFunction, getFromSetWithFunction, getWithFunction, getsert, gradient, insertSorted, intersects, isAssignableFrom, isBoolean, isDate, isEmpty, isFunction, isNamedFunction, isNumber, isObject, isString, lineIntersection, lineLength, lineRectangleIntersection, log, logEnabled, map, merge, normal, objectsEqual, perpendicularLineTo, pointOnLine, populate, quadrant, remove, removeWithFunction, replace, rotateAnchorOrientation, rotatePoint, setToArray, sgn, snapToGrid, subtract, suggest, theta, uuid, wrap };
+export { EventGenerator, Events, OptimisticEventGenerator, TWO_PI, add, addToDictionary, addToList, addWithFunction, arraysEqual, clone, each, encloses, extend, fastTrim, filterList, filterNull, findAllWithFunction, findWithFunction, fixPrecision, forEach, fromArray, functionChain, getAllWithFunction, getFromSetWithFunction, getWithFunction, getsert, gradient, insertSorted, intersects, isAssignableFrom, isBoolean, isDate, isEmpty, isFunction, isNamedFunction, isNumber, isObject, isString, lineIntersection, lineLength, lineRectangleIntersection, log, logEnabled, map, merge, normal, objectsEqual, perpendicularLineTo, pointOnLine, populate, quadrant, remove, removeWithFunction, replace, rotateAnchorOrientation, rotatePoint, setToArray, sgn, snapToGrid, subtract, suggest, theta, uuid, wrap };

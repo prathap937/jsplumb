@@ -1,4 +1,4 @@
-import { Connection } from "../connector/connection-impl";
+import { Connection } from '../connector/declarations';
 import { EndpointRepresentation } from './endpoints';
 import { JsPlumbInstance } from '../core';
 import { Component } from "../component/component";

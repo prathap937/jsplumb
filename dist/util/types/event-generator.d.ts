@@ -74,4 +74,11 @@ export declare abstract class EventGenerator {
 export declare class OptimisticEventGenerator extends EventGenerator {
     shouldFireEvent(event: string, value: any, originalEvent?: Event): boolean;
 }
+export interface EventSource {
+    _listeners: Record<string, Array<Function>>;
+}
+export declare const Events: {
+    fire(source: EventSource, eventName: string, payload: any, originalEvent?: Event): void;
+    subscribe(source: EventSource, eventName: string, handler: Function): void;
+};
 //# sourceMappingURL=event-generator.d.ts.map

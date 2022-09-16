@@ -789,6 +789,24 @@
       }]);
       return OptimisticEventGenerator;
     }(EventGenerator);
+    var Events = {
+      fire: function fire(source, eventName, payload, originalEvent) {
+        var h = source._listeners[eventName];
+        if (h != null) {
+          for (var i = 0; i < h.length; i++) {
+            try {
+              h[i](payload, originalEvent);
+            } catch (e) {
+              log("Exception thrown in listener for ".concat(eventName, " ") + e);
+            }
+          }
+        }
+      },
+      subscribe: function subscribe(source, eventName, handler) {
+        source._listeners[eventName] = source._listeners[eventName] || [];
+        source._listeners[eventName].push(handler);
+      }
+    };
 
     var segmentMultipliers = [null, [1, -1], [1, 1], [-1, 1], [-1, -1]];
     var inverseSegmentMultipliers = [null, [-1, -1], [-1, 1], [1, 1], [1, -1]];
@@ -973,6 +991,7 @@
     }
 
     exports.EventGenerator = EventGenerator;
+    exports.Events = Events;
     exports.OptimisticEventGenerator = OptimisticEventGenerator;
     exports.TWO_PI = TWO_PI;
     exports.add = add;

@@ -1,21 +1,14 @@
-import { Overlay } from "./overlay";
+import { OverlayBase } from "./overlay";
 import { Size } from "@jsplumb/util";
-import { Component } from "../component/component";
-import { JsPlumbInstance } from "../core";
-import { LabelOverlayOptions } from "@jsplumb/common";
-export declare class LabelOverlay extends Overlay {
-    instance: JsPlumbInstance;
-    component: Component;
+export declare const TYPE_OVERLAY_LABEL = "Label";
+export interface LabelOverlay extends OverlayBase {
     label: string | Function;
     labelText: string;
-    static type: string;
-    type: string;
     cachedDimensions: Size;
-    constructor(instance: JsPlumbInstance, component: Component, p: LabelOverlayOptions);
-    getLabel(): string;
-    setLabel(l: string | Function): void;
-    getDimensions(): Size;
-    updateFrom(d: any): void;
 }
-export declare function isLabelOverlay(o: Overlay): o is LabelOverlay;
+export declare function isLabelOverlay(o: OverlayBase): o is LabelOverlay;
+export declare const Labels: {
+    setLabel(overlay: LabelOverlay, l: string | Function): void;
+    getLabel(overlay: LabelOverlay): string;
+};
 //# sourceMappingURL=label-overlay.d.ts.map

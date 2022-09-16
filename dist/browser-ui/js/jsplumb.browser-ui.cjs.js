@@ -2982,7 +2982,7 @@ function _makeFloatingEndpoint(ep, endpoint, referenceCanvas, sourceElement, sou
     cssClass: [core.CLASS_ENDPOINT_FLOATING, ep.cssClass].join(" ")
   };
   if (endpoint != null) {
-    if (util.isAssignableFrom(endpoint, core.EndpointRepresentation)) {
+    if (core.isEndpointRepresentation(endpoint)) {
       p.existingEndpoint = endpoint;
     } else {
       p.endpoint = endpoint;
@@ -3587,11 +3587,11 @@ var EndpointDragHandler = function () {
                 connection: this.jpc
               });
               if (bb) {
-                newDropTarget.endpoint.representation.addClass(this.instance.endpointDropAllowedClass);
-                newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropForbiddenClass);
+                core.Endpoints.addClass(newDropTarget.endpoint, this.instance.endpointDropAllowedClass);
+                core.Endpoints.removeClass(newDropTarget.endpoint, this.instance.endpointDropForbiddenClass);
               } else {
-                newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropAllowedClass);
-                newDropTarget.endpoint.representation.addClass(this.instance.endpointDropForbiddenClass);
+                core.Endpoints.addClass(newDropTarget.endpoint, this.instance.endpointDropForbiddenClass);
+                core.Endpoints.removeClass(newDropTarget.endpoint, this.instance.endpointDropAllowedClass);
               }
               this.floatingAnchor.over(newDropTarget.endpoint);
               this.instance._paintConnection(this.jpc);
@@ -3660,6 +3660,11 @@ var EndpointDragHandler = function () {
               if (!dropEndpoint.enabled) {
                 this._reattachOrDiscard(p.e);
               } else if (core.Endpoints.isFull(dropEndpoint)) {
+                this.instance.fire(core.EVENT_MAX_CONNECTIONS, {
+                  endpoint: this,
+                  connection: this.jpc,
+                  maxConnections: this.instance.defaults.maxConnections
+                }, originalEvent);
                 this._reattachOrDiscard(p.e);
               } else {
                 if (idx === 0) {
@@ -3968,7 +3973,7 @@ var HTMLElementOverlay = function () {
         o.canvas.style.msTransform = ts;
         o.canvas.style.oTransform = ts;
         o.canvas.style.transform = ts;
-        if (!o.isVisible()) {
+        if (!o.visible) {
           o.canvas.style.display = core.NONE;
         }
         o.canvas.jtk = {
@@ -4055,21 +4060,6 @@ function destroySVGOverlay(o, force) {
   delete _o.path;
   delete _o.bgPath;
 }
-(function (_Overlay) {
-  _inherits(SVGElementOverlay, _Overlay);
-  var _super = _createSuper(SVGElementOverlay);
-  function SVGElementOverlay() {
-    var _this;
-    _classCallCheck(this, SVGElementOverlay);
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-    _this = _super.call.apply(_super, [this].concat(args));
-    _defineProperty(_assertThisInitialized(_this), "path", void 0);
-    return _this;
-  }
-  return SVGElementOverlay;
-})(core.Overlay);
 
 var SvgComponent = function () {
   function SvgComponent() {
@@ -4430,10 +4420,10 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
       var mappedEvent = compoundEvent(stem, event)
       ;
       e._jsPlumbOverlay = overlay;
-      overlay.fire(event, {
+      util.Events.fire(overlay, event, {
         e: e,
         overlay: overlay
-      });
+      }, e);
       this.fire(mappedEvent, overlay.component, e);
     }
   }, {
@@ -5183,20 +5173,20 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
               x: absolutePosition.x,
               y: absolutePosition.y
             };
-          } else if (component instanceof core.EndpointRepresentation) {
+          } else if (core.Endpoints.isEndpoint(component)) {
             var locToUse = Array.isArray(o.location) ? o.location : [o.location, o.location];
             cxy = {
-              x: locToUse[0] * component.w,
-              y: locToUse[1] * component.h
+              x: locToUse[0] * component.representation.w,
+              y: locToUse[1] * component.representation.h
             };
-          } else {
+          } else if (core.Connections.isConnection(component)) {
             var loc = o.location,
                 absolute = false;
             if (util.isString(o.location) || o.location < 0 || o.location > 1) {
               loc = parseInt("" + o.location, 10);
               absolute = true;
             }
-            cxy = core.pointOnComponentPath(component, loc, absolute);
+            cxy = core.pointOnComponentPath(component.connector, loc, absolute);
           }
           var minx = cxy.x - td.w / 2,
               miny = cxy.y - td.h / 2;
@@ -5222,7 +5212,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
           };
         }
       } else if (core.isArrowOverlay(o) || core.isDiamondOverlay(o) || core.isPlainArrowOverlay(o)) {
-        return o.draw(component, paintStyle, absolutePosition);
+        return core.OverlayFactory.draw(o, component, paintStyle, absolutePosition);
       } else {
         throw "Could not draw overlay of type [" + o.type + "]";
       }
@@ -5492,7 +5482,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
 
 var CIRCLE = "circle";
 var register$2 = function register() {
-  registerEndpointRenderer(core.DotEndpoint.type, {
+  registerEndpointRenderer(core.TYPE_ENDPOINT_DOT, {
     makeNode: function makeNode(ep, style) {
       return _node(CIRCLE, {
         "cx": ep.w / 2,
@@ -5512,7 +5502,7 @@ var register$2 = function register() {
 
 var RECT = "rect";
 var register$1 = function register() {
-  registerEndpointRenderer(core.RectangleEndpoint.type, {
+  registerEndpointRenderer(core.TYPE_ENDPOINT_RECTANGLE, {
     makeNode: function makeNode(ep, style) {
       return _node(RECT, {
         "width": ep.w,
@@ -5535,7 +5525,7 @@ var BLANK_ATTRIBUTES = {
   "stroke": "transparent"
 };
 var register = function register() {
-  registerEndpointRenderer(core.BlankEndpoint.type, {
+  registerEndpointRenderer(core.TYPE_ENDPOINT_BLANK, {
     makeNode: function makeNode(ep, style) {
       return _node("rect", BLANK_ATTRIBUTES);
     },

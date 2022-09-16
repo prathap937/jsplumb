@@ -169,6 +169,16 @@ export declare abstract class EventGenerator {
     silently(fn: Function): void;
 }
 
+export declare const Events: {
+    fire(source: EventSource_2, eventName: string, payload: any, originalEvent?: Event): void;
+    subscribe(source: EventSource_2, eventName: string, handler: Function): void;
+};
+
+declare interface EventSource_2 {
+    _listeners: Record<string, Array<Function>>;
+}
+export { EventSource_2 as EventSource }
+
 /**
  * Equivalent of Object.assign, which IE11 does not support.
  * @param o1

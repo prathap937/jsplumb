@@ -1,5 +1,5 @@
 import { PointXY, Extents } from "@jsplumb/util";
-import { Connection } from './connection-impl';
+import { Connection } from './declarations';
 import { Orientation } from '../factory/anchor-record-factory';
 import { Endpoint } from '../endpoint/endpoint';
 import { ViewportElement } from "../viewport";

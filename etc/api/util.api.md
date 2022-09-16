@@ -68,6 +68,19 @@ export abstract class EventGenerator {
     unbind(eventOrListener?: string | Function, listener?: Function): EventGenerator;
 }
 
+// @public (undocumented)
+export const Events: {
+    fire(source: EventSource_2, eventName: string, payload: any, originalEvent?: Event): void;
+    subscribe(source: EventSource_2, eventName: string, handler: Function): void;
+};
+
+// @public (undocumented)
+interface EventSource_2 {
+    // (undocumented)
+    _listeners: Record<string, Array<Function>>;
+}
+export { EventSource_2 as EventSource }
+
 // @public
 export function extend<T>(o1: T, o2: T, keys?: string[]): T;
 

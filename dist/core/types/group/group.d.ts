@@ -1,5 +1,5 @@
 import { JsPlumbInstance } from "../core";
-import { Connection } from '../connector/connection-impl';
+import { Connection } from '../connector/declarations';
 import { GroupManager } from "./group-manager";
 import { PointXY } from '@jsplumb/util';
 import { EndpointSpec, AnchorSpec } from "@jsplumb/common";

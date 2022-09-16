@@ -3,13 +3,12 @@ import { LightweightAnchor, Orientation } from "../factory/anchor-record-factory
 import { Endpoint } from "./endpoint";
 import { Extents } from '@jsplumb/util';
 import { AnchorPlacement, AnchorSpec, EndpointRepresentationParams, EndpointSpec } from "@jsplumb/common";
-import { Connection } from "@jsplumb/core";
+import { Connection } from '../connector/declarations';
+export declare const TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION = "endpoint-representation";
 /**
- * Superclass for all types of Endpoint. This class is renderer
- * agnostic, as are any subclasses of it.
+ * Base interface for all types of Endpoint representation.
  */
-export declare abstract class EndpointRepresentation<C> {
-    endpoint: Endpoint;
+export interface EndpointRepresentation<C> {
     typeId: string;
     x: number;
     y: number;
@@ -20,12 +19,12 @@ export declare abstract class EndpointRepresentation<C> {
     classes: Array<string>;
     instance: JsPlumbInstance;
     canvas: any;
-    abstract type: string;
-    protected constructor(endpoint: Endpoint, params?: EndpointRepresentationParams);
-    addClass(c: string): void;
-    removeClass(c: string): void;
-    compute(anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any): void;
+    type: string;
+    endpoint: Endpoint;
+    typeDescriptor: typeof TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION;
 }
+export declare function isEndpointRepresentation(ep: any): ep is EndpointRepresentation<any>;
+export declare function createBaseRepresentation(type: string, endpoint: Endpoint, params?: EndpointRepresentationParams): EndpointRepresentation<any>;
 export declare const TYPE_DESCRIPTOR_ENDPOINT = "endpoint";
 export declare const Endpoints: {
     applyType(endpoint: Endpoint, t: any, typeMap: any): void;
@@ -67,5 +66,6 @@ export declare const Endpoints: {
     prepareEndpoint<C>(endpoint: Endpoint, ep: EndpointSpec | EndpointRepresentation<C>, typeId?: string): EndpointRepresentation<C>;
     setEndpoint<C_1>(endpoint: Endpoint, ep: EndpointSpec | EndpointRepresentation<C_1>): void;
     setPreparedEndpoint<C_2>(endpoint: Endpoint, ep: EndpointRepresentation<C_2>): void;
+    compute(ep: EndpointRepresentation<any>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any): void;
 };
 //# sourceMappingURL=endpoints.d.ts.map

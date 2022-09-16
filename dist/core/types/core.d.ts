@@ -1,5 +1,5 @@
 import { JsPlumbDefaults } from "./defaults";
-import { Connection, ConnectionOptions } from "./connector/connection-impl";
+import { Connection, ConnectionOptions } from './connector/declarations';
 import { Endpoint } from "./endpoint/endpoint";
 import { RedrawResult } from "./router/router";
 import { RotatedPointXY, Rotations, PointXY, Size, Extents, EventGenerator } from "@jsplumb/util";
@@ -15,7 +15,7 @@ import { EndpointSelection } from "./selection/endpoint-selection";
 import { ConnectionSelection } from "./selection/connection-selection";
 import { Viewport, ViewportElement } from "./viewport";
 import { Component } from './component/component';
-import { Overlay } from './overlay/overlay';
+import { OverlayBase } from './overlay/overlay';
 import { LabelOverlay } from './overlay/label-overlay';
 import { ConnectorBase } from './connector/abstract-connector';
 import { PaintStyle, AnchorPlacement, AnchorSpec, EndpointSpec, OverlaySpec } from '@jsplumb/common';
@@ -741,15 +741,15 @@ export declare abstract class JsPlumbInstance<T extends {
      * @param params
      * @param extents
      */
-    abstract _paintOverlay(o: Overlay, params: any, extents: any): void;
-    abstract addOverlayClass(o: Overlay, clazz: string): void;
-    abstract removeOverlayClass(o: Overlay, clazz: string): void;
-    abstract setOverlayVisible(o: Overlay, visible: boolean): void;
-    abstract destroyOverlay(o: Overlay): void;
+    abstract _paintOverlay(o: OverlayBase, params: any, extents: any): void;
+    abstract addOverlayClass(o: OverlayBase, clazz: string): void;
+    abstract removeOverlayClass(o: OverlayBase, clazz: string): void;
+    abstract setOverlayVisible(o: OverlayBase, visible: boolean): void;
+    abstract destroyOverlay(o: OverlayBase): void;
     abstract updateLabel(o: LabelOverlay): void;
-    abstract drawOverlay(overlay: Overlay, component: any, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
-    abstract reattachOverlay(o: Overlay, c: Component): void;
-    abstract setOverlayHover(o: Overlay, hover: boolean): void;
+    abstract drawOverlay(overlay: OverlayBase, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
+    abstract reattachOverlay(o: OverlayBase, c: Component): void;
+    abstract setOverlayHover(o: OverlayBase, hover: boolean): void;
     abstract setHover(component: Component, hover: boolean): void;
     /**
      * @internal

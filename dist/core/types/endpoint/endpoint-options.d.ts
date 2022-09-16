@@ -1,4 +1,4 @@
-import { Connection } from "../connector/connection-impl";
+import { Connection } from '../connector/declarations';
 import { EndpointRepresentation } from "./endpoints";
 import { LightweightAnchor } from "../factory/anchor-record-factory";
 import { PaintStyle, OverlaySpec, AnchorSpec, EndpointSpec, ConnectorSpec } from "@jsplumb/common";
@@ -106,12 +106,6 @@ export interface EndpointOptions<E = any> {
      * full, in a practical sense this means whether or not existing connections can be dragged off an endpoint that is full. Defaults to true.
      */
     dragAllowedWhenFull?: boolean;
-    /**
-     * Optional callback to fire when the endpoint transitions to the state that it is now full.
-     * @param value
-     * @param event
-     */
-    onMaxConnections?: (value: any, event?: any) => any;
     /**
      * Optional cost to set for connections that have this endpoint as their source. Defaults to 1.
      */

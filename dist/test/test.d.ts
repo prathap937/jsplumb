@@ -9,7 +9,7 @@ import { BrowserJsPlumbInstance } from '@jsplumb/browser-ui';
 import { Connection } from '@jsplumb/core';
 import { Endpoint } from '@jsplumb/core';
 import { EventManager } from '@jsplumb/browser-ui';
-import { Overlay } from '@jsplumb/core';
+import { OverlayBase } from '@jsplumb/core';
 
 export declare class BrowserUITestSupport {
     private _jsPlumb;
@@ -280,7 +280,7 @@ export declare class BrowserUITestSupport {
      * @param overlay
      * @public
      */
-    getOverlayCanvas(overlay: Overlay): any;
+    getOverlayCanvas(overlay: OverlayBase): any;
     /**
      * Fire an event on an connection's overlay
      * @param connection Connection to which the overlay belongs

@@ -29,6 +29,10 @@ jsPlumb.Endpoints.addClass(someEndpoint, "some-class")
 
 - `getOverlay` method on Endpoint/Connection has been replaced with direct access to `overlays` record.
 - `getUuid()` method on Endpoint changed to direct access to `uuid` member 
+- if you drop a connection on an endpoint that is full, it no longer fires a 'maxConnections' event - instead, the
+associated jsPlumb instance fires the event.
+- the `onMaxConnections` parameter is not supported in an Endpoint constructor. bind to the event on the jsPlumb
+instance instead.
 
 ## 5.11.3
 

@@ -19,7 +19,7 @@ import { jsPlumbElement } from '@jsplumb/core';
 import { JsPlumbInstance } from '@jsplumb/core';
 import { LabelOverlay } from '@jsplumb/core';
 import { ManagedElement } from '@jsplumb/core';
-import { Overlay } from '@jsplumb/core';
+import { OverlayBase } from '@jsplumb/core';
 import { PaintStyle } from '@jsplumb/common';
 import { PointXY } from '@jsplumb/util';
 import { RedrawResult } from '@jsplumb/core';
@@ -66,7 +66,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     // @internal (undocumented)
     addEndpointClass(ep: Endpoint, c: string): void;
     // @internal (undocumented)
-    addOverlayClass(o: Overlay, clazz: string): void;
+    addOverlayClass(o: OverlayBase, clazz: string): void;
     addSourceSelector(selector: string, params?: BehaviouralTypeDescriptor, exclude?: boolean): ConnectionDragSelector;
     addToDragGroup(spec: DragGroupSpec, ...els: Array<Element>): void;
     addToDragSelection(...el: Array<Element>): void;
@@ -111,7 +111,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     // @internal (undocumented)
     destroyEndpoint(ep: Endpoint): void;
     // @internal (undocumented)
-    destroyOverlay(o: Overlay): void;
+    destroyOverlay(o: OverlayBase): void;
     // (undocumented)
     draggingClass: string;
     // (undocumented)
@@ -119,7 +119,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     // (undocumented)
     dragSelectClass: string;
     // @internal (undocumented)
-    drawOverlay(o: Overlay, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
+    drawOverlay(o: OverlayBase, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
     // (undocumented)
     _elementClick: Function;
     // (undocumented)
@@ -206,9 +206,9 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     // @internal (undocumented)
     paintConnector(connector: ConnectorBase, paintStyle: PaintStyle, extents?: Extents): void;
     // @internal (undocumented)
-    _paintOverlay(o: Overlay, params: any, extents: any): void;
+    _paintOverlay(o: OverlayBase, params: any, extents: any): void;
     // @internal (undocumented)
-    reattachOverlay(o: Overlay, c: Component): void;
+    reattachOverlay(o: OverlayBase, c: Component): void;
     removeAttribute(el: Element, attName: string): void;
     removeClass(el: Element | NodeListOf<Element>, clazz: string): void;
     // @internal (undocumented)
@@ -221,7 +221,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     removeFromDragGroup(...els: Array<Element>): void;
     removeFromDragSelection(...el: Array<Element>): void;
     // @internal (undocumented)
-    removeOverlayClass(o: Overlay, clazz: string): void;
+    removeOverlayClass(o: OverlayBase, clazz: string): void;
     removeSourceSelector(selector: ConnectionDragSelector): void;
     // @internal (undocumented)
     renderEndpoint(ep: Endpoint, paintStyle: PaintStyle): void;
@@ -247,8 +247,8 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{
     // @internal (undocumented)
     setHover(component: Component, hover: boolean): void;
     // @internal (undocumented)
-    setOverlayHover(o: Overlay, hover: boolean): void;
-    setOverlayVisible(o: Overlay, visible: boolean): void;
+    setOverlayHover(o: OverlayBase, hover: boolean): void;
+    setOverlayVisible(o: OverlayBase, visible: boolean): void;
     // @internal
     setPosition(el: Element, p: PointXY): void;
     // (undocumented)
@@ -1085,7 +1085,7 @@ export interface jsPlumbDOMInformation {
     // (undocumented)
     endpoint?: Endpoint;
     // (undocumented)
-    overlay?: Overlay;
+    overlay?: OverlayBase;
 }
 
 // @public (undocumented)

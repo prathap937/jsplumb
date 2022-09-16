@@ -8,7 +8,7 @@ import { BrowserJsPlumbInstance } from '@jsplumb/browser-ui';
 import { Connection } from '@jsplumb/core';
 import { Endpoint } from '@jsplumb/core';
 import { EventManager } from '@jsplumb/browser-ui';
-import { Overlay } from '@jsplumb/core';
+import { OverlayBase } from '@jsplumb/core';
 
 // @public (undocumented)
 export class BrowserUITestSupport {
@@ -63,7 +63,7 @@ export class BrowserUITestSupport {
         w: string;
         h: string;
     };
-    getOverlayCanvas(overlay: Overlay): any;
+    getOverlayCanvas(overlay: OverlayBase): any;
     head(obj: any): any;
     length(obj: any): number;
     makeContent(s: string): ChildNode;

@@ -1,13 +1,7 @@
 import { ArrowOverlay } from "./arrow-overlay";
-import { JsPlumbInstance } from "../core";
-import { Component } from '../component/component';
-import { ArrowOverlayOptions } from "@jsplumb/common";
-import { Overlay } from "./overlay";
-export declare class PlainArrowOverlay extends ArrowOverlay {
-    instance: JsPlumbInstance;
-    static type: string;
-    type: string;
-    constructor(instance: JsPlumbInstance, component: Component, p: ArrowOverlayOptions);
+import { OverlayBase } from "./overlay";
+export declare const TYPE_OVERLAY_PLAIN_ARROW = "PlainArrow";
+export interface PlainArrowOverlay extends ArrowOverlay {
 }
-export declare function isPlainArrowOverlay(o: Overlay): o is PlainArrowOverlay;
+export declare function isPlainArrowOverlay(o: OverlayBase): o is PlainArrowOverlay;
 //# sourceMappingURL=plain-arrow-overlay.d.ts.map

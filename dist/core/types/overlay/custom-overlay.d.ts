@@ -1,21 +1,15 @@
-import { Overlay } from "./overlay";
-import { JsPlumbInstance } from "../core";
+import { OverlayBase } from "./overlay";
 import { Component } from '../component/component';
 import { OverlayOptions } from "@jsplumb/common";
+export declare const TYPE_OVERLAY_CUSTOM = "Custom";
 /**
  * @public
  */
 export interface CustomOverlayOptions extends OverlayOptions {
     create: (c: Component) => any;
 }
-export declare class CustomOverlay extends Overlay {
-    instance: JsPlumbInstance;
-    component: Component;
+export interface CustomOverlay extends OverlayBase {
     create: (c: Component) => any;
-    constructor(instance: JsPlumbInstance, component: Component, p: CustomOverlayOptions);
-    static type: string;
-    type: string;
-    updateFrom(d: any): void;
 }
-export declare function isCustomOverlay(o: Overlay): o is CustomOverlay;
+export declare function isCustomOverlay(o: OverlayBase): o is CustomOverlay;
 //# sourceMappingURL=custom-overlay.d.ts.map

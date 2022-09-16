@@ -1,8 +1,7 @@
 import { EndpointRepresentation } from "../endpoint/endpoints";
 import { Endpoint } from "../endpoint/endpoint";
 import { Orientation } from "../factory/anchor-record-factory";
-import { Constructable } from "@jsplumb/util";
-import { AnchorPlacement } from "@jsplumb/common";
+import { AnchorPlacement, EndpointRepresentationParams } from "@jsplumb/common";
 export declare type EndpointComputeFunction<T> = (endpoint: EndpointRepresentation<T>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any) => T;
 export declare const EndpointFactory: {
     get: (ep: Endpoint, name: string, params: any) => EndpointRepresentation<any>;
@@ -14,6 +13,6 @@ export interface EndpointHandler<EndpointClass, T> {
     type: string;
     compute: EndpointComputeFunction<T>;
     getParams(endpoint: EndpointClass): Record<string, any>;
-    cls: Constructable<EndpointRepresentation<T>>;
+    create(endpoint: Endpoint, params?: EndpointRepresentationParams): EndpointClass;
 }
 //# sourceMappingURL=endpoint-factory.d.ts.map

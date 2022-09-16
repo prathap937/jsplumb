@@ -1,5 +1,5 @@
 import { Endpoint } from "./endpoint/endpoint";
-import { Connection } from "./connector/connection-impl";
+import { Connection } from "./connector/declarations";
 /**
  * Definition of the parameters passed to a listener for the `connection` event.
  * @public

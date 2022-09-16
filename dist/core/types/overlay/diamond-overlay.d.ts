@@ -1,13 +1,7 @@
 import { ArrowOverlay } from "./arrow-overlay";
-import { JsPlumbInstance } from "../core";
-import { Component } from '../component/component';
-import { Overlay } from "./overlay";
-import { ArrowOverlayOptions } from "@jsplumb/common";
-export declare class DiamondOverlay extends ArrowOverlay {
-    instance: JsPlumbInstance;
-    static type: string;
-    type: string;
-    constructor(instance: JsPlumbInstance, component: Component, p: ArrowOverlayOptions);
+import { OverlayBase } from "./overlay";
+export declare const TYPE_OVERLAY_DIAMOND = "Diamond";
+export interface DiamondOverlay extends ArrowOverlay {
 }
-export declare function isDiamondOverlay(o: Overlay): o is DiamondOverlay;
+export declare function isDiamondOverlay(o: OverlayBase): o is DiamondOverlay;
 //# sourceMappingURL=diamond-overlay.d.ts.map

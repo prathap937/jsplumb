@@ -1,5 +1,5 @@
 import { PointXY, Rotations, Size } from "@jsplumb/util";
-import { Connection } from "../connector/connection-impl";
+import { Connection } from '../connector/declarations';
 import { Endpoint } from "../endpoint/endpoint";
 import { JsPlumbInstance } from "../core";
 import { AnchorSpec, PerimeterAnchorShapes } from "@jsplumb/common";

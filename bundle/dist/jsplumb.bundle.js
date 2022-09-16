@@ -786,6 +786,24 @@ var jsPlumbBrowserUI = (function (exports) {
     }]);
     return OptimisticEventGenerator;
   }(EventGenerator);
+  var Events = {
+    fire: function fire(source, eventName, payload, originalEvent) {
+      var h = source._listeners[eventName];
+      if (h != null) {
+        for (var i = 0; i < h.length; i++) {
+          try {
+            h[i](payload, originalEvent);
+          } catch (e) {
+            log("Exception thrown in listener for ".concat(eventName, " ") + e);
+          }
+        }
+      }
+    },
+    subscribe: function subscribe(source, eventName, handler) {
+      source._listeners[eventName] = source._listeners[eventName] || [];
+      source._listeners[eventName].push(handler);
+    }
+  };
 
   var segmentMultipliers = [null, [1, -1], [1, 1], [-1, 1], [-1, -1]];
   var inverseSegmentMultipliers = [null, [-1, -1], [-1, 1], [1, 1], [1, -1]];
@@ -1047,6 +1065,122 @@ var jsPlumbBrowserUI = (function (exports) {
   var FALSE$1 = "false";
   var WILDCARD = "*";
 
+  var endpointComputers = {};
+  var handlers = {};
+  var EndpointFactory = {
+    get: function get(ep, name, params) {
+      var e = handlers[name];
+      if (!e) {
+        throw {
+          message: "jsPlumb: unknown endpoint type '" + name + "'"
+        };
+      } else {
+        return e.create(ep, params);
+      }
+    },
+    clone: function clone(epr) {
+      var handler = handlers[epr.type];
+      return EndpointFactory.get(epr.endpoint, epr.type, handler.getParams(epr));
+    },
+    compute: function compute(endpoint, anchorPoint, orientation, endpointStyle) {
+      var c = endpointComputers[endpoint.type];
+      if (c != null) {
+        return c(endpoint, anchorPoint, orientation, endpointStyle);
+      } else {
+        log("jsPlumb: cannot find endpoint calculator for endpoint of type ", endpoint.type);
+      }
+    },
+    registerHandler: function registerHandler(eph) {
+      handlers[eph.type] = eph;
+      endpointComputers[eph.type] = eph.compute;
+    }
+  };
+
+  function cls() {
+    for (var _len = arguments.length, className = new Array(_len), _key = 0; _key < _len; _key++) {
+      className[_key] = arguments[_key];
+    }
+    return className.map(function (cn) {
+      return "." + cn;
+    }).join(",");
+  }
+  function classList() {
+    for (var _len2 = arguments.length, className = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      className[_key2] = arguments[_key2];
+    }
+    return className.join(" ");
+  }
+  function att() {
+    for (var _len3 = arguments.length, attName = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      attName[_key3] = arguments[_key3];
+    }
+    return attName.map(function (an) {
+      return "[" + an + "]";
+    }).join(",");
+  }
+  var SOURCE = "source";
+  var TARGET = "target";
+  var BLOCK = "block";
+  var NONE = "none";
+  var SOURCE_INDEX = 0;
+  var TARGET_INDEX = 1;
+  var ABSOLUTE = "absolute";
+  var FIXED = "fixed";
+  var STATIC = "static";
+  var ATTRIBUTE_GROUP = "data-jtk-group";
+  var ATTRIBUTE_MANAGED = "data-jtk-managed";
+  var ATTRIBUTE_NOT_DRAGGABLE = "data-jtk-not-draggable";
+  var ATTRIBUTE_TABINDEX = "tabindex";
+  var ATTRIBUTE_SCOPE = "data-jtk-scope";
+  var ATTRIBUTE_SCOPE_PREFIX = ATTRIBUTE_SCOPE + "-";
+  var CHECK_CONDITION = "checkCondition";
+  var CHECK_DROP_ALLOWED = "checkDropAllowed";
+  var CLASS_CONNECTOR = "jtk-connector";
+  var CLASS_CONNECTOR_OUTLINE = "jtk-connector-outline";
+  var CLASS_CONNECTED = "jtk-connected";
+  var CLASS_ENDPOINT = "jtk-endpoint";
+  var CLASS_ENDPOINT_CONNECTED = "jtk-endpoint-connected";
+  var CLASS_ENDPOINT_FULL = "jtk-endpoint-full";
+  var CLASS_ENDPOINT_FLOATING = "jtk-floating-endpoint";
+  var CLASS_ENDPOINT_DROP_ALLOWED = "jtk-endpoint-drop-allowed";
+  var CLASS_ENDPOINT_DROP_FORBIDDEN = "jtk-endpoint-drop-forbidden";
+  var CLASS_ENDPOINT_ANCHOR_PREFIX = "jtk-endpoint-anchor";
+  var CLASS_GROUP_COLLAPSED = "jtk-group-collapsed";
+  var CLASS_GROUP_EXPANDED = "jtk-group-expanded";
+  var CLASS_OVERLAY = "jtk-overlay";
+  var EVENT_ANCHOR_CHANGED = "anchor:changed";
+  var EVENT_CONNECTION = "connection";
+  var EVENT_INTERNAL_CONNECTION = "internal.connection";
+  var EVENT_CONNECTION_DETACHED = "connection:detach";
+  var EVENT_CONNECTION_MOVED = "connection:move";
+  var EVENT_CONTAINER_CHANGE = "container:change";
+  var EVENT_ENDPOINT_REPLACED = "endpoint:replaced";
+  var EVENT_INTERNAL_ENDPOINT_UNREGISTERED = "internal.endpoint:unregistered";
+  var EVENT_INTERNAL_CONNECTION_DETACHED = "internal.connection:detached";
+  var EVENT_MANAGE_ELEMENT = "element:manage";
+  var EVENT_GROUP_ADDED = "group:added";
+  var EVENT_GROUP_COLLAPSE = "group:collapse";
+  var EVENT_GROUP_EXPAND = "group:expand";
+  var EVENT_GROUP_MEMBER_ADDED = "group:member:added";
+  var EVENT_GROUP_MEMBER_REMOVED = "group:member:removed";
+  var EVENT_GROUP_REMOVED = "group:removed";
+  var EVENT_MAX_CONNECTIONS = "maxConnections";
+  var EVENT_NESTED_GROUP_ADDED = "group:nested:added";
+  var EVENT_NESTED_GROUP_REMOVED = "group:nested:removed";
+  var EVENT_UNMANAGE_ELEMENT = "element:unmanage";
+  var EVENT_ZOOM = "zoom";
+  var IS_DETACH_ALLOWED = "isDetachAllowed";
+  var INTERCEPT_BEFORE_DRAG = "beforeDrag";
+  var INTERCEPT_BEFORE_DROP = "beforeDrop";
+  var INTERCEPT_BEFORE_DETACH = "beforeDetach";
+  var INTERCEPT_BEFORE_START_DETACH = "beforeStartDetach";
+  var SELECTOR_MANAGED_ELEMENT = att(ATTRIBUTE_MANAGED);
+  var ERROR_SOURCE_ENDPOINT_FULL = "Cannot establish connection: source endpoint is full";
+  var ERROR_TARGET_ENDPOINT_FULL = "Cannot establish connection: target endpoint is full";
+  var ERROR_SOURCE_DOES_NOT_EXIST = "Cannot establish connection: source does not exist";
+  var ERROR_TARGET_DOES_NOT_EXIST = "Cannot establish connection: target does not exist";
+  var KEY_CONNECTION_OVERLAYS = "connectionOverlays";
+
   function _classCallCheck$1(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError("Cannot call a class as a function");
@@ -1238,124 +1372,6 @@ var jsPlumbBrowserUI = (function (exports) {
     throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
   }
 
-  var endpointMap$1 = {};
-  var endpointComputers = {};
-  var handlers = {};
-  var EndpointFactory = {
-    get: function get(ep, name, params) {
-      var e = endpointMap$1[name];
-      if (!e) {
-        throw {
-          message: "jsPlumb: unknown endpoint type '" + name + "'"
-        };
-      } else {
-        return new e(ep, params);
-      }
-    },
-    clone: function clone(epr) {
-      var handler = handlers[epr.type];
-      return EndpointFactory.get(epr.endpoint, epr.type, handler.getParams(epr));
-    },
-    compute: function compute(endpoint, anchorPoint, orientation, endpointStyle) {
-      var c = endpointComputers[endpoint.type];
-      if (c != null) {
-        return c(endpoint, anchorPoint, orientation, endpointStyle);
-      } else {
-        log("jsPlumb: cannot find endpoint calculator for endpoint of type ", endpoint.type);
-      }
-    },
-    registerHandler: function registerHandler(eph) {
-      handlers[eph.type] = eph;
-      endpointMap$1[eph.type] = eph.cls;
-      endpointComputers[eph.type] = eph.compute;
-    }
-  };
-
-  function cls() {
-    for (var _len = arguments.length, className = new Array(_len), _key = 0; _key < _len; _key++) {
-      className[_key] = arguments[_key];
-    }
-    return className.map(function (cn) {
-      return "." + cn;
-    }).join(",");
-  }
-  function classList() {
-    for (var _len2 = arguments.length, className = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-      className[_key2] = arguments[_key2];
-    }
-    return className.join(" ");
-  }
-  function att() {
-    for (var _len3 = arguments.length, attName = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      attName[_key3] = arguments[_key3];
-    }
-    return attName.map(function (an) {
-      return "[" + an + "]";
-    }).join(",");
-  }
-  var SOURCE = "source";
-  var TARGET = "target";
-  var BLOCK = "block";
-  var NONE = "none";
-  var SOURCE_INDEX = 0;
-  var TARGET_INDEX = 1;
-  var ABSOLUTE = "absolute";
-  var FIXED = "fixed";
-  var STATIC = "static";
-  var ATTRIBUTE_GROUP = "data-jtk-group";
-  var ATTRIBUTE_MANAGED = "data-jtk-managed";
-  var ATTRIBUTE_NOT_DRAGGABLE = "data-jtk-not-draggable";
-  var ATTRIBUTE_TABINDEX = "tabindex";
-  var ATTRIBUTE_SCOPE = "data-jtk-scope";
-  var ATTRIBUTE_SCOPE_PREFIX = ATTRIBUTE_SCOPE + "-";
-  var CHECK_CONDITION = "checkCondition";
-  var CHECK_DROP_ALLOWED = "checkDropAllowed";
-  var CLASS_CONNECTOR = "jtk-connector";
-  var CLASS_CONNECTOR_OUTLINE = "jtk-connector-outline";
-  var CLASS_CONNECTED = "jtk-connected";
-  var CLASS_ENDPOINT = "jtk-endpoint";
-  var CLASS_ENDPOINT_CONNECTED = "jtk-endpoint-connected";
-  var CLASS_ENDPOINT_FULL = "jtk-endpoint-full";
-  var CLASS_ENDPOINT_FLOATING = "jtk-floating-endpoint";
-  var CLASS_ENDPOINT_DROP_ALLOWED = "jtk-endpoint-drop-allowed";
-  var CLASS_ENDPOINT_DROP_FORBIDDEN = "jtk-endpoint-drop-forbidden";
-  var CLASS_ENDPOINT_ANCHOR_PREFIX = "jtk-endpoint-anchor";
-  var CLASS_GROUP_COLLAPSED = "jtk-group-collapsed";
-  var CLASS_GROUP_EXPANDED = "jtk-group-expanded";
-  var CLASS_OVERLAY = "jtk-overlay";
-  var EVENT_ANCHOR_CHANGED = "anchor:changed";
-  var EVENT_CONNECTION = "connection";
-  var EVENT_INTERNAL_CONNECTION = "internal.connection";
-  var EVENT_CONNECTION_DETACHED = "connection:detach";
-  var EVENT_CONNECTION_MOVED = "connection:move";
-  var EVENT_CONTAINER_CHANGE = "container:change";
-  var EVENT_ENDPOINT_REPLACED = "endpoint:replaced";
-  var EVENT_INTERNAL_ENDPOINT_UNREGISTERED = "internal.endpoint:unregistered";
-  var EVENT_INTERNAL_CONNECTION_DETACHED = "internal.connection:detached";
-  var EVENT_MANAGE_ELEMENT = "element:manage";
-  var EVENT_GROUP_ADDED = "group:added";
-  var EVENT_GROUP_COLLAPSE = "group:collapse";
-  var EVENT_GROUP_EXPAND = "group:expand";
-  var EVENT_GROUP_MEMBER_ADDED = "group:member:added";
-  var EVENT_GROUP_MEMBER_REMOVED = "group:member:removed";
-  var EVENT_GROUP_REMOVED = "group:removed";
-  var EVENT_MAX_CONNECTIONS = "maxConnections";
-  var EVENT_NESTED_GROUP_ADDED = "group:nested:added";
-  var EVENT_NESTED_GROUP_REMOVED = "group:nested:removed";
-  var EVENT_UNMANAGE_ELEMENT = "element:unmanage";
-  var EVENT_ZOOM = "zoom";
-  var IS_DETACH_ALLOWED = "isDetachAllowed";
-  var INTERCEPT_BEFORE_DRAG = "beforeDrag";
-  var INTERCEPT_BEFORE_DROP = "beforeDrop";
-  var INTERCEPT_BEFORE_DETACH = "beforeDetach";
-  var INTERCEPT_BEFORE_START_DETACH = "beforeStartDetach";
-  var SELECTOR_MANAGED_ELEMENT = att(ATTRIBUTE_MANAGED);
-  var ERROR_SOURCE_ENDPOINT_FULL = "Cannot establish connection: source endpoint is full";
-  var ERROR_TARGET_ENDPOINT_FULL = "Cannot establish connection: target endpoint is full";
-  var ERROR_SOURCE_DOES_NOT_EXIST = "Cannot establish connection: source does not exist";
-  var ERROR_TARGET_DOES_NOT_EXIST = "Cannot establish connection: target does not exist";
-  var KEY_CONNECTION_OVERLAYS = "connectionOverlays";
-
   function isFullOverlaySpec(o) {
     return o.type != null && o.options != null;
   }
@@ -1372,67 +1388,48 @@ var jsPlumbBrowserUI = (function (exports) {
     o.options.id = o.options.id || uuid();
     return o;
   }
-  var Overlay = function (_EventGenerator) {
-    _inherits$1(Overlay, _EventGenerator);
-    var _super = _createSuper$1(Overlay);
-    function Overlay(instance, component, p) {
-      var _this;
-      _classCallCheck$1(this, Overlay);
-      _this = _super.call(this);
-      _this.instance = instance;
-      _this.component = component;
-      _defineProperty$1(_assertThisInitialized$1(_this), "id", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "type", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "cssClass", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "visible", true);
-      _defineProperty$1(_assertThisInitialized$1(_this), "location", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "events", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "attributes", void 0);
-      p = p || {};
-      _this.id = p.id || uuid();
-      _this.cssClass = p.cssClass || "";
-      _this.setLocation(p.location);
-      _this.events = p.events || {};
-      _this.attributes = p.attributes || {};
-      for (var _event in _this.events) {
-        _this.bind(_event, _this.events[_event]);
-      }
-      return _this;
+  function createOverlayBase(instance, component, p) {
+    p = p || {};
+    var id = p.id || uuid();
+    var cssClass = p.cssClass || "";
+    var attributes = p.attributes || {};
+    var events = p.events || {};
+    var overlayBase = {
+      type: null,
+      instance: instance,
+      id: id,
+      cssClass: cssClass,
+      attributes: attributes,
+      component: component,
+      visible: true,
+      _listeners: {},
+      location: 0.5
+    };
+    for (var event in events) {
+      Events.subscribe(overlayBase, event, events[event]);
     }
-    _createClass$1(Overlay, [{
-      key: "setLocation",
-      value: function setLocation(l) {
-        var newLocation = this.location == null ? 0.5 : this.location;
-        if (l != null) {
-          try {
-            var _l = typeof l === "string" ? parseFloat(l) : l;
-            if (!isNaN(_l)) {
-              newLocation = _l;
-            }
-          } catch (e) {
+    Overlays.setLocation(overlayBase, p.location);
+    return overlayBase;
+  }
+  var Overlays = {
+    setLocation: function setLocation(overlay, l) {
+      var newLocation = overlay.location == null ? 0.5 : overlay.location;
+      if (l != null) {
+        try {
+          var _l = typeof l === "string" ? parseFloat(l) : l;
+          if (!isNaN(_l)) {
+            newLocation = _l;
           }
+        } catch (e) {
         }
-        this.location = newLocation;
       }
-    }, {
-      key: "shouldFireEvent",
-      value: function shouldFireEvent(event, value, originalEvent) {
-        return true;
-      }
-    }, {
-      key: "setVisible",
-      value: function setVisible(v) {
-        this.visible = v;
-        this.instance.setOverlayVisible(this, v);
-      }
-    }, {
-      key: "isVisible",
-      value: function isVisible() {
-        return this.visible;
-      }
-    }]);
-    return Overlay;
-  }(EventGenerator);
+      overlay.location = newLocation;
+    },
+    setVisible: function setVisible(overlay, v) {
+      overlay.visible = v;
+      overlay.instance.setOverlayVisible(overlay, v);
+    }
+  };
 
   var overlayMap = {};
   var OverlayFactory = {
@@ -1443,76 +1440,71 @@ var jsPlumbBrowserUI = (function (exports) {
           message: "jsPlumb: unknown overlay type '" + name + "'"
         };
       } else {
-        return new c(instance, component, params);
+        return c.create(instance, component, params);
       }
     },
     register: function register(name, overlay) {
       overlayMap[name] = overlay;
+    },
+    updateFrom: function updateFrom(overlay, d) {
+      var handler = overlayMap[overlay.type];
+      if (handler) {
+        handler.updateFrom(overlay, d);
+      }
+    },
+    draw: function draw(overlay, component, currentConnectionPaintStyle, absolutePosition) {
+      var handler = overlayMap[overlay.type];
+      if (handler) {
+        return handler.draw(overlay, component, currentConnectionPaintStyle, absolutePosition);
+      }
     }
   };
 
-  var LabelOverlay = function (_Overlay) {
-    _inherits$1(LabelOverlay, _Overlay);
-    var _super = _createSuper$1(LabelOverlay);
-    function LabelOverlay(instance, component, p) {
-      var _this;
-      _classCallCheck$1(this, LabelOverlay);
-      _this = _super.call(this, instance, component, p);
-      _this.instance = instance;
-      _this.component = component;
-      _defineProperty$1(_assertThisInitialized$1(_this), "label", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "labelText", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "type", LabelOverlay.type);
-      _defineProperty$1(_assertThisInitialized$1(_this), "cachedDimensions", void 0);
-      p = p || {
+  var TYPE_OVERLAY_LABEL = "Label";
+  function isLabelOverlay(o) {
+    return o.type === TYPE_OVERLAY_LABEL;
+  }
+  var LabelOverlayHandler = {
+    create: function create(instance, component, options) {
+      options = options || {
         label: ""
       };
-      _this.setLabel(p.label);
-      return _this;
+      var overlayBase = createOverlayBase(instance, component, options);
+      var labelOverlay = extend(overlayBase, {
+        label: options.label,
+        labelText: "",
+        cachedDimensions: null,
+        type: TYPE_OVERLAY_LABEL
+      });
+      Labels.setLabel(labelOverlay, options.label);
+      return labelOverlay;
+    },
+    draw: function draw(overlay, component, currentConnectionPaintStyle, absolutePosition) {},
+    updateFrom: function updateFrom(overlay, d) {
+      if (d.label != null) {
+        Labels.setLabel(overlay, d.label);
+      }
+      if (d.location != null) {
+        Overlays.setLocation(overlay, d.location);
+        overlay.instance.updateLabel(overlay);
+      }
     }
-    _createClass$1(LabelOverlay, [{
-      key: "getLabel",
-      value: function getLabel() {
-        if (isFunction(this.label)) {
-          return this.label(this);
-        } else {
-          return this.labelText;
-        }
+  };
+  OverlayFactory.register(TYPE_OVERLAY_LABEL, LabelOverlayHandler);
+  var Labels = {
+    setLabel: function setLabel(overlay, l) {
+      overlay.label = l;
+      overlay.labelText = null;
+      overlay.instance.updateLabel(overlay);
+    },
+    getLabel: function getLabel(overlay) {
+      if (isFunction(overlay.label)) {
+        return overlay.label(overlay);
+      } else {
+        return overlay.labelText;
       }
-    }, {
-      key: "setLabel",
-      value: function setLabel(l) {
-        this.label = l;
-        this.labelText = null;
-        this.instance.updateLabel(this);
-      }
-    }, {
-      key: "getDimensions",
-      value: function getDimensions() {
-        return {
-          w: 1,
-          h: 1
-        };
-      }
-    }, {
-      key: "updateFrom",
-      value: function updateFrom(d) {
-        if (d.label != null) {
-          this.setLabel(d.label);
-        }
-        if (d.location != null) {
-          this.setLocation(d.location);
-          this.instance.updateLabel(this);
-        }
-      }
-    }]);
-    return LabelOverlay;
-  }(Overlay);
-  _defineProperty$1(LabelOverlay, "type", "Label");
-  function isLabelOverlay(o) {
-    return o.type === LabelOverlay.type;
-  }
-  OverlayFactory.register(LabelOverlay.type, LabelOverlay);
+    }
+  };
 
   var connectorHandlerMap = {};
   var defaultConnectorHandler = {
@@ -2000,8 +1992,11 @@ var jsPlumbBrowserUI = (function (exports) {
     return aa;
   }
 
+  var TYPE_ID_CONNECTION = "_jsplumb_connection";
+  var ID_PREFIX_CONNECTION = "_jsPlumb_c";
   var TYPE_DESCRIPTOR_CONNECTION = "connection";
   var DEFAULT_LABEL_LOCATION_CONNECTION = 0.5;
+
   function prepareEndpoint(conn, existing, index, anchor, element, elementId, endpoint) {
     var e;
     if (existing) {
@@ -2077,6 +2072,149 @@ var jsPlumbBrowserUI = (function (exports) {
         instance._paintConnection(connection);
       }
     }
+  }
+  function createConnection(instance, params) {
+    var componentBase = createComponentBase(instance, ID_PREFIX_CONNECTION, TYPE_DESCRIPTOR_CONNECTION, KEY_CONNECTION_OVERLAYS, {}, DEFAULT_LABEL_LOCATION_CONNECTION, params);
+    var previousConnection = params.previousConnection;
+    var source = params.source;
+    var target = params.target;
+    var sourceId, targetId;
+    if (params.sourceEndpoint) {
+      source = params.sourceEndpoint.element;
+      sourceId = params.sourceEndpoint.elementId;
+    } else {
+      sourceId = instance.getId(source);
+    }
+    if (params.targetEndpoint) {
+      target = params.targetEndpoint.element;
+      targetId = params.targetEndpoint.elementId;
+    } else {
+      targetId = instance.getId(target);
+    }
+    var scope = params.scope;
+    var sourceAnchor = params.anchors ? params.anchors[0] : params.anchor;
+    var targetAnchor = params.anchors ? params.anchors[1] : params.anchor;
+    instance.manage(source);
+    instance.manage(target);
+    var cParams = {
+      cssClass: params.cssClass,
+      hoverClass: params.hoverClass,
+      "pointer-events": params["pointer-events"],
+      overlays: params.overlays
+    };
+    if (params.type) {
+      params.endpoints = params.endpoints || instance._deriveEndpointAndAnchorSpec(params.type).endpoints;
+    }
+    var endpointSpec = params.endpoint;
+    var endpointsSpec = params.endpoints || [null, null];
+    var endpointStyle = params.endpointStyle;
+    var endpointHoverStyle = params.endpointHoverStyle;
+    var endpointStyles = params.endpointStyles || [null, null];
+    var endpointHoverStyles = params.endpointHoverStyles || [null, null];
+    var paintStyle = params.paintStyle;
+    var hoverPaintStyle = params.hoverPaintStyle;
+    var uuids = params.uuids;
+    var connection = extend(componentBase, {
+      previousConnection: previousConnection,
+      source: source,
+      target: target,
+      sourceId: sourceId,
+      targetId: targetId,
+      scope: scope,
+      params: cParams,
+      lastPaintedAt: null,
+      endpointSpec: endpointSpec,
+      endpointsSpec: endpointsSpec,
+      endpointStyle: endpointStyle,
+      endpointHoverStyle: endpointHoverStyle,
+      endpointStyles: endpointStyles,
+      endpointHoverStyles: endpointHoverStyles,
+      paintStyle: paintStyle,
+      hoverPaintStyle: hoverPaintStyle,
+      uuids: uuids,
+      deleted: false,
+      idPrefix: ID_PREFIX_CONNECTION,
+      typeId: TYPE_ID_CONNECTION,
+      defaultOverlayKey: KEY_CONNECTION_OVERLAYS,
+      detachable: true,
+      reattach: true,
+      cost: 1,
+      directed: false,
+      endpoints: [null, null],
+      proxies: []
+    });
+    Connections.makeEndpoint(connection, true, connection.source, connection.sourceId, sourceAnchor, params.sourceEndpoint);
+    Connections.makeEndpoint(connection, false, connection.target, connection.targetId, targetAnchor, params.targetEndpoint);
+    if (!connection.scope) {
+      connection.scope = connection.endpoints[0].scope;
+    }
+    if (params.deleteEndpointsOnEmpty != null) {
+      connection.endpoints[0].deleteOnEmpty = params.deleteEndpointsOnEmpty;
+      connection.endpoints[1].deleteOnEmpty = params.deleteEndpointsOnEmpty;
+    }
+    var _detachable = instance.defaults.connectionsDetachable;
+    if (params.detachable === false) {
+      _detachable = false;
+    }
+    if (connection.endpoints[0].connectionsDetachable === false) {
+      _detachable = false;
+    }
+    if (connection.endpoints[1].connectionsDetachable === false) {
+      _detachable = false;
+    }
+    var _reattach = params.reattach || connection.endpoints[0].reattachConnections || connection.endpoints[1].reattachConnections || instance.defaults.reattachConnections;
+    var initialPaintStyle = extend({}, connection.endpoints[0].connectorStyle || connection.endpoints[1].connectorStyle || params.paintStyle || instance.defaults.paintStyle);
+    Components.appendToDefaultType(connection, {
+      detachable: _detachable,
+      reattach: _reattach,
+      paintStyle: initialPaintStyle,
+      hoverPaintStyle: extend({}, connection.endpoints[0].connectorHoverStyle || connection.endpoints[1].connectorHoverStyle || params.hoverPaintStyle || instance.defaults.hoverPaintStyle)
+    });
+    if (params.outlineWidth) {
+      initialPaintStyle.outlineWidth = params.outlineWidth;
+    }
+    if (params.outlineColor) {
+      initialPaintStyle.outlineStroke = params.outlineColor;
+    }
+    if (params.lineWidth) {
+      initialPaintStyle.strokeWidth = params.lineWidth;
+    }
+    if (params.color) {
+      initialPaintStyle.stroke = params.color;
+    }
+    if (!instance._suspendDrawing) {
+      var initialTimestamp = instance._suspendedAt || uuid();
+      instance._paintEndpoint(connection.endpoints[0], {
+        timestamp: initialTimestamp
+      });
+      instance._paintEndpoint(connection.endpoints[1], {
+        timestamp: initialTimestamp
+      });
+    }
+    connection.cost = params.cost || connection.endpoints[0].connectionCost;
+    connection.directed = params.directed;
+    if (params.directed == null) {
+      connection.directed = connection.endpoints[0].connectionsDirected;
+    }
+    var _p = extend({}, connection.endpoints[1].parameters);
+    extend(_p, connection.endpoints[0].parameters);
+    extend(_p, connection.parameters);
+    connection.parameters = _p;
+    connection.paintStyleInUse = connection.paintStyle || {};
+    Connections.setConnector(connection, connection.endpoints[0].connector || connection.endpoints[1].connector || params.connector || instance.defaults.connector, true);
+    var data = params.data == null || !isObject(params.data) ? {} : params.data;
+    Components.setData(connection, data);
+    var _types = [DEFAULT, connection.endpoints[0].edgeType, connection.endpoints[1].edgeType, params.type].join(" ");
+    if (/[^\s]/.test(_types)) {
+      Components.addType(connection, _types, params.data);
+    }
+    connection.getXY = function () {
+      return {
+        x: this.connector.x,
+        y: this.connector.y
+      };
+    };
+    return connection;
   }
   var Connections = {
     isReattach: function isReattach(connection, alsoCheckForced) {
@@ -2224,6 +2362,9 @@ var jsPlumbBrowserUI = (function (exports) {
     },
     isConnection: function isConnection(component) {
       return component._typeDescriptor != null && component._typeDescriptor == TYPE_DESCRIPTOR_CONNECTION;
+    },
+    create: function create(instance, params) {
+      return createConnection(instance, params);
     }
   };
 
@@ -2298,7 +2439,7 @@ var jsPlumbBrowserUI = (function (exports) {
       component: component
     },
         mergedParams = extend(_params, params);
-    return new LabelOverlay(component.instance, component, mergedParams);
+    return OverlayFactory.get(component.instance, TYPE_OVERLAY_LABEL, component, mergedParams);
   }
   function _processOverlay(component, o) {
     var _newOverlay = null;
@@ -2352,7 +2493,7 @@ var jsPlumbBrowserUI = (function (exports) {
     _defaultType.overlays = oo;
     if (params.label) {
       _defaultType.overlays[_internalLabelOverlayId] = {
-        type: LabelOverlay.type,
+        type: TYPE_OVERLAY_LABEL,
         options: {
           label: params.label,
           location: params.labelLocation || defaultLabelLocation,
@@ -2396,7 +2537,6 @@ var jsPlumbBrowserUI = (function (exports) {
       lastPaintedAt: null,
       data: data,
       params: cParams,
-      events: {},
       _defaultType: _defaultType
     };
   }
@@ -2428,15 +2568,15 @@ var jsPlumbBrowserUI = (function (exports) {
         for (i in t.overlays) {
           var existing = component.overlays[t.overlays[i].options.id];
           if (existing) {
-            existing.updateFrom(t.overlays[i].options);
+            OverlayFactory.updateFrom(existing, t.overlays[i].options);
             keep[t.overlays[i].options.id] = true;
             component.instance.reattachOverlay(existing, component);
           } else {
             var _c = this.getCachedTypeItem(component, TYPE_ITEM_OVERLAY, t.overlays[i].options.id);
             if (_c != null) {
               component.instance.reattachOverlay(_c, component);
-              _c.setVisible(true);
-              _c.updateFrom(t.overlays[i].options);
+              Overlays.setVisible(_c, true);
+              OverlayFactory.updateFrom(_c, t.overlays[i].options);
               component.overlays[_c.id] = _c;
             } else {
               _c = this.addOverlay(component, t.overlays[i]);
@@ -2510,7 +2650,7 @@ var jsPlumbBrowserUI = (function (exports) {
       ids = ids || [];
       for (var i in component.overlays) {
         if (ids.length === 0 || ids.indexOf(i) !== -1) {
-          component.overlays[i].setVisible(true);
+          Overlays.setVisible(component.overlays[i], true);
         }
       }
     },
@@ -2521,7 +2661,7 @@ var jsPlumbBrowserUI = (function (exports) {
       ids = ids || [];
       for (var i in component.overlays) {
         if (ids.length === 0 || ids.indexOf(i) !== -1) {
-          component.overlays[i].setVisible(false);
+          Overlays.setVisible(component.overlays[i], false);
         }
       }
     },
@@ -2541,7 +2681,7 @@ var jsPlumbBrowserUI = (function (exports) {
     },
     addOverlay: function addOverlay(component, overlay) {
       var o = _processOverlay(component, overlay);
-      if (component.data != null && o.type === LabelOverlay.type && !isString(overlay)) {
+      if (component.data != null && o.type === TYPE_OVERLAY_LABEL && !isString(overlay)) {
         var d = component.data,
             p = overlay.options;
         if (d) {
@@ -2560,13 +2700,13 @@ var jsPlumbBrowserUI = (function (exports) {
     hideOverlay: function hideOverlay(component, id) {
       var o = this.getOverlay(component, id);
       if (o) {
-        o.setVisible(false);
+        Overlays.setVisible(o, false);
       }
     },
     showOverlay: function showOverlay(component, id) {
       var o = this.getOverlay(component, id);
       if (o) {
-        o.setVisible(true);
+        Overlays.setVisible(o, true);
       }
     },
     removeAllOverlays: function removeAllOverlays(component) {
@@ -2580,7 +2720,7 @@ var jsPlumbBrowserUI = (function (exports) {
     removeOverlay: function removeOverlay(component, overlayId, dontCleanup) {
       var o = component.overlays[overlayId];
       if (o) {
-        o.setVisible(false);
+        Overlays.setVisible(o, false);
         if (!dontCleanup) {
           component.instance.destroyOverlay(o);
         }
@@ -2600,7 +2740,7 @@ var jsPlumbBrowserUI = (function (exports) {
     },
     getLabel: function getLabel(component) {
       var lo = this.getLabelOverlay(component);
-      return lo != null ? lo.getLabel() : null;
+      return lo != null ? Labels.getLabel(lo) : null;
     },
     getLabelOverlay: function getLabelOverlay(component) {
       return this.getOverlay(component, _internalLabelOverlayId);
@@ -2615,11 +2755,11 @@ var jsPlumbBrowserUI = (function (exports) {
         component.overlays[_internalLabelOverlayId] = lo;
       } else {
         if (isString(l) || isFunction(l)) {
-          lo.setLabel(l);
+          Labels.setLabel(lo, l);
         } else {
           var ll = l;
           if (ll.label) {
-            lo.setLabel(ll.label);
+            Labels.setLabel(lo, ll.label);
           }
           if (ll.location) {
             lo.location = ll.location;
@@ -2763,56 +2903,35 @@ var jsPlumbBrowserUI = (function (exports) {
     }
   };
 
-  var EndpointRepresentation = function () {
-    function EndpointRepresentation(endpoint, params) {
-      _classCallCheck$1(this, EndpointRepresentation);
-      this.endpoint = endpoint;
-      _defineProperty$1(this, "typeId", void 0);
-      _defineProperty$1(this, "x", void 0);
-      _defineProperty$1(this, "y", void 0);
-      _defineProperty$1(this, "w", void 0);
-      _defineProperty$1(this, "h", void 0);
-      _defineProperty$1(this, "computedValue", void 0);
-      _defineProperty$1(this, "bounds", EMPTY_BOUNDS());
-      _defineProperty$1(this, "classes", []);
-      _defineProperty$1(this, "instance", void 0);
-      _defineProperty$1(this, "canvas", void 0);
-      _defineProperty$1(this, "type", void 0);
-      params = params || {};
-      this.instance = endpoint.instance;
-      if (endpoint.cssClass) {
-        this.classes.push(endpoint.cssClass);
-      }
-      if (params.cssClass) {
-        this.classes.push(params.cssClass);
-      }
+  var TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION = "endpoint-representation";
+  function isEndpointRepresentation(ep) {
+    return ep.typeDescriptor != null && ep.typeDescriptor === TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION;
+  }
+  function createBaseRepresentation(type, endpoint, params) {
+    params = params || {};
+    var classes = [];
+    if (endpoint.cssClass) {
+      classes.push(endpoint.cssClass);
     }
-    _createClass$1(EndpointRepresentation, [{
-      key: "addClass",
-      value: function addClass(c) {
-        this.classes.push(c);
-        this.instance.addEndpointClass(this.endpoint, c);
-      }
-    }, {
-      key: "removeClass",
-      value: function removeClass(c) {
-        this.classes = this.classes.filter(function (_c) {
-          return _c !== c;
-        });
-        this.instance.removeEndpointClass(this.endpoint, c);
-      }
-    }, {
-      key: "compute",
-      value: function compute(anchorPoint, orientation, endpointStyle) {
-        this.computedValue = EndpointFactory.compute(this, anchorPoint, orientation, endpointStyle);
-        this.bounds.xmin = this.x;
-        this.bounds.ymin = this.y;
-        this.bounds.xmax = this.x + this.w;
-        this.bounds.ymax = this.y + this.h;
-      }
-    }]);
-    return EndpointRepresentation;
-  }();
+    if (params.cssClass) {
+      classes.push(params.cssClass);
+    }
+    return {
+      typeId: null,
+      x: 0,
+      y: 0,
+      w: 0,
+      h: 0,
+      classes: classes,
+      type: type,
+      bounds: EMPTY_BOUNDS(),
+      instance: endpoint.instance,
+      canvas: null,
+      endpoint: endpoint,
+      computedValue: null,
+      typeDescriptor: TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION
+    };
+  }
   var TYPE_DESCRIPTOR_ENDPOINT = "endpoint";
   var typeParameters = ["connectorStyle", "connectorHoverStyle", "connectorOverlays", "connector", "connectionType", "connectorClass", "connectorHoverClass"];
   var Endpoints = {
@@ -2864,13 +2983,17 @@ var jsPlumbBrowserUI = (function (exports) {
     addClass: function addClass(endpoint, clazz, cascade) {
       Components.addBaseClass(endpoint, clazz, cascade);
       if (endpoint.representation != null) {
-        endpoint.representation.addClass(clazz);
+        endpoint.representation.classes.push(clazz);
+        endpoint.instance.addEndpointClass(endpoint, clazz);
       }
     },
     removeClass: function removeClass(endpoint, clazz, cascade) {
       Components.removeBaseClass(endpoint, clazz, cascade);
       if (endpoint.representation != null) {
-        endpoint.representation.removeClass(clazz);
+        endpoint.representation.classes = endpoint.representation.classes.filter(function (_c) {
+          return _c !== clazz;
+        });
+        endpoint.instance.removeEndpointClass(endpoint, clazz);
       }
     },
     _setPreparedAnchor: function _setPreparedAnchor(endpoint, anchor) {
@@ -2963,7 +3086,7 @@ var jsPlumbBrowserUI = (function (exports) {
         endpoint: endpoint
       };
       var endpointRep;
-      if (isAssignableFrom(ep, EndpointRepresentation)) {
+      if (isEndpointRepresentation(ep)) {
         var epr = ep;
         endpointRep = EndpointFactory.clone(epr);
         endpointRep.classes = endpointArgs.cssClass.split(" ");
@@ -2986,32 +3109,29 @@ var jsPlumbBrowserUI = (function (exports) {
         endpoint.instance.destroyEndpoint(endpoint);
       }
       endpoint.representation = ep;
+    },
+    compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
+      ep.computedValue = EndpointFactory.compute(ep, anchorPoint, orientation, endpointStyle);
+      ep.bounds.xmin = ep.x;
+      ep.bounds.ymin = ep.y;
+      ep.bounds.xmax = ep.x + ep.w;
+      ep.bounds.ymax = ep.y + ep.h;
     }
   };
 
-  var DotEndpoint = function (_EndpointRepresentati) {
-    _inherits$1(DotEndpoint, _EndpointRepresentati);
-    var _super = _createSuper$1(DotEndpoint);
-    function DotEndpoint(endpoint, params) {
-      var _this;
-      _classCallCheck$1(this, DotEndpoint);
-      _this = _super.call(this, endpoint, params);
-      _defineProperty$1(_assertThisInitialized$1(_this), "radius", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "defaultOffset", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "defaultInnerRadius", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "type", DotEndpoint.type);
-      params = params || {};
-      _this.radius = params.radius || 5;
-      _this.defaultOffset = 0.5 * _this.radius;
-      _this.defaultInnerRadius = _this.radius / 3;
-      return _this;
-    }
-    return DotEndpoint;
-  }(EndpointRepresentation);
-  _defineProperty$1(DotEndpoint, "type", "Dot");
+  var TYPE_ENDPOINT_DOT = "Dot";
   var DotEndpointHandler = {
-    type: DotEndpoint.type,
-    cls: DotEndpoint,
+    type: TYPE_ENDPOINT_DOT,
+    create: function create(endpoint, params) {
+      var base = createBaseRepresentation(TYPE_ENDPOINT_DOT, endpoint, params);
+      var radius = params.radius || 5;
+      return extend(base, {
+        type: TYPE_ENDPOINT_DOT,
+        radius: radius,
+        defaultOffset: 0.5 * radius,
+        defaultInnerRadius: radius / 3
+      });
+    },
     compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
       var x = anchorPoint.curX - ep.radius,
           y = anchorPoint.curY - ep.radius,
@@ -3037,22 +3157,15 @@ var jsPlumbBrowserUI = (function (exports) {
     }
   };
 
-  var BlankEndpoint = function (_EndpointRepresentati) {
-    _inherits$1(BlankEndpoint, _EndpointRepresentati);
-    var _super = _createSuper$1(BlankEndpoint);
-    function BlankEndpoint(endpoint, params) {
-      var _this;
-      _classCallCheck$1(this, BlankEndpoint);
-      _this = _super.call(this, endpoint, params);
-      _defineProperty$1(_assertThisInitialized$1(_this), "type", BlankEndpoint.type);
-      return _this;
-    }
-    return BlankEndpoint;
-  }(EndpointRepresentation);
-  _defineProperty$1(BlankEndpoint, "type", "Blank");
+  var TYPE_ENDPOINT_BLANK = "Blank";
   var BlankEndpointHandler = {
-    type: BlankEndpoint.type,
-    cls: BlankEndpoint,
+    type: TYPE_ENDPOINT_BLANK,
+    create: function create(endpoint, params) {
+      var base = createBaseRepresentation(TYPE_ENDPOINT_BLANK, endpoint, params);
+      return extend(base, {
+        type: TYPE_ENDPOINT_BLANK
+      });
+    },
     compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
       ep.x = anchorPoint.curX;
       ep.y = anchorPoint.curY;
@@ -3065,36 +3178,17 @@ var jsPlumbBrowserUI = (function (exports) {
     }
   };
 
-  var RectangleEndpoint = function (_EndpointRepresentati) {
-    _inherits$1(RectangleEndpoint, _EndpointRepresentati);
-    var _super = _createSuper$1(RectangleEndpoint);
-    function RectangleEndpoint(endpoint, params) {
-      var _this;
-      _classCallCheck$1(this, RectangleEndpoint);
-      _this = _super.call(this, endpoint, params);
-      _defineProperty$1(_assertThisInitialized$1(_this), "width", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "height", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "type", RectangleEndpoint.type);
-      params = params || {};
-      _this.width = params.width || 10;
-      _this.height = params.height || 10;
-      return _this;
-    }
-    _createClass$1(RectangleEndpoint, null, [{
-      key: "_getParams",
-      value: function _getParams(ep) {
-        return {
-          width: ep.width,
-          height: ep.height
-        };
-      }
-    }]);
-    return RectangleEndpoint;
-  }(EndpointRepresentation);
-  _defineProperty$1(RectangleEndpoint, "type", "Rectangle");
+  var TYPE_ENDPOINT_RECTANGLE = "Rectangle";
   var RectangleEndpointHandler = {
-    type: RectangleEndpoint.type,
-    cls: RectangleEndpoint,
+    type: TYPE_ENDPOINT_RECTANGLE,
+    create: function create(endpoint, params) {
+      var base = createBaseRepresentation(TYPE_ENDPOINT_RECTANGLE, endpoint, params);
+      return extend(base, {
+        type: TYPE_ENDPOINT_RECTANGLE,
+        width: params.width || 10,
+        height: params.height || 10
+      });
+    },
     compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
       var width = endpointStyle.width || ep.width,
           height = endpointStyle.height || ep.height,
@@ -3135,152 +3229,6 @@ var jsPlumbBrowserUI = (function (exports) {
   var DEFAULT_KEY_PAINT_STYLE = "paintStyle";
   var DEFAULT_KEY_REATTACH_CONNECTIONS = "reattachConnections";
   var DEFAULT_KEY_SCOPE = "scope";
-
-  var TYPE_ID_CONNECTION = "_jsplumb_connection";
-  var ID_PREFIX_CONNECTION = "_jsPlumb_c";
-  function createConnection(instance, params) {
-    var componentBase = createComponentBase(instance, ID_PREFIX_CONNECTION, TYPE_DESCRIPTOR_CONNECTION, KEY_CONNECTION_OVERLAYS, {}, DEFAULT_LABEL_LOCATION_CONNECTION, params);
-    var previousConnection = params.previousConnection;
-    var source = params.source;
-    var target = params.target;
-    var sourceId, targetId;
-    if (params.sourceEndpoint) {
-      source = params.sourceEndpoint.element;
-      sourceId = params.sourceEndpoint.elementId;
-    } else {
-      sourceId = instance.getId(source);
-    }
-    if (params.targetEndpoint) {
-      target = params.targetEndpoint.element;
-      targetId = params.targetEndpoint.elementId;
-    } else {
-      targetId = instance.getId(target);
-    }
-    var scope = params.scope;
-    var sourceAnchor = params.anchors ? params.anchors[0] : params.anchor;
-    var targetAnchor = params.anchors ? params.anchors[1] : params.anchor;
-    instance.manage(source);
-    instance.manage(target);
-    var cParams = {
-      cssClass: params.cssClass,
-      hoverClass: params.hoverClass,
-      "pointer-events": params["pointer-events"],
-      overlays: params.overlays
-    };
-    if (params.type) {
-      params.endpoints = params.endpoints || instance._deriveEndpointAndAnchorSpec(params.type).endpoints;
-    }
-    var endpointSpec = params.endpoint;
-    var endpointsSpec = params.endpoints || [null, null];
-    var endpointStyle = params.endpointStyle;
-    var endpointHoverStyle = params.endpointHoverStyle;
-    var endpointStyles = params.endpointStyles || [null, null];
-    var endpointHoverStyles = params.endpointHoverStyles || [null, null];
-    var paintStyle = params.paintStyle;
-    var hoverPaintStyle = params.hoverPaintStyle;
-    var uuids = params.uuids;
-    var connection = extend(componentBase, {
-      previousConnection: previousConnection,
-      source: source,
-      target: target,
-      sourceId: sourceId,
-      targetId: targetId,
-      scope: scope,
-      params: cParams,
-      lastPaintedAt: null,
-      endpointSpec: endpointSpec,
-      endpointsSpec: endpointsSpec,
-      endpointStyle: endpointStyle,
-      endpointHoverStyle: endpointHoverStyle,
-      endpointStyles: endpointStyles,
-      endpointHoverStyles: endpointHoverStyles,
-      paintStyle: paintStyle,
-      hoverPaintStyle: hoverPaintStyle,
-      uuids: uuids,
-      deleted: false,
-      idPrefix: ID_PREFIX_CONNECTION,
-      typeId: TYPE_ID_CONNECTION,
-      defaultOverlayKey: KEY_CONNECTION_OVERLAYS,
-      detachable: true,
-      reattach: true,
-      cost: 1,
-      directed: false,
-      endpoints: [null, null],
-      proxies: []
-    });
-    Connections.makeEndpoint(connection, true, connection.source, connection.sourceId, sourceAnchor, params.sourceEndpoint);
-    Connections.makeEndpoint(connection, false, connection.target, connection.targetId, targetAnchor, params.targetEndpoint);
-    if (!connection.scope) {
-      connection.scope = connection.endpoints[0].scope;
-    }
-    if (params.deleteEndpointsOnEmpty != null) {
-      connection.endpoints[0].deleteOnEmpty = params.deleteEndpointsOnEmpty;
-      connection.endpoints[1].deleteOnEmpty = params.deleteEndpointsOnEmpty;
-    }
-    var _detachable = instance.defaults.connectionsDetachable;
-    if (params.detachable === false) {
-      _detachable = false;
-    }
-    if (connection.endpoints[0].connectionsDetachable === false) {
-      _detachable = false;
-    }
-    if (connection.endpoints[1].connectionsDetachable === false) {
-      _detachable = false;
-    }
-    var _reattach = params.reattach || connection.endpoints[0].reattachConnections || connection.endpoints[1].reattachConnections || instance.defaults.reattachConnections;
-    var initialPaintStyle = extend({}, connection.endpoints[0].connectorStyle || connection.endpoints[1].connectorStyle || params.paintStyle || instance.defaults.paintStyle);
-    Components.appendToDefaultType(connection, {
-      detachable: _detachable,
-      reattach: _reattach,
-      paintStyle: initialPaintStyle,
-      hoverPaintStyle: extend({}, connection.endpoints[0].connectorHoverStyle || connection.endpoints[1].connectorHoverStyle || params.hoverPaintStyle || instance.defaults.hoverPaintStyle)
-    });
-    if (params.outlineWidth) {
-      initialPaintStyle.outlineWidth = params.outlineWidth;
-    }
-    if (params.outlineColor) {
-      initialPaintStyle.outlineStroke = params.outlineColor;
-    }
-    if (params.lineWidth) {
-      initialPaintStyle.strokeWidth = params.lineWidth;
-    }
-    if (params.color) {
-      initialPaintStyle.stroke = params.color;
-    }
-    if (!instance._suspendDrawing) {
-      var initialTimestamp = instance._suspendedAt || uuid();
-      instance._paintEndpoint(connection.endpoints[0], {
-        timestamp: initialTimestamp
-      });
-      instance._paintEndpoint(connection.endpoints[1], {
-        timestamp: initialTimestamp
-      });
-    }
-    connection.cost = params.cost || connection.endpoints[0].connectionCost;
-    connection.directed = params.directed;
-    if (params.directed == null) {
-      connection.directed = connection.endpoints[0].connectionsDirected;
-    }
-    var _p = extend({}, connection.endpoints[1].parameters);
-    extend(_p, connection.endpoints[0].parameters);
-    extend(_p, connection.parameters);
-    connection.parameters = _p;
-    connection.paintStyleInUse = connection.paintStyle || {};
-    Connections.setConnector(connection, connection.endpoints[0].connector || connection.endpoints[1].connector || params.connector || instance.defaults.connector, true);
-    var data = params.data == null || !isObject(params.data) ? {} : params.data;
-    Components.setData(connection, data);
-    var _types = [DEFAULT, connection.endpoints[0].edgeType, connection.endpoints[1].edgeType, params.type].join(" ");
-    if (/[^\s]/.test(_types)) {
-      Components.addType(connection, _types, params.data);
-    }
-    connection.getXY = function () {
-      return {
-        x: this.connector.x,
-        y: this.connector.y
-      };
-    };
-    return connection;
-  }
 
   var ID_PREFIX_ENDPOINT = "_jsplumb_e";
   var DEFAULT_OVERLAY_KEY_ENDPOINTS = "endpointOverlays";
@@ -3453,7 +3401,7 @@ var jsPlumbBrowserUI = (function (exports) {
       key: "getEndpoint",
       value: function getEndpoint(conn, endpointIndex) {
         return this.endpoint || {
-          type: DotEndpoint.type,
+          type: TYPE_ENDPOINT_DOT,
           options: {
             radius: 10
           }
@@ -6433,7 +6381,7 @@ var jsPlumbBrowserUI = (function (exports) {
         connectionOverlays: [],
         connector: CONNECTOR_TYPE_STRAIGHT,
         container: null,
-        endpoint: DotEndpoint.type,
+        endpoint: TYPE_ENDPOINT_DOT,
         endpointOverlays: [],
         endpoints: [null, null],
         endpointStyle: {
@@ -7317,7 +7265,7 @@ var jsPlumbBrowserUI = (function (exports) {
       key: "_newConnection",
       value: function _newConnection(params) {
         params.id = "con_" + this._idstamp();
-        var c = createConnection(this, params);
+        var c = Connections.create(this, params);
         addManagedConnection(c, this._managedElements[c.sourceId], this._managedElements[c.targetId]);
         this._paintConnection(c);
         return c;
@@ -7780,14 +7728,14 @@ var jsPlumbBrowserUI = (function (exports) {
               anchorParams.rotation = this._getRotations(endpoint.elementId);
               ap = this.router.computeAnchorLocation(endpoint._anchor, anchorParams);
             }
-            endpoint.representation.compute(ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse);
+            Endpoints.compute(endpoint.representation, ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse);
             this.renderEndpoint(endpoint, endpoint.paintStyleInUse);
             endpoint.timestamp = timestamp;
             for (var i in endpoint.overlays) {
               if (endpoint.overlays.hasOwnProperty(i)) {
                 var _o = endpoint.overlays[i];
-                if (_o.isVisible()) {
-                  endpoint.overlayPlacements[i] = this.drawOverlay(_o, endpoint.representation, endpoint.paintStyleInUse, Components.getAbsoluteOverlayPosition(endpoint, _o));
+                if (_o.visible) {
+                  endpoint.overlayPlacements[i] = this.drawOverlay(_o, endpoint, endpoint.paintStyleInUse, Components.getAbsoluteOverlayPosition(endpoint, _o));
                   this._paintOverlay(_o, endpoint.overlayPlacements[i], {
                     xmin: 0,
                     ymin: 0
@@ -7818,8 +7766,8 @@ var jsPlumbBrowserUI = (function (exports) {
             for (var i in connection.overlays) {
               if (connection.overlays.hasOwnProperty(i)) {
                 var _o2 = connection.overlays[i];
-                if (_o2.isVisible()) {
-                  connection.overlayPlacements[i] = this.drawOverlay(_o2, connection.connector, connection.paintStyleInUse, Components.getAbsoluteOverlayPosition(connection, _o2));
+                if (_o2.visible) {
+                  connection.overlayPlacements[i] = this.drawOverlay(_o2, connection, connection.paintStyleInUse, Components.getAbsoluteOverlayPosition(connection, _o2));
                   overlayExtents.xmin = Math.min(overlayExtents.xmin, connection.overlayPlacements[i].xmin);
                   overlayExtents.xmax = Math.max(overlayExtents.xmax, connection.overlayPlacements[i].xmax);
                   overlayExtents.ymin = Math.min(overlayExtents.ymin, connection.overlayPlacements[i].ymin);
@@ -7839,7 +7787,7 @@ var jsPlumbBrowserUI = (function (exports) {
             for (var j in connection.overlays) {
               if (connection.overlays.hasOwnProperty(j)) {
                 var _p2 = connection.overlays[j];
-                if (_p2.isVisible()) {
+                if (_p2.visible) {
                   this._paintOverlay(_p2, connection.overlayPlacements[j], _extents);
                 }
               }
@@ -8122,77 +8070,74 @@ var jsPlumbBrowserUI = (function (exports) {
 
   var DEFAULT_WIDTH = 20;
   var DEFAULT_LENGTH = 20;
-  var ArrowOverlay = function (_Overlay) {
-    _inherits$1(ArrowOverlay, _Overlay);
-    var _super = _createSuper$1(ArrowOverlay);
-    function ArrowOverlay(instance, component, p) {
-      var _this;
-      _classCallCheck$1(this, ArrowOverlay);
-      _this = _super.call(this, instance, component, p);
-      _this.instance = instance;
-      _this.component = component;
-      _defineProperty$1(_assertThisInitialized$1(_this), "width", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "length", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "foldback", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "direction", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "location", 0.5);
-      _defineProperty$1(_assertThisInitialized$1(_this), "paintStyle", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "type", ArrowOverlay.type);
-      _defineProperty$1(_assertThisInitialized$1(_this), "cachedDimensions", void 0);
-      p = p || {};
-      _this.width = p.width || DEFAULT_WIDTH;
-      _this.length = p.length || DEFAULT_LENGTH;
-      _this.direction = (p.direction || 1) < 0 ? -1 : 1;
-      _this.foldback = p.foldback || 0.623;
-      _this.paintStyle = p.paintStyle || {
+  var TYPE_OVERLAY_ARROW = "Arrow";
+  function isArrowOverlay(o) {
+    return o.type === TYPE_OVERLAY_ARROW;
+  }
+  var ArrowOverlayHandler = {
+    create: function create(p1, p2, options) {
+      options = options || {};
+      var overlayBase = createOverlayBase(p1, p2, options);
+      var width = options.width || DEFAULT_WIDTH;
+      var length = options.length || DEFAULT_LENGTH;
+      var direction = (options.direction || 1) < 0 ? -1 : 1;
+      var foldback = options.foldback || 0.623;
+      var paintStyle = options.paintStyle || {
         "strokeWidth": 1
       };
-      _this.location = p.location == null ? _this.location : Array.isArray(p.location) ? p.location[0] : p.location;
-      return _this;
-    }
-    _createClass$1(ArrowOverlay, [{
-      key: "draw",
-      value: function draw(component, currentConnectionPaintStyle, absolutePosition) {
-        var connector = component;
+      var location = options.location == null ? this.location : Array.isArray(options.location) ? options.location[0] : options.location;
+      return extend(overlayBase, {
+        width: width,
+        length: length,
+        direction: direction,
+        foldback: foldback,
+        paintStyle: paintStyle,
+        location: location,
+        type: TYPE_OVERLAY_ARROW
+      });
+    },
+    draw: function draw(overlay, component, currentConnectionPaintStyle, absolutePosition) {
+      if (Connections.isConnection(component)) {
+        var connector = component.connector;
         var hxy, mid, txy, tail, cxy;
-        if (this.location > 1 || this.location < 0) {
-          var fromLoc = this.location < 0 ? 1 : 0;
-          hxy = pointAlongComponentPathFrom(connector, fromLoc, this.location, false);
-          mid = pointAlongComponentPathFrom(connector, fromLoc, this.location - this.direction * this.length / 2, false);
-          txy = pointOnLine(hxy, mid, this.length);
-        } else if (this.location === 1) {
-          hxy = pointOnComponentPath(connector, this.location);
-          mid = pointAlongComponentPathFrom(connector, this.location, -this.length);
-          txy = pointOnLine(hxy, mid, this.length);
-          if (this.direction === -1) {
+        if (overlay.location > 1 || overlay.location < 0) {
+          var fromLoc = overlay.location < 0 ? 1 : 0;
+          hxy = pointAlongComponentPathFrom(connector, fromLoc, overlay.location, false);
+          mid = pointAlongComponentPathFrom(connector, fromLoc, overlay.location - overlay.direction * overlay.length / 2, false);
+          txy = pointOnLine(hxy, mid, overlay.length);
+        } else if (overlay.location === 1) {
+          hxy = pointOnComponentPath(connector, overlay.location);
+          mid = pointAlongComponentPathFrom(connector, overlay.location, -overlay.length);
+          txy = pointOnLine(hxy, mid, overlay.length);
+          if (overlay.direction === -1) {
             var _ = txy;
             txy = hxy;
             hxy = _;
           }
-        } else if (this.location === 0) {
-          txy = pointOnComponentPath(connector, this.location);
-          mid = pointAlongComponentPathFrom(connector, this.location, this.length);
-          hxy = pointOnLine(txy, mid, this.length);
-          if (this.direction === -1) {
+        } else if (overlay.location === 0) {
+          txy = pointOnComponentPath(connector, overlay.location);
+          mid = pointAlongComponentPathFrom(connector, overlay.location, overlay.length);
+          hxy = pointOnLine(txy, mid, overlay.length);
+          if (overlay.direction === -1) {
             var __ = txy;
             txy = hxy;
             hxy = __;
           }
         } else {
-          hxy = pointAlongComponentPathFrom(connector, this.location, this.direction * this.length / 2);
-          mid = pointOnComponentPath(connector, this.location);
-          txy = pointOnLine(hxy, mid, this.length);
+          hxy = pointAlongComponentPathFrom(connector, overlay.location, overlay.direction * overlay.length / 2);
+          mid = pointOnComponentPath(connector, overlay.location);
+          txy = pointOnLine(hxy, mid, overlay.length);
         }
-        tail = perpendicularLineTo(hxy, txy, this.width);
-        cxy = pointOnLine(hxy, txy, this.foldback * this.length);
+        tail = perpendicularLineTo(hxy, txy, overlay.width);
+        cxy = pointOnLine(hxy, txy, overlay.foldback * overlay.length);
         var d = {
           hxy: hxy,
           tail: tail,
           cxy: cxy
         },
-            stroke = this.paintStyle.stroke || currentConnectionPaintStyle.stroke,
-            fill = this.paintStyle.fill || currentConnectionPaintStyle.stroke,
-            lineWidth = this.paintStyle.strokeWidth || currentConnectionPaintStyle.strokeWidth;
+            stroke = overlay.paintStyle.stroke || currentConnectionPaintStyle.stroke,
+            fill = overlay.paintStyle.fill || currentConnectionPaintStyle.stroke,
+            lineWidth = overlay.paintStyle.strokeWidth || currentConnectionPaintStyle.strokeWidth;
         return {
           component: component,
           d: d,
@@ -8205,84 +8150,67 @@ var jsPlumbBrowserUI = (function (exports) {
           ymax: Math.max(hxy.y, tail[0].y, tail[1].y)
         };
       }
-    }, {
-      key: "updateFrom",
-      value: function updateFrom(d) {}
-    }]);
-    return ArrowOverlay;
-  }(Overlay);
-  _defineProperty$1(ArrowOverlay, "type", "Arrow");
-  function isArrowOverlay(o) {
-    return o.type === ArrowOverlay.type;
-  }
-  OverlayFactory.register(ArrowOverlay.type, ArrowOverlay);
+    },
+    updateFrom: function updateFrom(d) {}
+  };
+  OverlayFactory.register(TYPE_OVERLAY_ARROW, ArrowOverlayHandler);
 
-  var PlainArrowOverlay = function (_ArrowOverlay) {
-    _inherits$1(PlainArrowOverlay, _ArrowOverlay);
-    var _super = _createSuper$1(PlainArrowOverlay);
-    function PlainArrowOverlay(instance, component, p) {
-      var _this;
-      _classCallCheck$1(this, PlainArrowOverlay);
-      _this = _super.call(this, instance, component, p);
-      _this.instance = instance;
-      _defineProperty$1(_assertThisInitialized$1(_this), "type", PlainArrowOverlay.type);
-      _this.foldback = 1;
-      return _this;
-    }
-    return PlainArrowOverlay;
-  }(ArrowOverlay);
-  _defineProperty$1(PlainArrowOverlay, "type", "PlainArrow");
+  var TYPE_OVERLAY_PLAIN_ARROW = "PlainArrow";
   function isPlainArrowOverlay(o) {
-    return o.type === PlainArrowOverlay.type;
+    return o.type === TYPE_OVERLAY_PLAIN_ARROW;
   }
-  OverlayFactory.register("PlainArrow", PlainArrowOverlay);
+  var PlainArrowOverlayHandler = {
+    create: function create(p1, p2, options) {
+      options = options || {};
+      options.foldback = 1;
+      var arrowOverlay = ArrowOverlayHandler.create(p1, p2, options);
+      arrowOverlay.type = TYPE_OVERLAY_PLAIN_ARROW;
+      return arrowOverlay;
+    },
+    draw: function draw(overlay, component, currentConnectionPaintStyle, absolutePosition) {
+      return ArrowOverlayHandler.draw(overlay, component, currentConnectionPaintStyle, absolutePosition);
+    },
+    updateFrom: function updateFrom(d) {}
+  };
+  OverlayFactory.register(TYPE_OVERLAY_PLAIN_ARROW, PlainArrowOverlayHandler);
 
-  var DiamondOverlay = function (_ArrowOverlay) {
-    _inherits$1(DiamondOverlay, _ArrowOverlay);
-    var _super = _createSuper$1(DiamondOverlay);
-    function DiamondOverlay(instance, component, p) {
-      var _this;
-      _classCallCheck$1(this, DiamondOverlay);
-      _this = _super.call(this, instance, component, p);
-      _this.instance = instance;
-      _defineProperty$1(_assertThisInitialized$1(_this), "type", DiamondOverlay.type);
-      _this.length = _this.length / 2;
-      _this.foldback = 2;
-      return _this;
-    }
-    return DiamondOverlay;
-  }(ArrowOverlay);
-  _defineProperty$1(DiamondOverlay, "type", "Diamond");
+  var TYPE_OVERLAY_DIAMOND = "Diamond";
   function isDiamondOverlay(o) {
-    return o.type === DiamondOverlay.type;
+    return o.type === TYPE_OVERLAY_DIAMOND;
   }
-  OverlayFactory.register(DiamondOverlay.type, DiamondOverlay);
+  var DiamondOverlayHandler = {
+    create: function create(p1, p2, options) {
+      options = options || {};
+      options.foldback = 2;
+      var l = options.length || DEFAULT_LENGTH;
+      options.length = l / 2;
+      var arrow = ArrowOverlayHandler.create(p1, p2, options);
+      arrow.type = TYPE_OVERLAY_DIAMOND;
+      return arrow;
+    },
+    draw: function draw(overlay, component, currentConnectionPaintStyle, absolutePosition) {
+      return ArrowOverlayHandler.draw(overlay, component, currentConnectionPaintStyle, absolutePosition);
+    },
+    updateFrom: function updateFrom(d) {}
+  };
+  OverlayFactory.register(TYPE_OVERLAY_DIAMOND, DiamondOverlayHandler);
 
-  var CustomOverlay = function (_Overlay) {
-    _inherits$1(CustomOverlay, _Overlay);
-    var _super = _createSuper$1(CustomOverlay);
-    function CustomOverlay(instance, component, p) {
-      var _this;
-      _classCallCheck$1(this, CustomOverlay);
-      _this = _super.call(this, instance, component, p);
-      _this.instance = instance;
-      _this.component = component;
-      _defineProperty$1(_assertThisInitialized$1(_this), "create", void 0);
-      _defineProperty$1(_assertThisInitialized$1(_this), "type", CustomOverlay.type);
-      _this.create = p.create;
-      return _this;
-    }
-    _createClass$1(CustomOverlay, [{
-      key: "updateFrom",
-      value: function updateFrom(d) {}
-    }]);
-    return CustomOverlay;
-  }(Overlay);
-  _defineProperty$1(CustomOverlay, "type", "Custom");
+  var TYPE_OVERLAY_CUSTOM = "Custom";
   function isCustomOverlay(o) {
-    return o.type === CustomOverlay.type;
+    return o.type === TYPE_OVERLAY_CUSTOM;
   }
-  OverlayFactory.register(CustomOverlay.type, CustomOverlay);
+  var CustomOverlayHandler = {
+    create: function create(instance, component, options) {
+      var overlayBase = createOverlayBase(instance, component, options);
+      return extend(overlayBase, {
+        create: options.create,
+        type: TYPE_OVERLAY_CUSTOM
+      });
+    },
+    draw: function draw(overlay, component, currentConnectionPaintStyle, absolutePosition) {},
+    updateFrom: function updateFrom(d) {}
+  };
+  OverlayFactory.register(TYPE_OVERLAY_CUSTOM, CustomOverlayHandler);
 
   EndpointFactory.registerHandler(DotEndpointHandler);
   EndpointFactory.registerHandler(RectangleEndpointHandler);
@@ -12573,7 +12501,7 @@ var jsPlumbBrowserUI = (function (exports) {
       cssClass: [CLASS_ENDPOINT_FLOATING, ep.cssClass].join(" ")
     };
     if (endpoint != null) {
-      if (isAssignableFrom(endpoint, EndpointRepresentation)) {
+      if (isEndpointRepresentation(endpoint)) {
         p.existingEndpoint = endpoint;
       } else {
         p.endpoint = endpoint;
@@ -13178,11 +13106,11 @@ var jsPlumbBrowserUI = (function (exports) {
                   connection: this.jpc
                 });
                 if (bb) {
-                  newDropTarget.endpoint.representation.addClass(this.instance.endpointDropAllowedClass);
-                  newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropForbiddenClass);
+                  Endpoints.addClass(newDropTarget.endpoint, this.instance.endpointDropAllowedClass);
+                  Endpoints.removeClass(newDropTarget.endpoint, this.instance.endpointDropForbiddenClass);
                 } else {
-                  newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropAllowedClass);
-                  newDropTarget.endpoint.representation.addClass(this.instance.endpointDropForbiddenClass);
+                  Endpoints.addClass(newDropTarget.endpoint, this.instance.endpointDropForbiddenClass);
+                  Endpoints.removeClass(newDropTarget.endpoint, this.instance.endpointDropAllowedClass);
                 }
                 this.floatingAnchor.over(newDropTarget.endpoint);
                 this.instance._paintConnection(this.jpc);
@@ -13251,6 +13179,11 @@ var jsPlumbBrowserUI = (function (exports) {
                 if (!dropEndpoint.enabled) {
                   this._reattachOrDiscard(p.e);
                 } else if (Endpoints.isFull(dropEndpoint)) {
+                  this.instance.fire(EVENT_MAX_CONNECTIONS, {
+                    endpoint: this,
+                    connection: this.jpc,
+                    maxConnections: this.instance.defaults.maxConnections
+                  }, originalEvent);
                   this._reattachOrDiscard(p.e);
                 } else {
                   if (idx === 0) {
@@ -13559,7 +13492,7 @@ var jsPlumbBrowserUI = (function (exports) {
           o.canvas.style.msTransform = ts;
           o.canvas.style.oTransform = ts;
           o.canvas.style.transform = ts;
-          if (!o.isVisible()) {
+          if (!o.visible) {
             o.canvas.style.display = NONE;
           }
           o.canvas.jtk = {
@@ -13646,21 +13579,6 @@ var jsPlumbBrowserUI = (function (exports) {
     delete _o.path;
     delete _o.bgPath;
   }
-  (function (_Overlay) {
-    _inherits(SVGElementOverlay, _Overlay);
-    var _super = _createSuper(SVGElementOverlay);
-    function SVGElementOverlay() {
-      var _this;
-      _classCallCheck(this, SVGElementOverlay);
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-      _this = _super.call.apply(_super, [this].concat(args));
-      _defineProperty(_assertThisInitialized(_this), "path", void 0);
-      return _this;
-    }
-    return SVGElementOverlay;
-  })(Overlay);
 
   var SvgComponent = function () {
     function SvgComponent() {
@@ -14021,10 +13939,10 @@ var jsPlumbBrowserUI = (function (exports) {
         var mappedEvent = compoundEvent(stem, event)
         ;
         e._jsPlumbOverlay = overlay;
-        overlay.fire(event, {
+        Events.fire(overlay, event, {
           e: e,
           overlay: overlay
-        });
+        }, e);
         this.fire(mappedEvent, overlay.component, e);
       }
     }, {
@@ -14774,20 +14692,20 @@ var jsPlumbBrowserUI = (function (exports) {
                 x: absolutePosition.x,
                 y: absolutePosition.y
               };
-            } else if (component instanceof EndpointRepresentation) {
+            } else if (Endpoints.isEndpoint(component)) {
               var locToUse = Array.isArray(o.location) ? o.location : [o.location, o.location];
               cxy = {
-                x: locToUse[0] * component.w,
-                y: locToUse[1] * component.h
+                x: locToUse[0] * component.representation.w,
+                y: locToUse[1] * component.representation.h
               };
-            } else {
+            } else if (Connections.isConnection(component)) {
               var loc = o.location,
                   absolute = false;
               if (isString(o.location) || o.location < 0 || o.location > 1) {
                 loc = parseInt("" + o.location, 10);
                 absolute = true;
               }
-              cxy = pointOnComponentPath(component, loc, absolute);
+              cxy = pointOnComponentPath(component.connector, loc, absolute);
             }
             var minx = cxy.x - td.w / 2,
                 miny = cxy.y - td.h / 2;
@@ -14813,7 +14731,7 @@ var jsPlumbBrowserUI = (function (exports) {
             };
           }
         } else if (isArrowOverlay(o) || isDiamondOverlay(o) || isPlainArrowOverlay(o)) {
-          return o.draw(component, paintStyle, absolutePosition);
+          return OverlayFactory.draw(o, component, paintStyle, absolutePosition);
         } else {
           throw "Could not draw overlay of type [" + o.type + "]";
         }
@@ -15083,7 +15001,7 @@ var jsPlumbBrowserUI = (function (exports) {
 
   var CIRCLE = "circle";
   var register$2 = function register() {
-    registerEndpointRenderer(DotEndpoint.type, {
+    registerEndpointRenderer(TYPE_ENDPOINT_DOT, {
       makeNode: function makeNode(ep, style) {
         return _node(CIRCLE, {
           "cx": ep.w / 2,
@@ -15103,7 +15021,7 @@ var jsPlumbBrowserUI = (function (exports) {
 
   var RECT = "rect";
   var register$1 = function register() {
-    registerEndpointRenderer(RectangleEndpoint.type, {
+    registerEndpointRenderer(TYPE_ENDPOINT_RECTANGLE, {
       makeNode: function makeNode(ep, style) {
         return _node(RECT, {
           "width": ep.w,
@@ -15126,7 +15044,7 @@ var jsPlumbBrowserUI = (function (exports) {
     "stroke": "transparent"
   };
   var register = function register() {
-    registerEndpointRenderer(BlankEndpoint.type, {
+    registerEndpointRenderer(TYPE_ENDPOINT_BLANK, {
       makeNode: function makeNode(ep, style) {
         return _node("rect", BLANK_ATTRIBUTES);
       },
@@ -15171,11 +15089,10 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.ATTRIBUTE_SCOPE = ATTRIBUTE_SCOPE;
   exports.ATTRIBUTE_SCOPE_PREFIX = ATTRIBUTE_SCOPE_PREFIX;
   exports.ATTRIBUTE_TABINDEX = ATTRIBUTE_TABINDEX;
-  exports.ArrowOverlay = ArrowOverlay;
+  exports.ArrowOverlayHandler = ArrowOverlayHandler;
   exports.BLOCK = BLOCK;
   exports.BOTTOM = BOTTOM;
   exports.BezierConnectorHandler = BezierConnectorHandler;
-  exports.BlankEndpoint = BlankEndpoint;
   exports.BlankEndpointHandler = BlankEndpointHandler;
   exports.BrowserJsPlumbInstance = BrowserJsPlumbInstance;
   exports.CHECK_CONDITION = CHECK_CONDITION;
@@ -15213,7 +15130,6 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.ConnectionSelection = ConnectionSelection;
   exports.Connections = Connections;
   exports.Connectors = Connectors;
-  exports.CustomOverlay = CustomOverlay;
   exports.DEFAULT = DEFAULT;
   exports.DEFAULT_KEY_ALLOW_NESTED_GROUPS = DEFAULT_KEY_ALLOW_NESTED_GROUPS;
   exports.DEFAULT_KEY_ANCHOR = DEFAULT_KEY_ANCHOR;
@@ -15238,9 +15154,8 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.DEFAULT_KEY_SCOPE = DEFAULT_KEY_SCOPE;
   exports.DEFAULT_LABEL_LOCATION_CONNECTION = DEFAULT_LABEL_LOCATION_CONNECTION;
   exports.DEFAULT_LABEL_LOCATION_ENDPOINT = DEFAULT_LABEL_LOCATION_ENDPOINT;
+  exports.DEFAULT_LENGTH = DEFAULT_LENGTH;
   exports.DEFAULT_OVERLAY_KEY_ENDPOINTS = DEFAULT_OVERLAY_KEY_ENDPOINTS;
-  exports.DiamondOverlay = DiamondOverlay;
-  exports.DotEndpoint = DotEndpoint;
   exports.DotEndpointHandler = DotEndpointHandler;
   exports.Drag = Drag;
   exports.DragManager = DragManager;
@@ -15331,11 +15246,11 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.EVENT_ZOOM = EVENT_ZOOM;
   exports.ElementDragHandler = ElementDragHandler;
   exports.EndpointFactory = EndpointFactory;
-  exports.EndpointRepresentation = EndpointRepresentation;
   exports.EndpointSelection = EndpointSelection;
   exports.Endpoints = Endpoints;
   exports.EventGenerator = EventGenerator;
   exports.EventManager = EventManager;
+  exports.Events = Events;
   exports.FALSE = FALSE$1;
   exports.FIXED = FIXED;
   exports.FlowchartConnectorHandler = FlowchartConnectorHandler;
@@ -15350,15 +15265,14 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.JsPlumbInstance = JsPlumbInstance;
   exports.KEY_CONNECTION_OVERLAYS = KEY_CONNECTION_OVERLAYS;
   exports.LEFT = LEFT;
-  exports.LabelOverlay = LabelOverlay;
+  exports.Labels = Labels;
   exports.LightweightFloatingAnchor = LightweightFloatingAnchor;
   exports.LightweightRouter = LightweightRouter;
   exports.NONE = NONE;
   exports.OptimisticEventGenerator = OptimisticEventGenerator;
-  exports.Overlay = Overlay;
   exports.OverlayFactory = OverlayFactory;
+  exports.Overlays = Overlays;
   exports.PROPERTY_POSITION = PROPERTY_POSITION;
-  exports.PlainArrowOverlay = PlainArrowOverlay;
   exports.REDROP_POLICY_ANY = REDROP_POLICY_ANY;
   exports.REDROP_POLICY_ANY_SOURCE = REDROP_POLICY_ANY_SOURCE;
   exports.REDROP_POLICY_ANY_SOURCE_OR_TARGET = REDROP_POLICY_ANY_SOURCE_OR_TARGET;
@@ -15366,7 +15280,6 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.REDROP_POLICY_STRICT = REDROP_POLICY_STRICT;
   exports.REMOVE_CLASS_ACTION = REMOVE_CLASS_ACTION;
   exports.RIGHT = RIGHT;
-  exports.RectangleEndpoint = RectangleEndpoint;
   exports.RectangleEndpointHandler = RectangleEndpointHandler;
   exports.SEGMENT_TYPE_ARC = SEGMENT_TYPE_ARC;
   exports.SEGMENT_TYPE_CUBIC_BEZIER = SEGMENT_TYPE_CUBIC_BEZIER;
@@ -15391,9 +15304,18 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.TYPE_DESCRIPTOR_CONNECTION = TYPE_DESCRIPTOR_CONNECTION;
   exports.TYPE_DESCRIPTOR_CONNECTOR = TYPE_DESCRIPTOR_CONNECTOR;
   exports.TYPE_DESCRIPTOR_ENDPOINT = TYPE_DESCRIPTOR_ENDPOINT;
+  exports.TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION = TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION;
+  exports.TYPE_ENDPOINT_BLANK = TYPE_ENDPOINT_BLANK;
+  exports.TYPE_ENDPOINT_DOT = TYPE_ENDPOINT_DOT;
+  exports.TYPE_ENDPOINT_RECTANGLE = TYPE_ENDPOINT_RECTANGLE;
   exports.TYPE_ID_CONNECTION = TYPE_ID_CONNECTION;
   exports.TYPE_ITEM_ANCHORS = TYPE_ITEM_ANCHORS;
   exports.TYPE_ITEM_CONNECTOR = TYPE_ITEM_CONNECTOR;
+  exports.TYPE_OVERLAY_ARROW = TYPE_OVERLAY_ARROW;
+  exports.TYPE_OVERLAY_CUSTOM = TYPE_OVERLAY_CUSTOM;
+  exports.TYPE_OVERLAY_DIAMOND = TYPE_OVERLAY_DIAMOND;
+  exports.TYPE_OVERLAY_LABEL = TYPE_OVERLAY_LABEL;
+  exports.TYPE_OVERLAY_PLAIN_ARROW = TYPE_OVERLAY_PLAIN_ARROW;
   exports.UIGroup = UIGroup;
   exports.UINode = UINode;
   exports.UNDEFINED = UNDEFINED;
@@ -15429,14 +15351,15 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.connectorBoxIntersection = connectorBoxIntersection;
   exports.consume = consume;
   exports.convertToFullOverlaySpec = convertToFullOverlaySpec;
+  exports.createBaseRepresentation = createBaseRepresentation;
   exports.createBezierConnectorBase = createBezierConnectorBase;
   exports.createComponentBase = createComponentBase;
-  exports.createConnection = createConnection;
   exports.createConnectorBase = createConnectorBase;
   exports.createElement = createElement;
   exports.createElementNS = createElementNS;
   exports.createEndpoint = createEndpoint;
   exports.createFloatingAnchor = createFloatingAnchor;
+  exports.createOverlayBase = createOverlayBase;
   exports.defaultConnectorHandler = defaultConnectorHandler;
   exports.defaultSegmentHandler = defaultSegmentHandler;
   exports.dist = dist;
@@ -15488,6 +15411,7 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.isDynamic = isDynamic;
   exports.isEdgeSupported = isEdgeSupported;
   exports.isEmpty = isEmpty;
+  exports.isEndpointRepresentation = isEndpointRepresentation;
   exports.isFloating = _isFloating;
   exports.isFullOverlaySpec = isFullOverlaySpec;
   exports.isFunction = isFunction;

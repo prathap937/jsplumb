@@ -1,7 +1,7 @@
 import { Endpoint } from "../endpoint/endpoint";
 import { AnchorComputeParams, Face, Orientation, LightweightAnchor, LightweightContinuousAnchor, LightweightFloatingAnchor } from "../factory/anchor-record-factory";
 import { RedrawResult, Router } from "./router";
-import { Connection } from "../connector/connection-impl";
+import { Connection } from '../connector/declarations';
 import { JsPlumbInstance } from "../core";
 import { PointXY } from "@jsplumb/util";
 import { AnchorPlacement, AnchorSpec } from "@jsplumb/common";

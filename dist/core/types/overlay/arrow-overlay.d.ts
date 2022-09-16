@@ -1,23 +1,18 @@
-import { PointXY, Size } from '@jsplumb/util';
-import { Overlay } from "./overlay";
-import { JsPlumbInstance } from "../core";
-import { Component } from '../component/component';
+import { Size } from '@jsplumb/util';
+import { OverlayBase } from "./overlay";
+import { OverlayHandler } from '../factory/overlay-factory';
 import { PaintStyle, ArrowOverlayOptions } from '@jsplumb/common';
-export declare class ArrowOverlay extends Overlay {
-    instance: JsPlumbInstance;
-    component: Component;
+export declare const DEFAULT_LENGTH = 20;
+export declare const TYPE_OVERLAY_ARROW = "Arrow";
+export interface ArrowOverlay extends OverlayBase {
     width: number;
     length: number;
     foldback: number;
     direction: number;
     location: number;
     paintStyle: PaintStyle;
-    static type: string;
-    type: string;
     cachedDimensions: Size;
-    constructor(instance: JsPlumbInstance, component: Component, p: ArrowOverlayOptions);
-    draw(component: Component, currentConnectionPaintStyle: PaintStyle, absolutePosition?: PointXY): any;
-    updateFrom(d: any): void;
 }
-export declare function isArrowOverlay(o: Overlay): o is ArrowOverlay;
+export declare function isArrowOverlay(o: OverlayBase): o is ArrowOverlay;
+export declare const ArrowOverlayHandler: OverlayHandler<ArrowOverlayOptions>;
 //# sourceMappingURL=arrow-overlay.d.ts.map

@@ -1,5 +1,5 @@
-import { NONE, cls, CLASS_CONNECTOR, CLASS_ENDPOINT, att, ATTRIBUTE_GROUP, CLASS_OVERLAY, ATTRIBUTE_TABINDEX, EVENT_ZOOM, SELECTOR_MANAGED_ELEMENT, ATTRIBUTE_NOT_DRAGGABLE, Components, Connections, Endpoints, SOURCE, TARGET, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_START_DETACH, ATTRIBUTE_SCOPE_PREFIX, CLASS_ENDPOINT_FLOATING, REDROP_POLICY_ANY, REDROP_POLICY_STRICT, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_ANY_SOURCE_OR_TARGET, CHECK_DROP_ALLOWED, classList, IS_DETACH_ALLOWED, CHECK_CONDITION, INTERCEPT_BEFORE_DETACH, createFloatingAnchor, EndpointRepresentation, ABSOLUTE, Overlay, BLOCK, ATTRIBUTE_MANAGED, STATIC, FIXED, isLabelOverlay, isArrowOverlay, isDiamondOverlay, isPlainArrowOverlay, isCustomOverlay, pointOnComponentPath, JsPlumbInstance, DotEndpoint, RectangleEndpoint, BlankEndpoint } from '@jsplumb/core';
-import { isString, forEach, fastTrim, log, removeWithFunction, uuid, snapToGrid, extend, findWithFunction, wrap, getWithFunction, getFromSetWithFunction, intersects, merge, each, getAllWithFunction, functionChain, isObject, isAssignableFrom, fromArray, isFunction } from '@jsplumb/util';
+import { NONE, cls, CLASS_CONNECTOR, CLASS_ENDPOINT, att, ATTRIBUTE_GROUP, CLASS_OVERLAY, ATTRIBUTE_TABINDEX, EVENT_ZOOM, SELECTOR_MANAGED_ELEMENT, ATTRIBUTE_NOT_DRAGGABLE, Components, Connections, Endpoints, SOURCE, TARGET, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_START_DETACH, ATTRIBUTE_SCOPE_PREFIX, CLASS_ENDPOINT_FLOATING, REDROP_POLICY_ANY, REDROP_POLICY_STRICT, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_ANY_SOURCE_OR_TARGET, CHECK_DROP_ALLOWED, classList, EVENT_MAX_CONNECTIONS, IS_DETACH_ALLOWED, CHECK_CONDITION, INTERCEPT_BEFORE_DETACH, createFloatingAnchor, isEndpointRepresentation, ABSOLUTE, BLOCK, ATTRIBUTE_MANAGED, STATIC, FIXED, isLabelOverlay, isArrowOverlay, isDiamondOverlay, isPlainArrowOverlay, isCustomOverlay, pointOnComponentPath, OverlayFactory, JsPlumbInstance, TYPE_ENDPOINT_DOT, TYPE_ENDPOINT_RECTANGLE, TYPE_ENDPOINT_BLANK } from '@jsplumb/core';
+import { isString, forEach, fastTrim, log, removeWithFunction, uuid, snapToGrid, extend, findWithFunction, wrap, getWithFunction, getFromSetWithFunction, intersects, merge, each, getAllWithFunction, functionChain, isObject, Events, fromArray, isFunction } from '@jsplumb/util';
 import { WILDCARD, FALSE as FALSE$1, TRUE as TRUE$1, UNDEFINED } from '@jsplumb/common';
 
 function _typeof(obj) {
@@ -2978,7 +2978,7 @@ function _makeFloatingEndpoint(ep, endpoint, referenceCanvas, sourceElement, sou
     cssClass: [CLASS_ENDPOINT_FLOATING, ep.cssClass].join(" ")
   };
   if (endpoint != null) {
-    if (isAssignableFrom(endpoint, EndpointRepresentation)) {
+    if (isEndpointRepresentation(endpoint)) {
       p.existingEndpoint = endpoint;
     } else {
       p.endpoint = endpoint;
@@ -3583,11 +3583,11 @@ var EndpointDragHandler = function () {
                 connection: this.jpc
               });
               if (bb) {
-                newDropTarget.endpoint.representation.addClass(this.instance.endpointDropAllowedClass);
-                newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropForbiddenClass);
+                Endpoints.addClass(newDropTarget.endpoint, this.instance.endpointDropAllowedClass);
+                Endpoints.removeClass(newDropTarget.endpoint, this.instance.endpointDropForbiddenClass);
               } else {
-                newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropAllowedClass);
-                newDropTarget.endpoint.representation.addClass(this.instance.endpointDropForbiddenClass);
+                Endpoints.addClass(newDropTarget.endpoint, this.instance.endpointDropForbiddenClass);
+                Endpoints.removeClass(newDropTarget.endpoint, this.instance.endpointDropAllowedClass);
               }
               this.floatingAnchor.over(newDropTarget.endpoint);
               this.instance._paintConnection(this.jpc);
@@ -3656,6 +3656,11 @@ var EndpointDragHandler = function () {
               if (!dropEndpoint.enabled) {
                 this._reattachOrDiscard(p.e);
               } else if (Endpoints.isFull(dropEndpoint)) {
+                this.instance.fire(EVENT_MAX_CONNECTIONS, {
+                  endpoint: this,
+                  connection: this.jpc,
+                  maxConnections: this.instance.defaults.maxConnections
+                }, originalEvent);
                 this._reattachOrDiscard(p.e);
               } else {
                 if (idx === 0) {
@@ -3964,7 +3969,7 @@ var HTMLElementOverlay = function () {
         o.canvas.style.msTransform = ts;
         o.canvas.style.oTransform = ts;
         o.canvas.style.transform = ts;
-        if (!o.isVisible()) {
+        if (!o.visible) {
           o.canvas.style.display = NONE;
         }
         o.canvas.jtk = {
@@ -4051,21 +4056,6 @@ function destroySVGOverlay(o, force) {
   delete _o.path;
   delete _o.bgPath;
 }
-(function (_Overlay) {
-  _inherits(SVGElementOverlay, _Overlay);
-  var _super = _createSuper(SVGElementOverlay);
-  function SVGElementOverlay() {
-    var _this;
-    _classCallCheck(this, SVGElementOverlay);
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-    _this = _super.call.apply(_super, [this].concat(args));
-    _defineProperty(_assertThisInitialized(_this), "path", void 0);
-    return _this;
-  }
-  return SVGElementOverlay;
-})(Overlay);
 
 var SvgComponent = function () {
   function SvgComponent() {
@@ -4426,10 +4416,10 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
       var mappedEvent = compoundEvent(stem, event)
       ;
       e._jsPlumbOverlay = overlay;
-      overlay.fire(event, {
+      Events.fire(overlay, event, {
         e: e,
         overlay: overlay
-      });
+      }, e);
       this.fire(mappedEvent, overlay.component, e);
     }
   }, {
@@ -5179,20 +5169,20 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
               x: absolutePosition.x,
               y: absolutePosition.y
             };
-          } else if (component instanceof EndpointRepresentation) {
+          } else if (Endpoints.isEndpoint(component)) {
             var locToUse = Array.isArray(o.location) ? o.location : [o.location, o.location];
             cxy = {
-              x: locToUse[0] * component.w,
-              y: locToUse[1] * component.h
+              x: locToUse[0] * component.representation.w,
+              y: locToUse[1] * component.representation.h
             };
-          } else {
+          } else if (Connections.isConnection(component)) {
             var loc = o.location,
                 absolute = false;
             if (isString(o.location) || o.location < 0 || o.location > 1) {
               loc = parseInt("" + o.location, 10);
               absolute = true;
             }
-            cxy = pointOnComponentPath(component, loc, absolute);
+            cxy = pointOnComponentPath(component.connector, loc, absolute);
           }
           var minx = cxy.x - td.w / 2,
               miny = cxy.y - td.h / 2;
@@ -5218,7 +5208,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
           };
         }
       } else if (isArrowOverlay(o) || isDiamondOverlay(o) || isPlainArrowOverlay(o)) {
-        return o.draw(component, paintStyle, absolutePosition);
+        return OverlayFactory.draw(o, component, paintStyle, absolutePosition);
       } else {
         throw "Could not draw overlay of type [" + o.type + "]";
       }
@@ -5488,7 +5478,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
 
 var CIRCLE = "circle";
 var register$2 = function register() {
-  registerEndpointRenderer(DotEndpoint.type, {
+  registerEndpointRenderer(TYPE_ENDPOINT_DOT, {
     makeNode: function makeNode(ep, style) {
       return _node(CIRCLE, {
         "cx": ep.w / 2,
@@ -5508,7 +5498,7 @@ var register$2 = function register() {
 
 var RECT = "rect";
 var register$1 = function register() {
-  registerEndpointRenderer(RectangleEndpoint.type, {
+  registerEndpointRenderer(TYPE_ENDPOINT_RECTANGLE, {
     makeNode: function makeNode(ep, style) {
       return _node(RECT, {
         "width": ep.w,
@@ -5531,7 +5521,7 @@ var BLANK_ATTRIBUTES = {
   "stroke": "transparent"
 };
 var register = function register() {
-  registerEndpointRenderer(BlankEndpoint.type, {
+  registerEndpointRenderer(TYPE_ENDPOINT_BLANK, {
     makeNode: function makeNode(ep, style) {
       return _node("rect", BLANK_ATTRIBUTES);
     },
