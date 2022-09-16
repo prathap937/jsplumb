@@ -1,14 +1,14 @@
 import {registerEndpointRenderer} from "./browser-jsplumb-instance"
 import { _attr, _node } from './svg-util'
-import { DotEndpoint } from '@jsplumb/core'
+import {DotEndpoint, TYPE_ENDPOINT_DOT} from '@jsplumb/core'
 import { PaintStyle } from "@jsplumb/common"
 
 const CIRCLE = "circle"
 
 export const register = () => {
 
-    registerEndpointRenderer<DotEndpoint>(DotEndpoint.type, {
-        // TODO `instance` not needed here
+    registerEndpointRenderer<DotEndpoint>(TYPE_ENDPOINT_DOT, {
+
         makeNode: (ep: DotEndpoint, style: PaintStyle) => {
             return _node(CIRCLE, {
                 "cx": ep.w / 2,

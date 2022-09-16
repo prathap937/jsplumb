@@ -2,7 +2,8 @@ import {DeleteConnectionOptions, JsPlumbInstance} from "../core"
 import {LightweightAnchor, Orientation} from "../factory/anchor-record-factory"
 import {Endpoint} from "./endpoint"
 import {EndpointFactory} from "../factory/endpoint-factory"
-import {extend, Extents, isAssignableFrom, isString} from '@jsplumb/util'
+import {extend, Extents, isString} from '@jsplumb/util'
+import { EVENT_ANCHOR_CHANGED } from '../constants'
 import {
     AnchorPlacement,
     AnchorSpec,
@@ -13,61 +14,57 @@ import {
 } from "@jsplumb/common"
 import {Components} from '../component/component'
 import { Connections } from '../connector/connections'
-import {Connection, EVENT_ANCHOR_CHANGED} from "@jsplumb/core"
+import { Connection } from '../connector/declarations'
+
+export const TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION = "endpoint-representation"
 
 /**
- * Superclass for all types of Endpoint. This class is renderer
- * agnostic, as are any subclasses of it.
+ * Base interface for all types of Endpoint representation.
  */
-export abstract class EndpointRepresentation<C> {
-
+export interface EndpointRepresentation<C> {
     typeId:string
-
     x:number
     y:number
     w:number
     h:number
-
     computedValue:C
-
-    bounds:Extents = EMPTY_BOUNDS()
-
-    classes:Array<string> = []
-
+    bounds:Extents
+    classes:Array<string>
     instance:JsPlumbInstance
-
     canvas:any
+    type:string
+    endpoint:Endpoint
+    typeDescriptor:typeof TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION
+}
 
-    abstract type:string
+export function isEndpointRepresentation(ep:any):ep is EndpointRepresentation<any> {
+    return ep.typeDescriptor != null && ep.typeDescriptor === TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION
+}
 
-    protected constructor(public endpoint:Endpoint, params?:EndpointRepresentationParams) {
-        params = params || {}
-        this.instance = endpoint.instance
-        if (endpoint.cssClass) {
-            this.classes.push(endpoint.cssClass)
-        }
-        if (params.cssClass) {
-            this.classes.push(params.cssClass)
-        }
+export function createBaseRepresentation(type:string, endpoint:Endpoint, params?:EndpointRepresentationParams) {
+    params = params || {}
+    const classes = []
+    if (endpoint.cssClass) {
+        classes.push(endpoint.cssClass)
     }
-
-    addClass(c:string) {
-        this.classes.push(c)
-        this.instance.addEndpointClass(this.endpoint, c)
+    if (params.cssClass) {
+        classes.push(params.cssClass)
     }
-
-    removeClass(c:string) {
-        this.classes = this.classes.filter((_c:string) => _c !== c)
-        this.instance.removeEndpointClass(this.endpoint, c)
-    }
-
-    compute(anchorPoint:AnchorPlacement, orientation:Orientation, endpointStyle:any) {
-        this.computedValue = EndpointFactory.compute(this, anchorPoint, orientation, endpointStyle)
-        this.bounds.xmin = this.x
-        this.bounds.ymin = this.y
-        this.bounds.xmax = this.x + this.w
-        this.bounds.ymax = this.y + this.h
-    }
+    return {
+       typeId:null,
+        x:0,
+        y:0,
+        w:0,
+        h:0,
+        classes,
+        type,
+        bounds:EMPTY_BOUNDS(),
+        instance:endpoint.instance,
+        canvas:null as any,
+        endpoint,
+        computedValue:null as any,
+        typeDescriptor:TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION
+    } as EndpointRepresentation<any>
 }
 
 export const TYPE_DESCRIPTOR_ENDPOINT = "endpoint"
@@ -140,14 +137,16 @@ export const Endpoints = {
     addClass(endpoint:Endpoint, clazz: string, cascade?:boolean): void {
         Components.addBaseClass(endpoint, clazz, cascade)
         if (endpoint.representation != null) {
-            endpoint.representation.addClass(clazz)
+            endpoint.representation.classes.push(clazz)
+            endpoint.instance.addEndpointClass(endpoint, clazz)
         }
     },
 
     removeClass(endpoint:Endpoint,clazz: string, cascade?:boolean): void {
         Components.removeBaseClass(endpoint, clazz, cascade)
         if (endpoint.representation != null) {
-            endpoint.representation.removeClass(clazz)
+            endpoint.representation.classes = endpoint.representation.classes.filter((_c:string) => _c !== clazz)
+            endpoint.instance.removeEndpointClass(endpoint, clazz)
         }
     },
     _setPreparedAnchor (endpoint:Endpoint, anchor:LightweightAnchor):Endpoint {
@@ -269,7 +268,7 @@ export const Endpoints = {
 
         let endpointRep:EndpointRepresentation<C>
 
-        if(isAssignableFrom(ep, EndpointRepresentation)) {
+        if(isEndpointRepresentation(ep)) {
             // cloning an existing endpoint
             const epr = (ep as EndpointRepresentation<C>)
             endpointRep = EndpointFactory.clone(epr)
@@ -299,6 +298,13 @@ export const Endpoints = {
             endpoint.instance.destroyEndpoint(endpoint)
         }
         endpoint.representation = ep
+    },
+    compute(ep:EndpointRepresentation<any>, anchorPoint:AnchorPlacement, orientation:Orientation, endpointStyle:any) {
+        ep.computedValue = EndpointFactory.compute(ep, anchorPoint, orientation, endpointStyle)
+        ep.bounds.xmin = ep.x
+        ep.bounds.ymin = ep.y
+        ep.bounds.xmax = ep.x + ep.w
+        ep.bounds.ymax = ep.y + ep.h
     }
 }
 

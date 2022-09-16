@@ -1,41 +1,31 @@
-import {EndpointRepresentation} from "./endpoints"
+import {createBaseRepresentation, EndpointRepresentation} from "./endpoints"
 import {Orientation} from "../factory/anchor-record-factory"
 import {Endpoint} from "./endpoint"
 import {EndpointHandler} from "../factory/endpoint-factory"
 import {AnchorPlacement, RectangleEndpointParams} from "@jsplumb/common"
+import {extend} from "@jsplumb/util"
 
 export type ComputedRectangleEndpoint = [ number, number, number, number ]
+export const TYPE_ENDPOINT_RECTANGLE = "Rectangle"
 
-export class RectangleEndpoint extends EndpointRepresentation<ComputedRectangleEndpoint> {
+export interface RectangleEndpoint extends EndpointRepresentation<ComputedRectangleEndpoint> {
 
     width:number
     height:number
-
-    constructor(endpoint:Endpoint, params?:RectangleEndpointParams) {
-
-        super(endpoint, params)
-
-        params = params || {}
-        this.width = params.width || 10
-        this.height = params.height || 10
-    }
-
-    static type = "Rectangle"
-    type = RectangleEndpoint.type
-
-    static _getParams(ep:RectangleEndpoint):Record<string, any> {
-        return {
-            width: ep.width,
-            height:ep.height
-        }
-    }
 }
 
 export const RectangleEndpointHandler:EndpointHandler<RectangleEndpoint, ComputedRectangleEndpoint> = {
 
-    type:RectangleEndpoint.type,
+    type:TYPE_ENDPOINT_RECTANGLE,
 
-    cls:RectangleEndpoint,
+    create(endpoint:Endpoint, params?:RectangleEndpointParams):RectangleEndpoint {
+        const base = createBaseRepresentation(TYPE_ENDPOINT_RECTANGLE, endpoint, params)
+        return extend(base as any, {
+            type:TYPE_ENDPOINT_RECTANGLE,
+            width:params.width || 10,
+            height:params.height || 10
+        }) as RectangleEndpoint
+    },
 
     compute:(ep:RectangleEndpoint, anchorPoint:AnchorPlacement, orientation:Orientation, endpointStyle:any):ComputedRectangleEndpoint => {
         let width = endpointStyle.width || ep.width,

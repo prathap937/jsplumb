@@ -137,7 +137,7 @@ var testSuite = function () {
         var e = _jsPlumb.addEndpoint(d1, {
             "overlays": [{type:"Label", options:{"label": "Label text", "cssClass": 'kw_port_label', "id": "66"}}]
         });
-        var o = e.getOverlay("66");
+        var o = e.overlays["66"]
         ok(o != null, "overlay exists");
     });
 
@@ -241,8 +241,8 @@ var testSuite = function () {
         var e3 = _jsPlumb.addEndpoint(d3, {source: true, maxConnections: -1});
         var e4 = _jsPlumb.addEndpoint(d4, {source: true, maxConnections: -1});
         _jsPlumb.connect({sourceEndpoint: e3, targetEndpoint: e4});
-        ok(e3.isConnectedTo(e4), "e3 is connected to e4");
-        ok(e4.isConnectedTo(e3), "e4 is connected to e3");
+        ok(jsPlumbBrowserUI.Endpoints.isConnectedTo(e3, e4), "e3 is connected to e4");
+        ok(jsPlumbBrowserUI.Endpoints.isConnectedTo(e4, e3), "e4 is connected to e3");
     });
 
 // ************** ANCHORS ********************************************	
@@ -476,8 +476,8 @@ var testSuite = function () {
         _jsPlumb.connect({uuids:["foo", "bar"]});
         var c = _jsPlumb.getConnections();  // will get all connections in the default scope.
         equal(c.length, 1, "there is one connection");
-        equal(c[0].getUuids()[0], "foo");
-        equal(c[0].getUuids()[1], "bar");
+        equal(jsPlumbBrowserUI.Connections.getUuids(c[0])[0], "foo");
+        equal(jsPlumbBrowserUI.Connections.getUuids(c[0])[1], "bar");
     });
 
     test('getConnections (simple case, default scope; detach by element id using params object)', function () {
@@ -710,7 +710,7 @@ var testSuite = function () {
         var c = _jsPlumb.connect({source: e1, target: e2});
         equal(_jsPlumb.select().length, 1, "there is one connection in the instance");
 
-        e1.deleteEveryConnection();
+        jsPlumbBrowserUI.Endpoints.deleteEveryConnection(e1);
         equal(_jsPlumb.select().length, 0, "there are no connections in the instance");
     });
 
@@ -845,7 +845,7 @@ var testSuite = function () {
             } });
         var c = _jsPlumb.connect({source: e1, target: e2});
         equal(c.endpoints[1].connections.length, 1, "target endpoint has a connection initially");
-        e1.deleteEveryConnection();
+        jsPlumbBrowserUI.Endpoints.deleteEveryConnection(e1);
         equal(c.endpoints.length, 2, "connection's endpoints were not removed");
         equal(e1.connections.length, 1, "source endpoint has one connection");
         equal(e2.connections.length, 1, "target endpoint has one connection");
@@ -859,7 +859,7 @@ var testSuite = function () {
             } });
         var c = _jsPlumb.connect({source: e1, target: e2});
         equal(c.endpoints[1].connections.length, 1, "target endpoint has a connection initially");
-        e1.deleteEveryConnection({force:true});
+        jsPlumbBrowserUI.Endpoints.deleteEveryConnection(e1, {force:true});
         equal(c.endpoints, null, "connection's endpoints were not removed");
         equal(e1.connections.length, 0, "source endpoint has no connections");
         equal(e2.connections.length, 0, "target endpoint has no connections");

@@ -51,7 +51,7 @@ import {
     REDROP_POLICY_ANY_TARGET,
     REDROP_POLICY_ANY_SOURCE_OR_TARGET,
     CLASS_ENDPOINT_FLOATING,
-    Endpoints, Connections, Components
+    Endpoints, Connections, Components, isEndpointRepresentation
 } from "@jsplumb/core"
 
 import { FALSE,
@@ -60,7 +60,6 @@ import { FALSE,
 import {
     getAllWithFunction,
     merge,
-    isAssignableFrom,
     getWithFunction,
     forEach,
     PointXY,
@@ -71,9 +70,8 @@ import {
     intersects,
     BoundingBox, isObject
 } from "@jsplumb/util"
+
 import {ATTRIBUTE_JTK_ENABLED, ELEMENT_DIV} from "./constants"
-
-
 
 function _makeFloatingEndpoint (ep:Endpoint,
                                 endpoint:EndpointSpec | EndpointRepresentation<any>,
@@ -94,8 +92,8 @@ function _makeFloatingEndpoint (ep:Endpoint,
 
     if (endpoint != null) {
 
-        if (isAssignableFrom(endpoint, EndpointRepresentation)) {
-            p.existingEndpoint = endpoint as EndpointRepresentation<any>
+        if (isEndpointRepresentation(endpoint)) {
+            p.existingEndpoint = endpoint
         } else {
             p.endpoint = endpoint as EndpointSpec
         }
@@ -124,10 +122,6 @@ const SELECTOR_DRAG_ACTIVE_OR_HOVER = cls(CLASS_DRAG_ACTIVE, CLASS_DRAG_HOVER)
 const SOURCE_SELECTOR_UNIQUE_ENDPOINT_DATA = "sourceSelectorEndpoint"
 
 type EndpointDropTarget = {el:jsPlumbDOMElement, endpoint:Endpoint, r:BoundingBox, def?:SourceOrTargetDefinition, targetEl:jsPlumbDOMElement, rank?:number}
-
-// export interface FloatingEndpoint extends Endpoint {
-//     referenceEndpoint:Endpoint
-// }
 
 /**
  * Handles dragging of connections between endpoints.
@@ -906,11 +900,11 @@ export class EndpointDragHandler implements DragHandler {
                         })
 
                         if (bb) {
-                            newDropTarget.endpoint.representation.addClass(this.instance.endpointDropAllowedClass)
-                            newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropForbiddenClass)
+                            Endpoints.addClass(newDropTarget.endpoint, this.instance.endpointDropAllowedClass)
+                            Endpoints.removeClass(newDropTarget.endpoint, this.instance.endpointDropForbiddenClass)
                         } else {
-                            newDropTarget.endpoint.representation.removeClass(this.instance.endpointDropAllowedClass)
-                            newDropTarget.endpoint.representation.addClass(this.instance.endpointDropForbiddenClass)
+                            Endpoints.addClass(newDropTarget.endpoint, this.instance.endpointDropForbiddenClass)
+                            Endpoints.removeClass(newDropTarget.endpoint, this.instance.endpointDropAllowedClass)
                         }
 
                         this.floatingAnchor.over(newDropTarget.endpoint)

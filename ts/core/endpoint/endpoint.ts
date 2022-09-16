@@ -1,5 +1,5 @@
 
-import {Connection} from "../connector/connection-impl"
+import { Connection } from '../connector/declarations'
 import {EndpointRepresentation, TYPE_DESCRIPTOR_ENDPOINT} from './endpoints'
 import { extend,  } from '@jsplumb/util'
 import { JsPlumbInstance } from '../core'

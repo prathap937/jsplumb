@@ -818,7 +818,7 @@ var testSuite = function () {
         });
         var lo = jsPlumb.Components.getLabelOverlay(c);
         ok(lo != null, "label overlay exists");
-        equal(lo.getLabel(), "BAZ", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "BAZ", "label overlay has correct value");
         equal(lo.location, 0.9, "label overlay has correct location");
     });
 
@@ -841,7 +841,7 @@ var testSuite = function () {
         });
 
         ok(lo != null, "label overlay exists");
-        equal(lo.getLabel(), "BAZ", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "BAZ", "label overlay has correct value");
         equal(lo.location, 0.9, "label overlay has correct location");
     });
 
@@ -855,7 +855,7 @@ var testSuite = function () {
             lo = jsPlumb.Components.getLabelOverlay(c);
 
         ok(lo != null, "label overlay exists");
-        equal(lo.getLabel(), "FOO", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "FOO", "label overlay has correct value");
         equal(lo.location, 0.5, "label overlay has correct location");
     });
 
@@ -870,7 +870,7 @@ var testSuite = function () {
             lo = jsPlumb.Components.getLabelOverlay(c);
 
         ok(lo != null, "label overlay exists");
-        equal(lo.getLabel(), "FOO", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "FOO", "label overlay has correct value");
         equal(lo.location, 0.2, "label overlay has correct location");
     });
 
@@ -1078,10 +1078,10 @@ var testSuite = function () {
                 options:{
                     id: "custom",
                     create: function (connection) {
-                        ok(connection != null, "we were passed in a connection");
-                        var d = document.createElement("div");
-                        d.setAttribute("custom", "true");
-                        d.innerHTML = connection.id;
+                        ok(connection != null, "we were passed in a connection")
+                        var d = document.createElement("div")
+                        d.setAttribute("custom", "true")
+                        d.innerHTML = connection.id
                         return d;
                     }
                 }

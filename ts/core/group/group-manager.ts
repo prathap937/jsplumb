@@ -10,7 +10,7 @@ import {UIGroup, GroupOptions, UINode} from "./group"
 import * as Constants from "../constants"
 import {PointXY, removeWithFunction, suggest, forEach, isString} from "@jsplumb/util"
 import { WILDCARD } from "@jsplumb/common"
-import {Connection} from "../connector/connection-impl"
+import { Connection } from '../connector/declarations'
 import {ConnectionSelection} from "../selection/connection-selection"
 import {SELECTOR_MANAGED_ELEMENT} from "../constants"
 import { Endpoints} from '../endpoint/endpoints'

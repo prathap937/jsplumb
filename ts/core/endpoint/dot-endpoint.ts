@@ -1,39 +1,36 @@
-import {EndpointRepresentation } from "./endpoints"
+import {createBaseRepresentation, EndpointRepresentation} from "./endpoints"
 import {Orientation} from "../factory/anchor-record-factory"
 import {Endpoint} from "./endpoint"
 import {EndpointHandler} from "../factory/endpoint-factory"
 import {AnchorPlacement, DotEndpointParams} from "@jsplumb/common"
+import {extend} from "@jsplumb/util"
 
 export type ComputedDotEndpoint = [ number, number, number, number, number ]
 
-export class DotEndpoint extends EndpointRepresentation<ComputedDotEndpoint> {
+export const TYPE_ENDPOINT_DOT = "Dot"
 
+export interface DotEndpoint extends EndpointRepresentation<ComputedDotEndpoint> {
     radius:number
     defaultOffset:number
     defaultInnerRadius:number
-
-    constructor(endpoint:Endpoint, params?:DotEndpointParams) {
-        
-        super(endpoint, params)
-        
-        params = params || {}
-        this.radius = params.radius || 5
-        this.defaultOffset = 0.5 * this.radius
-        this.defaultInnerRadius = this.radius / 3
-    }
-
-    static type = "Dot"
-    type = DotEndpoint.type
 }
-
 
 export const DotEndpointHandler:EndpointHandler<DotEndpoint, ComputedDotEndpoint> = {
 
-    type:DotEndpoint.type,
+    type:TYPE_ENDPOINT_DOT,
 
-    cls:DotEndpoint,
+    create(endpoint:Endpoint, params?:DotEndpointParams):DotEndpoint {
+        const base = createBaseRepresentation(TYPE_ENDPOINT_DOT, endpoint, params)
+        const radius = params.radius || 5
+        return extend(base as any, {
+            type:TYPE_ENDPOINT_DOT,
+            radius,
+            defaultOffset :0.5 * radius,
+            defaultInnerRadius : radius / 3
+        }) as DotEndpoint
+    },
 
-    compute:(ep:DotEndpoint, anchorPoint:AnchorPlacement, orientation:Orientation, endpointStyle:any):ComputedDotEndpoint => {
+    compute(ep:DotEndpoint, anchorPoint:AnchorPlacement, orientation:Orientation, endpointStyle:any):ComputedDotEndpoint {
         let x = anchorPoint.curX - ep.radius,
             y = anchorPoint.curY - ep.radius,
             w = ep.radius * 2,

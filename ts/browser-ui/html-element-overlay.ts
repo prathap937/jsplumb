@@ -1,11 +1,11 @@
 
 import {createElement} from './browser-util'
 import { jsPlumbDOMElement} from './element-facade'
-import {Component, JsPlumbInstance, Overlay, NONE, ABSOLUTE} from "@jsplumb/core"
+import {Component, JsPlumbInstance, NONE, ABSOLUTE, OverlayBase} from "@jsplumb/core"
 import {ELEMENT_DIV} from "./constants"
 import { Size } from "@jsplumb/util"
 
-interface HTMLElementOverlayHolder extends Overlay {
+interface HTMLElementOverlayHolder extends OverlayBase {
     canvas:jsPlumbDOMElement
     cachedDimensions:Size
 } 
@@ -14,7 +14,7 @@ export class HTMLElementOverlay {
 
     protected htmlElementOverlay:HTMLElementOverlayHolder
 
-    constructor(public instance:JsPlumbInstance, public overlay: Overlay) {
+    constructor(public instance:JsPlumbInstance, public overlay: OverlayBase) {
         this.htmlElementOverlay = overlay as HTMLElementOverlayHolder
     }
 

@@ -1,4 +1,4 @@
-import {Connection} from "../connector/connection-impl"
+import { Connection } from '../connector/declarations'
 import {EndpointRepresentation} from "./endpoints"
 import {LightweightAnchor} from "../factory/anchor-record-factory"
 import {PaintStyle, OverlaySpec, AnchorSpec, EndpointSpec, ConnectorSpec} from "@jsplumb/common"

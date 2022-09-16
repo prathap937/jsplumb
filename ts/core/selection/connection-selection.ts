@@ -1,7 +1,7 @@
 import {SelectionBase} from "./common"
-import {Connection} from "../connector/connection-impl"
 import {ConnectorSpec} from "@jsplumb/common"
 import {Connections} from "../connector/connections"
+import { Connection } from '../connector/declarations'
 
 export class ConnectionSelection extends SelectionBase<Connection> {
 

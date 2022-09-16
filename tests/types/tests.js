@@ -332,7 +332,7 @@ var testSuite = function () {
         equal(jsPlumb.Components.hasType(c, "basic"), true, "connection has 'basic' type");
         equal(c.paintStyle.stroke, "yellow", "connection has yellow stroke style");
         equal(c.paintStyle.strokeWidth, 4, "connection has strokeWidth 4");
-        equal(c.overlays["LBL"].getLabel(), "FOO", "overlay's label set via setType parameter");
+        equal(jsPlumb.Labels.getLabel(c.overlays["LBL"]), "FOO", "overlay's label set via setType parameter");
         equal(_length(c.overlays), 2, "two overlays after setting'basic' type");
         ok(_jsPlumb.hasClass(support.getConnectionCanvas(c), "FOO"), "FOO class was set on canvas");
 
@@ -421,8 +421,8 @@ var testSuite = function () {
 
         var labelOverlay = c.overlays["myLabel1"];
         ok(labelOverlay != null, "label overlay was retrieved");
-        labelOverlay.setLabel("foo");
-        ok(labelOverlay.getLabel() === "foo", "label set correctly on overlay");
+        jsPlumb.Labels.setLabel(labelOverlay, "foo");
+        ok(jsPlumb.Labels.getLabel(labelOverlay) === "foo", "label set correctly on overlay");
 
         jsPlumb.Components.addType(c, "selected");
         labelOverlay = c.overlays["myLabel1"];
@@ -991,11 +991,11 @@ var testSuite = function () {
         equal(c.hoverPaintStyle.strokeWidth, 4, "hoverPaintStyle strokeWidth is 6");
 
         var o1 = c.overlays["one"];
-        equal(o1.getLabel(),"one", "static label set correctly");
+        equal(jsPlumb.Labels.getLabel(o1),"one", "static label set correctly");
         var o2 = c.overlays["two"];
-        equal(o2.getLabel(), "label", "parameterised label with provided value set correctly");
+        equal(jsPlumb.Labels.getLabel(o2), "label", "parameterised label with provided value set correctly");
         var o3 = c.overlays["three"];
-        equal(o3.getLabel(), "", "parameterised label with missing value set correctly");
+        equal(jsPlumb.Labels.getLabel(o3), "", "parameterised label with missing value set correctly");
 
         ok(jsPlumb.Components.getLabel(c.endpoints[0]) == null, "endpoint did not get a label assigned from the connector's type");
     });
@@ -1018,7 +1018,7 @@ var testSuite = function () {
             }),
             l = c.overlays["label"];
 
-        equal(l.getLabel(), "LABEL", "label is set correctly");
+        equal(jsPlumb.Labels.getLabel(l), "LABEL", "label is set correctly");
 
     });
 
@@ -1040,7 +1040,7 @@ var testSuite = function () {
             }),
             l = c.overlays["label"];
 
-        equal(l.getLabel(), "", "label is blank when no value provided");
+        equal(jsPlumb.Labels.getLabel(l), "", "label is blank when no value provided");
 
     });
 

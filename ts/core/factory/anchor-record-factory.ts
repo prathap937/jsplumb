@@ -1,5 +1,5 @@
 import {PointXY, Rotations, Size, extend, isNumber, isString, uuid, map} from "@jsplumb/util"
-import { Connection } from "../connector/connection-impl"
+import { Connection } from '../connector/declarations'
 import { Endpoint } from "../endpoint/endpoint"
 import { JsPlumbInstance } from "../core"
 import {AnchorLocations, AnchorSpec, FullAnchorSpec, PerimeterAnchorShapes} from "@jsplumb/common"

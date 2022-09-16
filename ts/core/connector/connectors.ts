@@ -1,5 +1,5 @@
 import {ConnectorBase, ConnectorComputeParams, PaintGeometry} from "./abstract-connector"
-import {Connection} from "./connection-impl"
+import {Connection} from "./declarations"
 import {Geometry} from "@jsplumb/common"
 
 const connectorHandlerMap:Record<string, ConnectorHandler> = {}

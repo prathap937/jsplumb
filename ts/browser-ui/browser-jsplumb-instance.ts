@@ -3,7 +3,7 @@ import {
     TypeDescriptor,
     JsPlumbInstance,
     Endpoint,
-    Overlay,
+    OverlayBase,
     RedrawResult,
     ATTRIBUTE_NOT_DRAGGABLE,
     SELECTOR_MANAGED_ELEMENT,
@@ -24,7 +24,6 @@ import {
     isCustomOverlay,
     DeleteConnectionOptions,
     BehaviouralTypeDescriptor,
-    OverlayMouseEventParams,
     UIGroup,
     CLASS_CONNECTOR,
     CLASS_ENDPOINT,
@@ -33,7 +32,8 @@ import {
     pointOnComponentPath,
     ConnectorBase,
     Connections,
-    Endpoints
+    Endpoints,
+    OverlayFactory
 } from '@jsplumb/core'
 
 import {
@@ -230,10 +230,10 @@ export interface BrowserJsPlumbDefaults extends JsPlumbDefaults<Element> {
 export interface jsPlumbDOMInformation {
     connector?:ConnectorBase
     endpoint?:Endpoint
-    overlay?:Overlay
+    overlay?:OverlayBase
 }
 
-function isSVGElementOverlay(o:Overlay): o is SVGElementOverlay {
+function isSVGElementOverlay(o:OverlayBase): o is SVGElementOverlay {
     return isArrowOverlay(o) || isDiamondOverlay(o) || isPlainArrowOverlay(o)
 }
 
@@ -476,7 +476,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param event
      * @param e
      */
-    private fireOverlayMethod(overlay:Overlay, event:string, e:MouseEvent) {
+    private fireOverlayMethod(overlay:OverlayBase, event:string, e:MouseEvent) {
         const stem = Connections.isConnection(overlay.component) ? CONNECTION : ENDPOINT
         const mappedEvent = compoundEvent(stem, event)
 
@@ -1420,7 +1420,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param o
      * @param clazz
      */
-    addOverlayClass(o: Overlay, clazz: string): void {
+    addOverlayClass(o: OverlayBase, clazz: string): void {
 
         if (isLabelOverlay(o)) {
             o.instance.addClass(getLabelElement(o), clazz)
@@ -1438,7 +1438,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param o
      * @param clazz
      */
-    removeOverlayClass(o: Overlay, clazz: string): void {
+    removeOverlayClass(o: OverlayBase, clazz: string): void {
         if (isLabelOverlay(o)) {
             o.instance.removeClass(getLabelElement(o), clazz)
         } else if (isSVGElementOverlay(o)) {
@@ -1456,7 +1456,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param params
      * @param extents
      */
-    _paintOverlay(o: Overlay, params:any, extents:any):void {
+    _paintOverlay(o: OverlayBase, params:any, extents:any):void {
 
         //
         if (isLabelOverlay(o)) {
@@ -1495,7 +1495,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param o - Overlay to hide or show
      * @param visible - If true, make the overlay visible, if false, make the overlay invisible.
      */
-    setOverlayVisible(o: Overlay, visible:boolean):void {
+    setOverlayVisible(o: OverlayBase, visible:boolean):void {
         const d = visible ? "block" : "none"
         function s(el:any) {
             if (el != null) {
@@ -1517,7 +1517,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param o
      * @param c
      */
-    reattachOverlay(o: Overlay, c: Component): void {
+    reattachOverlay(o: OverlayBase, c: Component): void {
         if (isLabelOverlay(o)) {
             o.instance._appendElement(getLabelElement(o), this.getContainer())
         } else if (isCustomOverlay(o)) {
@@ -1533,7 +1533,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param o
      * @param hover
      */
-    setOverlayHover(o: Overlay, hover: boolean): void {
+    setOverlayHover(o: OverlayBase, hover: boolean): void {
 
         let canvas:Element
 
@@ -1563,7 +1563,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @internal
      * @param o
      */
-    destroyOverlay(o: Overlay):void {
+    destroyOverlay(o: OverlayBase):void {
         if (isLabelOverlay(o)) {
             const el = getLabelElement(o)
             el.parentNode.removeChild(el)
@@ -1587,7 +1587,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      * @param paintStyle
      * @param absolutePosition
      */
-    drawOverlay(o: Overlay, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any {
+    drawOverlay(o: OverlayBase, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any {
         if (isLabelOverlay(o) || isCustomOverlay(o)) {
 
             //  TO DO - move to a static method, or a shared method, etc.  (? future me doesnt know what that means.)
@@ -1598,19 +1598,19 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
                 let cxy = {x: 0, y: 0}
                 if (absolutePosition) {
                     cxy = {x: absolutePosition.x, y: absolutePosition.y}
-                } else if (component instanceof EndpointRepresentation) {
+                } else if (Endpoints.isEndpoint(component)) {
                     let locToUse:Array<number> = Array.isArray(o.location) ? o.location as Array<number> : [o.location, o.location] as Array<number>
                     cxy = {
-                        x: locToUse[0] * component.w,
-                        y: locToUse[1] * component.h
+                        x: locToUse[0] * component.representation.w,
+                        y: locToUse[1] * component.representation.h
                     }
-                } else {
+                } else if (Connections.isConnection(component)) {
                     let loc = o.location, absolute = false
                     if (isString(o.location) || o.location < 0 || o.location > 1) {
                         loc = parseInt("" + o.location, 10)
                         absolute = true
                     }
-                    cxy = pointOnComponentPath(component as unknown as ConnectorBase, loc as number, absolute);  // a connection
+                    cxy = pointOnComponentPath(component.connector, loc as number, absolute)
                 }
 
                 let minx = cxy.x - (td.w / 2),
@@ -1630,7 +1630,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
             }
 
         } else if (isArrowOverlay(o) || isDiamondOverlay(o) || isPlainArrowOverlay(o)) {
-            return o.draw(component, paintStyle, absolutePosition)
+            return OverlayFactory.draw(o, component, paintStyle, absolutePosition)
         } else {
             throw "Could not draw overlay of type [" + o.type + "]"
         }

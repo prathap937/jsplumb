@@ -1,59 +1,23 @@
 
-import {createOverlayBase, Overlay, OverlayBase, Overlays} from "./overlay"
+import {createOverlayBase, OverlayBase, Overlays} from "./overlay"
 import {Size, isFunction, PointXY, extend} from "@jsplumb/util"
 import {Component} from "../component/component"
 import {JsPlumbInstance} from "../core"
 import {OverlayFactory, OverlayHandler} from "../factory/overlay-factory"
-import {ArrowOverlayOptions, LabelOverlayOptions, PaintStyle} from "@jsplumb/common"
-import {ArrowOverlayHandler, DEFAULT_LENGTH, DiamondOverlay, PlainArrowOverlay} from "@jsplumb/core"
+import {LabelOverlayOptions, PaintStyle} from "@jsplumb/common"
 
 export const TYPE_OVERLAY_LABEL = "Label"
 
-export class LabelOverlay extends Overlay implements  OverlayBase {
+export interface LabelOverlay extends OverlayBase {
 
     label:string | Function
     labelText:string
-
-    static type = "Label"
-    type:string = LabelOverlay.type
-
     cachedDimensions:Size
-
-    constructor(public instance:JsPlumbInstance, public component:Component,
-                p:LabelOverlayOptions) {
-
-        super(instance, component, p)
-        p = p || { label:""}
-        Labels.setLabel(this, p.label)
-    }
-
-    getLabel(): string {
-        return Labels.getLabel(this)
-    }
-
-    setLabel(l: string | Function): void {
-        Labels.setLabel(this, l)
-    }
-
-    getDimensions():Size { return {w:1,h:1} }
-
-    updateFrom(d: any): void {
-        if(d.label != null){
-            this.setLabel(d.label)
-        }
-        if (d.location != null) {
-            this.setLocation(d.location)
-            this.instance.updateLabel(this)
-        }
-    }
 }
 
-export function isLabelOverlay(o:Overlay):o is LabelOverlay {
-    return o.type === LabelOverlay.type
+export function isLabelOverlay(o:OverlayBase):o is LabelOverlay {
+    return o.type === TYPE_OVERLAY_LABEL
 }
-
-
-OverlayFactory.register(LabelOverlay.type, LabelOverlay)
 
 const LabelOverlayHandler:OverlayHandler<LabelOverlayOptions> = {
     create: function(instance: JsPlumbInstance, component: Component, options: LabelOverlayOptions):LabelOverlay {
@@ -62,7 +26,8 @@ const LabelOverlayHandler:OverlayHandler<LabelOverlayOptions> = {
         const labelOverlay = extend(overlayBase as any, {
             label:options.label,
             labelText:"",
-            cachedDimensions:null
+            cachedDimensions:null,
+            type:TYPE_OVERLAY_LABEL
         }) as LabelOverlay
 
         Labels.setLabel(labelOverlay, options.label)
@@ -81,9 +46,9 @@ const LabelOverlayHandler:OverlayHandler<LabelOverlayOptions> = {
         }
     }
 
-
-
 }
+
+OverlayFactory.register(TYPE_OVERLAY_LABEL, LabelOverlayHandler)
 
 export const Labels = {
     setLabel(overlay:LabelOverlay, l:string|Function) {

@@ -1,23 +1,23 @@
-import {Extents, EventGenerator,clone, extend, isFunction, isString, log, merge, populate, setToArray, uuid, PointXY } from "@jsplumb/util"
+import {Extents, clone, extend, isFunction, isString, log, merge, populate, setToArray, uuid, PointXY } from "@jsplumb/util"
 
-import {Overlay, Overlays} from '../overlay/overlay'
+import {OverlayBase, Overlays} from '../overlay/overlay'
 import {ComponentTypeDescriptor} from '../type-descriptors'
 import { JsPlumbInstance } from "../core"
-import {Connection} from "../connector/connection-impl"
 import {Endpoint} from "../endpoint/endpoint"
 import { INTERCEPT_BEFORE_DROP } from '../constants'
 import { BeforeDropParams } from '../callbacks'
 import {
     convertToFullOverlaySpec
 } from "../overlay/overlay"
-import { LabelOverlay } from "../overlay/label-overlay"
+import {LabelOverlay, Labels, TYPE_OVERLAY_LABEL} from "../overlay/label-overlay"
 import { OverlayFactory } from "../factory/overlay-factory"
 import {
     FullOverlaySpec,
     LabelOverlayOptions,
     OverlaySpec, PaintStyle } from "@jsplumb/common"
 import {TYPE_DESCRIPTOR_ENDPOINT, Endpoints} from "../endpoint/endpoints"
-import { TYPE_DESCRIPTOR_CONNECTION, Connections } from "../connector/connections"
+import { Connections } from "../connector/connections"
+import { TYPE_DESCRIPTOR_CONNECTION, Connection } from '../connector/declarations'
 
 export type ComponentParameters = Record<string, any>
 
@@ -45,38 +45,37 @@ const ACTION_ADD = "add"
 const ACTION_REMOVE = "remove"
 
 function _applyTypes<E>(component:Component, params?:any) {
-    // if (component.getDefaultType) {
-        let td = component._typeDescriptor, map = {}
-        let defType = component._defaultType
 
-        let o = extend({} as any, defType)
+    let td = component._typeDescriptor, map = {}
+    let defType = component._defaultType
 
-        _mapType(map, defType, DEFAULT_TYPE_KEY)
+    let o = extend({} as any, defType)
 
-        component._types.forEach(tid => {
-            if (tid !== DEFAULT_TYPE_KEY) {
-                let _t = component.instance.getType(tid, td)
-                if (_t != null) {
+    _mapType(map, defType, DEFAULT_TYPE_KEY)
 
-                    const overrides = new Set([CONNECTOR, ANCHOR, ANCHORS])
-                    if (_t.mergeStrategy === MERGE_STRATEGY_OVERRIDE) {
-                        for (let k in _t) {
-                            overrides.add(k)
-                        }
+    component._types.forEach(tid => {
+        if (tid !== DEFAULT_TYPE_KEY) {
+            let _t = component.instance.getType(tid, td)
+            if (_t != null) {
+
+                const overrides = new Set([CONNECTOR, ANCHOR, ANCHORS])
+                if (_t.mergeStrategy === MERGE_STRATEGY_OVERRIDE) {
+                    for (let k in _t) {
+                        overrides.add(k)
                     }
-
-                    o = merge(o, _t, [CSS_CLASS], setToArray(overrides))
-                    _mapType(map, _t, tid)
                 }
+
+                o = merge(o, _t, [CSS_CLASS], setToArray(overrides))
+                _mapType(map, _t, tid)
             }
-        })
-
-        if (params) {
-            o = populate(o, params, "_")
         }
+    })
 
-        Components.applyType(component, o, map)
-    //}
+    if (params) {
+        o = populate(o, params, "_")
+    }
+
+    Components.applyType(component, o, map)
 }
 
 export function _removeTypeCssHelper<E>(component:Component, typeId:string) {
@@ -178,11 +177,11 @@ function _makeLabelOverlay(component:Component, params:LabelOverlayOptions):Labe
         },
         mergedParams:LabelOverlayOptions = extend<LabelOverlayOptions>(_params, params)
 
-    return new LabelOverlay(component.instance, component, mergedParams)
+    return OverlayFactory.get(component.instance, TYPE_OVERLAY_LABEL, component, mergedParams) as LabelOverlay
 }
 
-function _processOverlay<E>(component:Component, o:OverlaySpec|Overlay) {
-    let _newOverlay:Overlay = null
+function _processOverlay<E>(component:Component, o:OverlaySpec|OverlayBase) {
+    let _newOverlay:OverlayBase = null
     if (isString(o)) {
         _newOverlay = OverlayFactory.get(component.instance, o as string, component, {})
     }
@@ -192,7 +191,7 @@ function _processOverlay<E>(component:Component, o:OverlaySpec|Overlay) {
         const p = extend({}, oa.options)
         _newOverlay = OverlayFactory.get(component.instance, oa.type, component, p)
     } else {
-        _newOverlay = o as Overlay
+        _newOverlay = o as OverlayBase
     }
 
     _newOverlay.id = _newOverlay.id || uuid()
@@ -217,7 +216,7 @@ function _processOverlay<E>(component:Component, o:OverlaySpec|Overlay) {
 // }
 
 export interface Component {
-    overlays:Record<string, Overlay>
+    overlays:Record<string, OverlayBase>
     overlayPositions:Record<string, PointXY>
     overlayPlacements:Record<string, Extents>
     instance:JsPlumbInstance
@@ -320,7 +319,7 @@ export function createComponentBase(instance:JsPlumbInstance,
 
     if (params.label) {
         _defaultType.overlays[_internalLabelOverlayId] = {
-            type:LabelOverlay.type,
+            type:TYPE_OVERLAY_LABEL,
             options:{
                 label: params.label,
                 location: params.labelLocation || defaultLabelLocation,
@@ -393,21 +392,21 @@ export const Components = {
 
             for (i in t.overlays) {
 
-                let existing:Overlay = component.overlays[t.overlays[i].options.id]
+                let existing:OverlayBase = component.overlays[t.overlays[i].options.id]
                 if (existing) {
                     // maybe update from data, if there were parameterised values for instance.
-                    existing.updateFrom(t.overlays[i].options)
+                    OverlayFactory.updateFrom(existing, t.overlays[i].options)
                     keep[t.overlays[i].options.id] = true
                     component.instance.reattachOverlay(existing, component)
 
                 }
                 else {
-                    let c:Overlay = this.getCachedTypeItem(component, TYPE_ITEM_OVERLAY, t.overlays[i].options.id)
+                    let c:OverlayBase = this.getCachedTypeItem(component, TYPE_ITEM_OVERLAY, t.overlays[i].options.id)
                     if (c != null) {
                         component.instance.reattachOverlay(c, component)
                         Overlays.setVisible(c, true)
                         // maybe update from data, if there were parameterised values for instance.
-                        c.updateFrom(t.overlays[i].options)
+                        OverlayFactory.updateFrom(c, t.overlays[i].options)
                         component.overlays[c.id] = c
                     }
                     else {
@@ -560,10 +559,10 @@ export const Components = {
      * @param overlay
      * @internal
      */
-    addOverlay(component:Component, overlay:OverlaySpec):Overlay {
+    addOverlay(component:Component, overlay:OverlaySpec):OverlayBase {
         let o = _processOverlay(component, overlay)
 
-        if (component.data != null && o.type === LabelOverlay.type && !isString(overlay)) {
+        if (component.data != null && o.type === TYPE_OVERLAY_LABEL && !isString(overlay)) {
             //
             // component data might contain label location - look for it here.
             const d = component.data, p = (overlay as FullOverlaySpec).options
@@ -586,7 +585,7 @@ export const Components = {
      * @param id ID of the overlay to retrieve.
      * @public
      */
-    getOverlay<T extends Overlay>(component:Component, id:string):T {
+    getOverlay<T extends OverlayBase>(component:Component, id:string):T {
         return component.overlays[id] as T
     },
 
@@ -669,7 +668,7 @@ export const Components = {
      */
     getLabel(component:Component):string {
         let lo:LabelOverlay = this.getLabelOverlay(component)
-        return lo != null ? lo.getLabel() : null
+        return lo != null ? Labels.getLabel(lo) : null
     },
 
     /**
@@ -693,12 +692,12 @@ export const Components = {
         }
         else {
             if (isString(l) || isFunction(l)) {
-                lo.setLabel(l as string|Function)
+                Labels.setLabel(lo, l as string|Function)
             }
             else {
                 let ll = l as LabelOverlay
                 if (ll.label) {
-                    lo.setLabel(ll.label)
+                    Labels.setLabel(lo, ll.label)
                 }
                 if (ll.location) {
                     lo.location = ll.location
@@ -918,14 +917,14 @@ export const Components = {
      */
     mergeData (component:Component, d:any) { component.data = extend(component.data, d) },
     
-    setAbsoluteOverlayPosition(component:Component, overlay:Overlay, xy:PointXY) {
+    setAbsoluteOverlayPosition(component:Component, overlay:OverlayBase, xy:PointXY) {
         component.overlayPositions[overlay.id] = xy
     },
 
     /**
      * @internal
      */
-    getAbsoluteOverlayPosition(component:Component, overlay:Overlay):PointXY {
+    getAbsoluteOverlayPosition(component:Component, overlay:OverlayBase):PointXY {
         return component.overlayPositions ? component.overlayPositions[overlay.id] : null
     }
 

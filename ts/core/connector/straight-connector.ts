@@ -8,7 +8,7 @@ import {
 import {SEGMENT_TYPE_STRAIGHT} from "./straight-segment"
 import {AnchorPlacement} from "@jsplumb/common"
 import {ConnectorHandler, Connectors, defaultConnectorHandler} from "./connectors"
-import {Connection } from './connection-impl'
+import {Connection } from './declarations'
 import {createConnectorBase} from "./abstract-connector"
 import {extend} from "@jsplumb/util"
 

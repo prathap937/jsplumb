@@ -1,7 +1,7 @@
 
 import { JsPlumbInstance, jsPlumbElement } from "../core"
-import { Connection } from '../connector/connection-impl'
-import { DotEndpoint } from "../endpoint/dot-endpoint"
+import { Connection } from '../connector/declarations'
+import {TYPE_ENDPOINT_DOT} from "../endpoint/dot-endpoint"
 import { GroupManager } from "./group-manager"
 import { PointXY, removeWithFunction, uuid, log, getWithFunction} from '@jsplumb/util'
 
@@ -97,26 +97,24 @@ export class UIGroup<E = any> extends UINode<E> {
     }
 
     getEndpoint (conn:Connection, endpointIndex:number):EndpointSpec {
-        return this.endpoint || { type:DotEndpoint.type, options:{ radius:10 }}
+        return this.endpoint || { type:TYPE_ENDPOINT_DOT, options:{ radius:10 }}
     }
 
     add(_el:E, doNotFireEvent?:boolean):void {
         const dragArea = this.instance.getGroupContentArea(this)
         const __el = _el as unknown as jsPlumbElement<E>
-        //this.instance.each(_el, (__el:any) => {
 
-            if (__el._jsPlumbParentGroup != null) {
-                if (__el._jsPlumbParentGroup === this) {
-                    return
-                } else {
-                    __el._jsPlumbParentGroup.remove(_el, true, doNotFireEvent, false)
-                }
+        if (__el._jsPlumbParentGroup != null) {
+            if (__el._jsPlumbParentGroup === this) {
+                return
+            } else {
+                __el._jsPlumbParentGroup.remove(_el, true, doNotFireEvent, false)
             }
+        }
 
-            __el._jsPlumbParentGroup = this
-            this.children.push(new UINode<E>(this.instance, _el))
-            this.instance._appendElement(__el, dragArea)
-       // })
+        __el._jsPlumbParentGroup = this
+        this.children.push(new UINode<E>(this.instance, _el))
+        this.instance._appendElement(__el, dragArea)
 
         this.manager._updateConnectionsForGroup(this)
     }
@@ -136,7 +134,6 @@ export class UIGroup<E = any> extends UINode<E> {
     private _doRemove(child:UINode<E>, manipulateDOM?:boolean, doNotFireEvent?:boolean, doNotUpdateConnections?:boolean, targetGroup?:UIGroup<E>) {
 
         const __el = child.el as unknown as jsPlumbElement<E>
-
         delete __el._jsPlumbParentGroup
 
         removeWithFunction(this.children, (e:UINode<E>) => {

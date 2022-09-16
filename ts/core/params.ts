@@ -1,5 +1,5 @@
 import { Endpoint } from "./endpoint/endpoint"
-import { Connection } from "./connector/connection-impl"
+import { Connection } from './connector/declarations'
 import { EndpointStyle, OverlaySpec, PaintStyle, AnchorSpec, ConnectorSpec, EndpointSpec } from "@jsplumb/common"
 
 export type UUID = string

@@ -2841,16 +2841,16 @@ var testSuite = function () {
         ]});
         var o = c.overlays["label"], e = o.canvas;
         equal(e.innerHTML, "foo", "label text is set to original value");
-        o.setLabel("baz");
+        jsPlumb.Labels.setLabel(o, "baz");
         equal(e.innerHTML, "baz", "label text is set to new value 'baz'");
-        equal(o.getLabel(), "baz", "getLabel function works correctly with String");
+        equal(jsPlumb.Labels.getLabel(o), "baz", "getLabel function works correctly with String");
         // now try functions
         var aFunction = function () {
             return "aFunction";
         };
-        o.setLabel(aFunction);
+        jsPlumb.Labels.setLabel(o, aFunction);
         equal(e.innerHTML, "aFunction", "label text is set to new value from Function");
-        equal(o.getLabel(), "aFunction", "getLabel function works correctly with Function");
+        equal(jsPlumb.Labels.getLabel(o), "aFunction", "getLabel function works correctly with Function");
     });
 
     test(" label overlay custom css class", function () {

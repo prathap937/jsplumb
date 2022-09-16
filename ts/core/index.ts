@@ -30,12 +30,13 @@ export * from "./component/component"
 
 export * from "./connector/abstract-connector"
 export * from "./connector/arc-segment"
-export * from "./connector/connection-impl"
+export * from "./connector/connections"
 export * from "./connector/connectors"
+export * from './connector/declarations'
+export * from './connector/segments'
 export * from "./connector/straight-segment"
 export * from './connector/straight-connector'
-export * from './connector/segments'
-export * from './connector/connections'
+
 
 export * from "./selection/connection-selection"
 

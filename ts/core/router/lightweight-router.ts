@@ -16,7 +16,7 @@ import {
 } from "../factory/anchor-record-factory"
 import {ConnectionDetachedParams} from "../callbacks"
 import {RedrawResult, Router} from "./router"
-import {Connection} from "../connector/connection-impl"
+import { Connection } from '../connector/declarations'
 import {JsPlumbInstance} from "../core"
 import * as Constants from "../constants"
 

@@ -1,6 +1,6 @@
 
 import { _attr, _node, _appendAtIndex, ELEMENT_PATH } from './svg-util'
-import {Connections, Endpoints, Component, Connection, Endpoint, Overlay} from "@jsplumb/core"
+import {Connections, Endpoints, Component, Connection, Endpoint, OverlayBase} from "@jsplumb/core"
 import { PaintStyle } from "@jsplumb/common"
 import {extend, Extents} from "@jsplumb/util"
 
@@ -63,7 +63,7 @@ export function paintSVGOverlay(o:SVGElementOverlay, path:string, params:SvgOver
     _attr(o.path, a)
 }
 
-export function destroySVGOverlay(o:Overlay, force?:boolean) {
+export function destroySVGOverlay(o:OverlayBase, force?:boolean) {
 
     let _o = o as any
 
@@ -81,11 +81,9 @@ export function destroySVGOverlay(o:Overlay, force?:boolean) {
 
 }
 
-export abstract class SVGElementOverlay extends Overlay {
+export interface SVGElementOverlay extends OverlayBase {
 
     path:SVGElement
-
-
 
 }
 

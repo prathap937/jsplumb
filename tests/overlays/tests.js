@@ -260,7 +260,7 @@ var testSuite = function () {
         });
         var lo = jsPlumb.Components.getLabelOverlay(c);
         ok(lo != null, "label overlay exists");
-        equal(lo.getLabel(), "BAZ", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "BAZ", "label overlay has correct value");
         equal(lo.location, 0.9, "label overlay has correct location");
     });
 
@@ -283,7 +283,7 @@ var testSuite = function () {
         });
 
         ok(lo != null, "label overlay exists");
-        equal(lo.getLabel(), "BAZ", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "BAZ", "label overlay has correct value");
         equal(lo.location, 0.9, "label overlay has correct location");
     });
 
@@ -299,14 +299,14 @@ var testSuite = function () {
         var lo = jsPlumb.Components.getLabelOverlay(c);
         equal(lo.location, 0.2, "label overlay has correct location");
 
-        lo.updateFrom({
+        jsPlumb.OverlayFactory.updateFrom(lo, {
             label: "BAZ",
             cssClass: "CLASSY",
             location: 0.9
         });
 
         ok(lo != null, "label overlay exists");
-        equal(lo.getLabel(), "BAZ", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "BAZ", "label overlay has correct value");
         equal(lo.location, 0.9, "label overlay has correct location");
     });
 
@@ -322,24 +322,24 @@ var testSuite = function () {
         var lo = jsPlumb.Components.getLabelOverlay(c);
         equal(lo.location, 0.2, "label overlay has correct location");
 
-        lo.updateFrom({
+        jsPlumb.OverlayFactory.updateFrom(lo, {
             label: "BAZ",
             cssClass: "CLASSY",
             location: ""
         });
 
-        equal(lo.getLabel(), "BAZ", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "BAZ", "label overlay has correct value");
         equal(lo.location, 0.2, "label overlay has correct location (it was not changed because the new value was invalid");
 
-        lo.updateFrom({
+        jsPlumb.OverlayFactory.updateFrom(lo, {
             label: "BAZZ",
             location: "not a number"
         });
 
-        equal(lo.getLabel(), "BAZZ", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "BAZZ", "label overlay has correct value");
         equal(lo.location, 0.2, "label overlay has correct location (it was not changed because the new value was invalid");
 
-        lo.updateFrom({
+        jsPlumb.OverlayFactory.updateFrom(lo, {
             location: 0.1
         });
 
@@ -371,7 +371,7 @@ var testSuite = function () {
             lo = jsPlumb.Components.getLabelOverlay(c);
 
         ok(lo != null, "label overlay exists");
-        equal(lo.getLabel(), "FOO", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "FOO", "label overlay has correct value");
         equal(lo.location, 0.5, "label overlay has correct location");
     });
 
@@ -386,7 +386,7 @@ var testSuite = function () {
             lo = jsPlumb.Components.getLabelOverlay(c);
 
         ok(lo != null, "label overlay exists");
-        equal(lo.getLabel(), "FOO", "label overlay has correct value");
+        equal(jsPlumb.Labels.getLabel(lo), "FOO", "label overlay has correct value");
         equal(lo.location, 0.2, "label overlay has correct location");
     });
 
@@ -718,16 +718,16 @@ var testSuite = function () {
         ]});
         var o = c.overlays["label"], e = o.canvas;
         equal(e.innerHTML, "foo", "label text is set to original value");
-        o.setLabel("baz");
+        jsPlumb.Labels.setLabel(o, "baz");
         equal(e.innerHTML, "baz", "label text is set to new value 'baz'");
-        equal(o.getLabel(), "baz", "getLabel function works correctly with String");
+        equal(jsPlumb.Labels.getLabel(o), "baz", "getLabel function works correctly with String");
         // now try functions
         var aFunction = function () {
             return "aFunction";
         };
-        o.setLabel(aFunction);
+        jsPlumb.Labels.setLabel(o, aFunction);
         equal(e.innerHTML, "aFunction", "label text is set to new value from Function");
-        equal(o.getLabel(), "aFunction", "getLabel function works correctly with Function");
+        equal(jsPlumb.Labels.getLabel(o), "aFunction", "getLabel function works correctly with Function");
     });
 
     test(" label overlay custom css class", function () {

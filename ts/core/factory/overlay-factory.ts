@@ -1,29 +1,41 @@
-import {Overlay} from '../overlay/overlay'
-import {Constructable, PointXY} from '@jsplumb/util'
+import {OverlayBase} from '../overlay/overlay'
+import {PointXY} from '@jsplumb/util'
 import { JsPlumbInstance } from "../core"
 import {Component} from '../component/component'
-import {ArrowOverlayOptions, PaintStyle} from "@jsplumb/common"
-import {LabelOverlay} from "@jsplumb/core"
-const overlayMap:Record<string, Constructable<Overlay>> = {}
+import {PaintStyle} from "@jsplumb/common"
+
+const overlayMap:Record<string, OverlayHandler<any>> = {}
 
 export interface OverlayHandler<OptionsClass> {
-    draw(overlay:Overlay, component:Component, currentConnectionPaintStyle:PaintStyle, absolutePosition?: PointXY):any
-    create(instance:JsPlumbInstance, component:Component, options:OptionsClass):any
-    updateFrom(overlay: LabelOverlay, d: any): void
+    draw(overlay:OverlayBase, component:Component, currentConnectionPaintStyle:PaintStyle, absolutePosition?: PointXY):any
+    create(instance:JsPlumbInstance, component:Component, options:OptionsClass):OverlayBase
+    updateFrom(overlay: OverlayBase, d: any): void
 }
 
 export const OverlayFactory = {
-    get:(instance:JsPlumbInstance, name:string, component:Component, params:any):Overlay => {
+    get(instance:JsPlumbInstance, name:string, component:Component, params:any):OverlayBase {
 
-        let c:Constructable<Overlay> = overlayMap[name]
+        let c:OverlayHandler<any> = overlayMap[name]
         if (!c) {
             throw {message:"jsPlumb: unknown overlay type '" + name + "'"}
         } else {
-            return new c(instance, component, params) as Overlay
+            return c.create(instance, component, params)
         }
     },
 
-    register:(name:string, overlay:Constructable<Overlay>) => {
+    register(name:string, overlay:OverlayHandler<any>) {
         overlayMap[name] = overlay
+    },
+    updateFrom(overlay: OverlayBase, d: any): void {
+        const handler = overlayMap[overlay.type]
+        if (handler) {
+            handler.updateFrom(overlay, d)
+        }
+    },
+    draw(overlay:OverlayBase, component:Component, currentConnectionPaintStyle:PaintStyle, absolutePosition?: PointXY):any {
+        const handler = overlayMap[overlay.type]
+        if (handler) {
+            return handler.draw(overlay, component, currentConnectionPaintStyle, absolutePosition)
+        }
     }
 }

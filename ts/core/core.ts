@@ -1,8 +1,9 @@
 import {DEFAULT_KEY_ALLOW_NESTED_GROUPS, DEFAULT_KEY_PAINT_STYLE, DEFAULT_KEY_SCOPE, JsPlumbDefaults} from "./defaults"
 
-import {Connection, ConnectionOptions, createConnection} from "./connector/connection-impl"
+import { Connection, ConnectionOptions } from './connector/declarations'
+
 import {createEndpoint, Endpoint} from "./endpoint/endpoint"
-import { DotEndpoint } from './endpoint/dot-endpoint'
+import {DotEndpoint, TYPE_ENDPOINT_DOT} from './endpoint/dot-endpoint'
 import {convertToFullOverlaySpec} from "./overlay/overlay"
 import {RedrawResult} from "./router/router"
 import {
@@ -52,7 +53,7 @@ import {ConnectionSelection} from "./selection/connection-selection"
 import {Viewport, ViewportElement} from "./viewport"
 
 import {Component, Components} from './component/component'
-import { Overlay } from './overlay/overlay'
+import { OverlayBase } from './overlay/overlay'
 import { LabelOverlay } from './overlay/label-overlay'
 import {ConnectorBase} from './connector/abstract-connector'
 import { Connections } from './connector/connections'
@@ -322,7 +323,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
             connectionOverlays: [ ],
             connector: CONNECTOR_TYPE_STRAIGHT,
             container: null,
-            endpoint: DotEndpoint.type,
+            endpoint: TYPE_ENDPOINT_DOT,
             endpointOverlays: [ ],
             endpoints: [ null, null ],
             endpointStyle: { fill: "#456" },
@@ -1472,7 +1473,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      */
     _newConnection (params:ConnectionOptions<T["E"]>):Connection {
         params.id = "con_" + this._idstamp()
-        const c = createConnection(this, params)
+        const c = Connections.create(this, params)
 
         addManagedConnection(c, this._managedElements[c.sourceId], this._managedElements[c.targetId])
 
@@ -2120,7 +2121,8 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                     ap = this.router.computeAnchorLocation(endpoint._anchor, anchorParams)
                 }
 
-                endpoint.representation.compute(ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse)
+                Endpoints.compute(endpoint.representation, ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse)
+
                 this.renderEndpoint(endpoint, endpoint.paintStyleInUse)
                 endpoint.timestamp = timestamp
 
@@ -2129,7 +2131,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                     if (endpoint.overlays.hasOwnProperty(i)) {
                         let o = endpoint.overlays[i]
                         if (o.visible) {
-                            endpoint.overlayPlacements[i] = this.drawOverlay(o, endpoint.representation, endpoint.paintStyleInUse, Components.getAbsoluteOverlayPosition(endpoint, o))
+                            endpoint.overlayPlacements[i] = this.drawOverlay(o, endpoint, endpoint.paintStyleInUse, Components.getAbsoluteOverlayPosition(endpoint, o))
                             this._paintOverlay(o, endpoint.overlayPlacements[i], {xmin:0, ymin:0})
                         }
                     }
@@ -2165,10 +2167,10 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                 // container if needs be (if an overlay would be clipped)
                 for (let i in connection.overlays) {
                     if (connection.overlays.hasOwnProperty(i)) {
-                        let o:Overlay = connection.overlays[i]
+                        let o:OverlayBase = connection.overlays[i]
                         if (o.visible) {
 
-                            connection.overlayPlacements[i] = this.drawOverlay(o, connection.connector, connection.paintStyleInUse, Components.getAbsoluteOverlayPosition(connection, o))
+                            connection.overlayPlacements[i] = this.drawOverlay(o, connection, connection.paintStyleInUse, Components.getAbsoluteOverlayPosition(connection, o))
 
                             overlayExtents.xmin = Math.min(overlayExtents.xmin, connection.overlayPlacements[i].xmin)
                             overlayExtents.xmax = Math.max(overlayExtents.xmax, connection.overlayPlacements[i].xmax)
@@ -2381,16 +2383,16 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @param params
      * @param extents
      */
-    abstract _paintOverlay(o: Overlay, params:any, extents:any):void
-    abstract addOverlayClass(o:Overlay, clazz:string):void
-    abstract removeOverlayClass(o:Overlay, clazz:string):void
-    abstract setOverlayVisible(o: Overlay, visible:boolean):void
-    abstract destroyOverlay(o: Overlay):void
+    abstract _paintOverlay(o: OverlayBase, params:any, extents:any):void
+    abstract addOverlayClass(o:OverlayBase, clazz:string):void
+    abstract removeOverlayClass(o:OverlayBase, clazz:string):void
+    abstract setOverlayVisible(o: OverlayBase, visible:boolean):void
+    abstract destroyOverlay(o: OverlayBase):void
     abstract updateLabel(o:LabelOverlay):void
-    abstract drawOverlay(overlay:Overlay, component:any, paintStyle:PaintStyle, absolutePosition?:PointXY):any
-    abstract reattachOverlay(o:Overlay, c:Component):void
+    abstract drawOverlay(overlay:OverlayBase, component:Component, paintStyle:PaintStyle, absolutePosition?:PointXY):any
+    abstract reattachOverlay(o:OverlayBase, c:Component):void
 
-    abstract setOverlayHover(o:Overlay, hover:boolean):void
+    abstract setOverlayHover(o:OverlayBase, hover:boolean):void
 
     abstract setHover(component:Component, hover:boolean):void
 

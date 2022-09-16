@@ -6,7 +6,7 @@ import {
     EVENT_MOUSEUP,
     EventManager
 } from "@jsplumb/browser-ui"
-import {Connection, Endpoint, Overlay} from "@jsplumb/core"
+import {Connection, Endpoint, OverlayBase} from "@jsplumb/core"
 import { uuid } from "@jsplumb/util"
 
 function _randomEvent ():any {
@@ -683,7 +683,7 @@ export class BrowserUITestSupport {
      * @param overlay
      * @public
      */
-    getOverlayCanvas (overlay:Overlay) {
+    getOverlayCanvas (overlay:OverlayBase) {
         return (overlay as any).canvas || (overlay as any).path
     }
 

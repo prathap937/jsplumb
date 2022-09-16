@@ -2,14 +2,14 @@ import {registerEndpointRenderer} from "./browser-jsplumb-instance"
 
 import { _attr, _node } from './svg-util'
 
-import {RectangleEndpoint} from "@jsplumb/core"
+import {RectangleEndpoint, TYPE_ENDPOINT_RECTANGLE} from "@jsplumb/core"
 import { PaintStyle } from "@jsplumb/common"
 
 const RECT = "rect"
 
 export const register = () => {
 
-    registerEndpointRenderer<RectangleEndpoint>(RectangleEndpoint.type, {
+    registerEndpointRenderer<RectangleEndpoint>(TYPE_ENDPOINT_RECTANGLE, {
         makeNode: (ep: RectangleEndpoint, style: PaintStyle) => {
             return _node(RECT, {
                 "width": ep.w,
