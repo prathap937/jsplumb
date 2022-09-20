@@ -955,25 +955,6 @@ export function getsert<K,V>(map:Map<K,V>, key:K, valueGenerator:() => V):V {
 }
 
 /**
- * Returns true if the given `object` can be considered to be an instance of the class `cls`.  This is done by
- * testing the proto chain of the object and checking at each level to see if the proto is an instance of the given class.
- * @param object Object to test
- * @param cls Class to test for.
- * @public
- */
-export function isAssignableFrom(object:any, cls:any) {
-    let proto = object.__proto__
-    while (proto != null) {
-        if (proto instanceof cls) {
-            return true
-        } else {
-            proto = proto.__proto__
-        }
-    }
-    return false
-}
-
-/**
  * Inserts the given value into the given array at a sorted location.
  * @param value Value to insert
  * @param array Array to insert into
