@@ -907,7 +907,8 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @param id
      */
     getManagedElement(id:string):T["E"] {
-        return this._managedElements[id] ? this._managedElements[id].el as unknown as T["E"] : null
+        //return this._managedElements[id] ? this._managedElements[id].el as unknown as T["E"] : null
+        return this._managedElements[id]?.el as T["E"]
     }
 
     /**
