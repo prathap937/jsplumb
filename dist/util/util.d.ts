@@ -348,15 +348,6 @@ export declare function insertSorted<T>(value: T, array: Array<T>, comparator: (
 export declare function intersects(r1: RectangleXY, r2: RectangleXY): boolean;
 
 /**
- * Returns true if the given `object` can be considered to be an instance of the class `cls`.  This is done by
- * testing the proto chain of the object and checking at each level to see if the proto is an instance of the given class.
- * @param object Object to test
- * @param cls Class to test for.
- * @public
- */
-export declare function isAssignableFrom(object: any, cls: any): boolean;
-
-/**
  * Returns whether or not the given value is of `boolean` type.
  * @param s
  * @public

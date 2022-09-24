@@ -5792,7 +5792,8 @@ var JsPlumbInstance = function (_EventGenerator) {
   }, {
     key: "getManagedElement",
     value: function getManagedElement(id) {
-      return this._managedElements[id] ? this._managedElements[id].el : null;
+      var _this$_managedElement;
+      return (_this$_managedElement = this._managedElements[id]) === null || _this$_managedElement === void 0 ? void 0 : _this$_managedElement.el;
     }
   }, {
     key: "unmanage",

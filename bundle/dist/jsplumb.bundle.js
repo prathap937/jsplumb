@@ -502,17 +502,6 @@ var jsPlumbBrowserUI = (function (exports) {
     }
     return map.get(key);
   }
-  function isAssignableFrom(object, cls) {
-    var proto = object.__proto__;
-    while (proto != null) {
-      if (proto instanceof cls) {
-        return true;
-      } else {
-        proto = proto.__proto__;
-      }
-    }
-    return false;
-  }
   function insertSorted(value, array, comparator, sortDescending) {
     if (array.length === 0) {
       array.push(value);
@@ -6849,7 +6838,8 @@ var jsPlumbBrowserUI = (function (exports) {
     }, {
       key: "getManagedElement",
       value: function getManagedElement(id) {
-        return this._managedElements[id] ? this._managedElements[id].el : null;
+        var _this$_managedElement;
+        return (_this$_managedElement = this._managedElements[id]) === null || _this$_managedElement === void 0 ? void 0 : _this$_managedElement.el;
       }
     }, {
       key: "unmanage",
@@ -15422,7 +15412,6 @@ var jsPlumbBrowserUI = (function (exports) {
   exports.intersects = intersects;
   exports.isArrayLike = isArrayLike;
   exports.isArrowOverlay = isArrowOverlay;
-  exports.isAssignableFrom = isAssignableFrom;
   exports.isBoolean = isBoolean;
   exports.isContinuous = isContinuous;
   exports.isCustomOverlay = isCustomOverlay;

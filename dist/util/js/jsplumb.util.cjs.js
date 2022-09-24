@@ -503,17 +503,6 @@ function getsert(map, key, valueGenerator) {
   }
   return map.get(key);
 }
-function isAssignableFrom(object, cls) {
-  var proto = object.__proto__;
-  while (proto != null) {
-    if (proto instanceof cls) {
-      return true;
-    } else {
-      proto = proto.__proto__;
-    }
-  }
-  return false;
-}
 function insertSorted(value, array, comparator, sortDescending) {
   if (array.length === 0) {
     array.push(value);
@@ -1017,7 +1006,6 @@ exports.getsert = getsert;
 exports.gradient = gradient;
 exports.insertSorted = insertSorted;
 exports.intersects = intersects;
-exports.isAssignableFrom = isAssignableFrom;
 exports.isBoolean = isBoolean;
 exports.isDate = isDate;
 exports.isEmpty = isEmpty;

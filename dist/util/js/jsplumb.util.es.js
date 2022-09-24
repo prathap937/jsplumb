@@ -499,17 +499,6 @@ function getsert(map, key, valueGenerator) {
   }
   return map.get(key);
 }
-function isAssignableFrom(object, cls) {
-  var proto = object.__proto__;
-  while (proto != null) {
-    if (proto instanceof cls) {
-      return true;
-    } else {
-      proto = proto.__proto__;
-    }
-  }
-  return false;
-}
 function insertSorted(value, array, comparator, sortDescending) {
   if (array.length === 0) {
     array.push(value);
@@ -984,4 +973,4 @@ function snapToGrid(pos, grid, thresholdX, thresholdY) {
   };
 }
 
-export { EventGenerator, Events, OptimisticEventGenerator, TWO_PI, add, addToDictionary, addToList, addWithFunction, arraysEqual, clone, each, encloses, extend, fastTrim, filterList, filterNull, findAllWithFunction, findWithFunction, fixPrecision, forEach, fromArray, functionChain, getAllWithFunction, getFromSetWithFunction, getWithFunction, getsert, gradient, insertSorted, intersects, isAssignableFrom, isBoolean, isDate, isEmpty, isFunction, isNamedFunction, isNumber, isObject, isString, lineIntersection, lineLength, lineRectangleIntersection, log, logEnabled, map, merge, normal, objectsEqual, perpendicularLineTo, pointOnLine, populate, quadrant, remove, removeWithFunction, replace, rotateAnchorOrientation, rotatePoint, setToArray, sgn, snapToGrid, subtract, suggest, theta, uuid, wrap };
+export { EventGenerator, Events, OptimisticEventGenerator, TWO_PI, add, addToDictionary, addToList, addWithFunction, arraysEqual, clone, each, encloses, extend, fastTrim, filterList, filterNull, findAllWithFunction, findWithFunction, fixPrecision, forEach, fromArray, functionChain, getAllWithFunction, getFromSetWithFunction, getWithFunction, getsert, gradient, insertSorted, intersects, isBoolean, isDate, isEmpty, isFunction, isNamedFunction, isNumber, isObject, isString, lineIntersection, lineLength, lineRectangleIntersection, log, logEnabled, map, merge, normal, objectsEqual, perpendicularLineTo, pointOnLine, populate, quadrant, remove, removeWithFunction, replace, rotateAnchorOrientation, rotatePoint, setToArray, sgn, snapToGrid, subtract, suggest, theta, uuid, wrap };

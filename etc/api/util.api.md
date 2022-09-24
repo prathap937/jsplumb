@@ -175,9 +175,6 @@ export function insertSorted<T>(value: T, array: Array<T>, comparator: (v1: T, v
 export function intersects(r1: RectangleXY, r2: RectangleXY): boolean;
 
 // @public
-export function isAssignableFrom(object: any, cls: any): boolean;
-
-// @public
 export function isBoolean(s: any): boolean;
 
 // @public
