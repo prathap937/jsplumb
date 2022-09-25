@@ -2997,24 +2997,27 @@ var GroupManager = function () {
       var actualGroup = this.getGroup(group);
       if (actualGroup) {
         var groupEl = actualGroup.el;
-        var _one = function _one(el) {
-          var jel = el;
+        for (var _len = arguments.length, el = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+          el[_key - 2] = arguments[_key];
+        }
+        el.forEach(function (_el) {
+          var jel = _el;
           var isGroup = jel._isJsPlumbGroup != null,
-              droppingGroup = jel._jsPlumbGroup;
-          var currentGroup = jel._jsPlumbParentGroup;
+              droppingGroup = jel._jsPlumbGroup,
+              currentGroup = jel._jsPlumbParentGroup;
           if (currentGroup !== actualGroup) {
-            var entry = _this7.instance.manage(el);
-            var elpos = _this7.instance.getOffset(el);
+            var entry = _this7.instance.manage(_el);
+            var elpos = _this7.instance.getOffset(_el);
             var cpos = actualGroup.collapsed ? _this7.instance.getOffsetRelativeToRoot(groupEl) : _this7.instance.getOffset(_this7.instance.getGroupContentArea(actualGroup));
             entry.group = actualGroup.elId;
             if (currentGroup != null) {
-              currentGroup.remove(el, false, doNotFireEvent, false, actualGroup);
+              currentGroup.remove(_el, false, doNotFireEvent, false, actualGroup);
               _this7._updateConnectionsForGroup(currentGroup);
             }
             if (isGroup) {
               actualGroup.addGroup(droppingGroup);
             } else {
-              actualGroup.add(el, doNotFireEvent);
+              actualGroup.add(_el, doNotFireEvent);
             }
             var handleDroppedConnections = function handleDroppedConnections(list, index) {
               var oidx = index === 0 ? 1 : 0;
@@ -3031,23 +3034,23 @@ var GroupManager = function () {
             };
             if (actualGroup.collapsed) {
               handleDroppedConnections(_this7.instance.select({
-                source: el
+                source: _el
               }), 0);
               handleDroppedConnections(_this7.instance.select({
-                target: el
+                target: _el
               }), 1);
             }
             var newPosition = {
               x: elpos.x - cpos.x,
               y: elpos.y - cpos.y
             };
-            _this7.instance.setPosition(el, newPosition);
+            _this7.instance.setPosition(_el, newPosition);
             _this7._updateConnectionsForGroup(actualGroup);
-            _this7.instance.revalidate(el);
+            _this7.instance.revalidate(_el);
             if (!doNotFireEvent) {
               var p = {
                 group: actualGroup,
-                el: el,
+                el: jel,
                 pos: newPosition
               };
               if (currentGroup) {
@@ -3056,11 +3059,7 @@ var GroupManager = function () {
               _this7.instance.fire(EVENT_GROUP_MEMBER_ADDED, p);
             }
           }
-        };
-        for (var _len = arguments.length, el = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-          el[_key - 2] = arguments[_key];
-        }
-        forEach(el, _one);
+        });
       }
     }
   }, {
