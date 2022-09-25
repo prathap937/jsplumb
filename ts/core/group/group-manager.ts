@@ -588,29 +588,31 @@ export class GroupManager<E> {
         if (actualGroup) {
             let groupEl = actualGroup.el
 
-            const _one = (el:E) => {
-                const jel = el as unknown as jsPlumbElement<E>
-                let isGroup = jel._isJsPlumbGroup != null,
-                    droppingGroup = jel._jsPlumbGroup
+            el.forEach((_el:E) => {
+                const jel = _el as unknown as jsPlumbElement<E>
 
-                let currentGroup = jel._jsPlumbParentGroup
+                let isGroup = jel._isJsPlumbGroup != null,
+                    droppingGroup = jel._jsPlumbGroup,
+                    currentGroup = jel._jsPlumbParentGroup
+
                 // if already a member of this group, do nothing
                 if (currentGroup !== actualGroup) {
 
-                    const entry = this.instance.manage(el)
-                    const elpos = this.instance.getOffset(el)
+                    const entry = this.instance.manage(_el)
+                    const elpos = this.instance.getOffset(_el)
                     const cpos = actualGroup.collapsed ? this.instance.getOffsetRelativeToRoot(groupEl) : this.instance.getOffset(this.instance.getGroupContentArea(actualGroup))
                     entry.group = actualGroup.elId
 
                     // otherwise, transfer to this group.
                     if (currentGroup != null) {
-                        currentGroup.remove(el, false, doNotFireEvent, false, actualGroup)
+                        currentGroup.remove(_el, false, doNotFireEvent, false, actualGroup)
                         this._updateConnectionsForGroup(currentGroup)
                     }
+
                     if (isGroup) {
                         actualGroup.addGroup(droppingGroup)
                     } else {
-                        actualGroup.add(el, doNotFireEvent)
+                        actualGroup.add(_el, doNotFireEvent)
                     }
 
                     const handleDroppedConnections = (list:ConnectionSelection, index:number) => {
@@ -629,32 +631,30 @@ export class GroupManager<E> {
                     }
 
                     if (actualGroup.collapsed) {
-                        handleDroppedConnections(this.instance.select({source: el}), 0)
-                        handleDroppedConnections(this.instance.select({target: el}), 1)
+                        handleDroppedConnections(this.instance.select({source: _el}), 0)
+                        handleDroppedConnections(this.instance.select({target: _el}), 1)
                     }
 
                     let newPosition = { x: elpos.x - cpos.x, y: elpos.y - cpos.y }
 
-                    this.instance.setPosition(el, newPosition)
+                    this.instance.setPosition(_el, newPosition)
 
                     this._updateConnectionsForGroup(actualGroup)
 
-                    this.instance.revalidate(el)
+                    this.instance.revalidate(_el)
 
                     if (!doNotFireEvent) {
 
                         // TODO fire a "child group added" event in that case?
 
-                        let p = {group: actualGroup, el: el, pos:newPosition}
+                        let p = {group: actualGroup, el: jel, pos:newPosition}
                         if (currentGroup) {
                             (<any>p).sourceGroup = currentGroup
                         }
                         this.instance.fire(Constants.EVENT_GROUP_MEMBER_ADDED, p)
                     }
                 }
-            }
-
-            forEach(el, _one)
+            })
 
         }
     }
