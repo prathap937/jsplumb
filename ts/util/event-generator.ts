@@ -10,7 +10,7 @@ import {addToDictionary, log, remove, uuid} from "./util"
  */
 export abstract class EventGenerator {
 
-    private _listeners: Record<string, Array<Function>> = {}
+    _listeners: Record<string, Array<Function>> = {}
     private eventsSuspended: boolean = false
     private tick: boolean = false
     // this is a list of events that should re-throw any errors that occur during their dispatch.
@@ -185,12 +185,11 @@ export class OptimisticEventGenerator extends EventGenerator {
 }
 
 export interface EventSource {
-    //events:Record<string, (payload:any, originalEvent?:Event)=>any>
     _listeners: Record<string, Array<Function>>
 }
 
 export const Events = {
-    fire(source:EventSource, eventName:string, payload:any, originalEvent?:Event) {
+    fire<T=any>(source:EventSource, eventName:string, payload:T, originalEvent?:Event) {
         const h = source._listeners[eventName]
         if (h != null) {
             for (let i = 0; i < h.length; i++) {
