@@ -262,13 +262,13 @@ var testSuite = function () {
     });
 
 
-    test(': endpoint.isConnectdTo', function () {
+    test(': endpoints.areConnected', function () {
         var d3 = support.addDiv("d3"), d4 = support.addDiv("d4");
         var e3 = _jsPlumb.addEndpoint(d3, {source: true, maxConnections: -1});
         var e4 = _jsPlumb.addEndpoint(d4, {source: true, maxConnections: -1});
         _jsPlumb.connect({sourceEndpoint: e3, targetEndpoint: e4});
-        ok(jsPlumb.Endpoints.isConnectedTo(e3, e4), "e3 is connected to e4");
-        ok(jsPlumb.Endpoints.isConnectedTo(e4, e3), "e4 is connected to e3");
+        ok(jsPlumb.Endpoints.areConnected(e3, e4), "e3 is connected to e4");
+        ok(jsPlumb.Endpoints.areConnected(e4, e3), "e4 is connected to e3");
     });
 
 // ************** ANCHORS ********************************************	
