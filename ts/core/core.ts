@@ -20,7 +20,7 @@ import {
     PointXY,
     Size,
     Extents,
-    EventGenerator
+    EventGenerator, Events
 } from "@jsplumb/util"
 
 import {
@@ -66,7 +66,7 @@ import {
     EndpointSpec,
     WILDCARD, DEFAULT, OverlaySpec
 } from '@jsplumb/common'
-import {AnchorComputeParams} from "./factory/anchor-record-factory"
+import {AnchorComputeParams, isValidAnchorsSpec} from "./factory/anchor-record-factory"
 import {
     ATTRIBUTE_MANAGED,
     CLASS_CONNECTED,
@@ -365,15 +365,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @internal
      */
     areDefaultAnchorsSet():boolean {
-        return this.validAnchorsSpec(this.defaults.anchors)
-    }
-
-    /**
-     * @internal
-     * @param anchors
-     */
-    validAnchorsSpec(anchors:[ AnchorSpec, AnchorSpec ]):boolean {
-        return anchors != null && anchors[0] != null && anchors[1] != null
+        return isValidAnchorsSpec(this.defaults.anchors)
     }
 
     getContainer():any { return this._container; }
@@ -546,9 +538,9 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
             newEndpoint:oldEndpoint
         }
 
-        if (Endpoints.isEndpoint(el)) {
+        if (Endpoints._isEndpoint(el)) {
             ep = el
-            Endpoints.addConnection((<Endpoint>ep), c)
+            Endpoints._addConnection((<Endpoint>ep), c)
         }
         else {
             sid = this.getId(el)
@@ -706,12 +698,6 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         if (connection != null && connection.deleted !== true) {
             params = params || {}
 
-            // if (params.force || functionChain(true, false, [
-            //         [ connection.endpoints[0], Constants.IS_DETACH_ALLOWED, [ connection ] ],
-            //         [ connection.endpoints[1], Constants.IS_DETACH_ALLOWED, [ connection ] ],
-            //         [ connection, Constants.IS_DETACH_ALLOWED, [ connection ] ],
-            //         [ this, Constants.CHECK_CONDITION, [ Constants.INTERCEPT_BEFORE_DETACH, connection ] ]
-            //     ])) {
             if (params.force || functionChain(true, false, [
                 [ Components, Constants.IS_DETACH_ALLOWED, [ connection.endpoints[0], connection ] ],
                 [ Components, Constants.IS_DETACH_ALLOWED, [ connection.endpoints[1], connection ] ],
@@ -803,7 +789,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
     }
 
     fireMoveEvent (params?:ConnectionMovedParams, evt?:Event):void {
-        this.fire<ConnectionMovedParams>(Constants.EVENT_CONNECTION_MOVED, params, evt)
+        Events.fire<ConnectionMovedParams>(this, Constants.EVENT_CONNECTION_MOVED, params, evt)
     }
 
     /**
@@ -1933,7 +1919,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         // detach the proxy EP from the connection (which will cause it to be removed as we no longer need it)
         Endpoints.detachFromConnection(connection.proxies[index].ep, connection, null)
 
-        Endpoints.addConnection(connection.proxies[index].originalEp, connection)
+        Endpoints._addConnection(connection.proxies[index].originalEp, connection)
         if(connection.visible) {
             Endpoints.setVisible(connection.proxies[index].originalEp, true)
         }
@@ -2122,7 +2108,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                     ap = this.router.computeAnchorLocation(endpoint._anchor, anchorParams)
                 }
 
-                Endpoints.compute(endpoint.representation, ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse)
+                Endpoints._compute(endpoint.representation, ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse)
 
                 this.renderEndpoint(endpoint, endpoint.paintStyleInUse)
                 endpoint.timestamp = timestamp
@@ -2238,7 +2224,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
     addOverlay(component:Component, overlay:OverlaySpec, doNotRevalidate?:boolean) {
         const o = Components.addOverlay(component, overlay)
         if (!doNotRevalidate) {
-            const relatedElement = Endpoints.isEndpoint(component) ? (component as Endpoint).element : (component as Connection).source
+            const relatedElement = Endpoints._isEndpoint(component) ? (component as Endpoint).element : (component as Connection).source
             this.revalidate(relatedElement)
         }
     }
@@ -2251,7 +2237,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      */
     removeOverlay(component:Component, overlayId:string) {
         Components.removeOverlay(component, overlayId)
-        const relatedElement = Endpoints.isEndpoint(component)? (component as Endpoint).element : (component as Connection).source
+        const relatedElement = Endpoints._isEndpoint(component)? (component as Endpoint).element : (component as Connection).source
         this.revalidate(relatedElement)
     }
 

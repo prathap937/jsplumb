@@ -181,7 +181,7 @@ export class ElementDragHandler implements DragHandler {
             let currentGroup = intersectingElement._jsPlumbParentGroup
 
             if (currentGroup !== targetGroup) {
-                if (currentGroup == null || !currentGroup.overrideDrop(intersectingElement, targetGroup)) {
+                if (currentGroup == null || !this.instance.groupManager.isOverrideDrop(currentGroup, intersectingElement, targetGroup)) {
                     dropGroup = this._intersectingGroups[0]
                 }
             }

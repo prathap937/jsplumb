@@ -51,7 +51,7 @@ import {
     REDROP_POLICY_ANY_TARGET,
     REDROP_POLICY_ANY_SOURCE_OR_TARGET,
     CLASS_ENDPOINT_FLOATING,
-    Endpoints, Connections, Components, isEndpointRepresentation
+    Endpoints, Connections, Components, isEndpointRepresentation, isValidAnchorsSpec
 } from "@jsplumb/core"
 
 import { FALSE,
@@ -487,7 +487,7 @@ export class EndpointDragHandler implements DragHandler {
         Endpoints.detachFromConnection(this.ep, this.jpc, null, true)
 
         // attach the connection to the floating endpoint.
-        Endpoints.addConnection(this.floatingEndpoint, this.jpc)
+        Endpoints._addConnection(this.floatingEndpoint, this.jpc)
 
         // fire an event that informs that a connection is being dragged. we do this before
         // replacing the original target with the floating element info.
@@ -1128,7 +1128,7 @@ export class EndpointDragHandler implements DragHandler {
 
             // if the definition specified an anchor/some anchors, use those, or if there are `anchors` specified as defaults on the instance,
             // use those. otherwise later in the code we'll pick the default anchor.
-            const anchorsToUse = this.instance.validAnchorsSpec(eps.anchors) ? eps.anchors : this.instance.areDefaultAnchorsSet() ? this.instance.defaults.anchors : null
+            const anchorsToUse = isValidAnchorsSpec(eps.anchors) ? eps.anchors : this.instance.areDefaultAnchorsSet() ? this.instance.defaults.anchors : null
             const anchorFromDef = targetDefinition.def.anchor
             const anchorFromPositionFinder = targetDefinition.def.anchorPositionFinder ? targetDefinition.def.anchorPositionFinder(targetElement, elxy, targetDefinition.def, p.e) : null
 
@@ -1192,7 +1192,7 @@ export class EndpointDragHandler implements DragHandler {
 
         this.jpc._forceDetach = true
 
-        Endpoints.addConnection(this.jpc.suspendedEndpoint, this.jpc)
+        Endpoints._addConnection(this.jpc.suspendedEndpoint, this.jpc)
         this.instance.sourceOrTargetChanged(this.floatingId, this.jpc.suspendedEndpoint.elementId, this.jpc, this.jpc.suspendedEndpoint.element, idx)
 
         this.instance.deleteEndpoint(this.floatingEndpoint)
@@ -1208,15 +1208,7 @@ export class EndpointDragHandler implements DragHandler {
         } else {
             const suspendedEndpoint = this.jpc.suspendedEndpoint,
                   otherEndpointIdx = this.jpc.suspendedElementType == SOURCE ? 1 : 0,
-                otherEndpoint = this.jpc.endpoints[otherEndpointIdx],
-                connection = this.jpc
-
-            // return !functionChain(true, false, [
-            //     [ suspendedEndpoint, IS_DETACH_ALLOWED, [ this.jpc ] ],
-            //     [ otherEndpoint, IS_DETACH_ALLOWED, [ this.jpc ] ],
-            //     [ this.jpc, IS_DETACH_ALLOWED, [ this.jpc ] ],
-            //     [ this.instance, CHECK_CONDITION, [ INTERCEPT_BEFORE_DETACH, this.jpc ] ]
-            // ])
+                otherEndpoint = this.jpc.endpoints[otherEndpointIdx]
 
             return !functionChain(true, false, [
                 [ Components, IS_DETACH_ALLOWED, [ suspendedEndpoint, this.jpc ] ],
@@ -1264,7 +1256,7 @@ export class EndpointDragHandler implements DragHandler {
         }
 
         this.jpc.endpoints[idx] = dropEndpoint
-        Endpoints.addConnection(dropEndpoint, this.jpc)
+        Endpoints._addConnection(dropEndpoint, this.jpc)
 
         if (this.jpc.suspendedEndpoint) {
             let suspendedElementId = this.jpc.suspendedEndpoint.elementId
@@ -1295,7 +1287,7 @@ export class EndpointDragHandler implements DragHandler {
             let _toDelete = this.jpc.endpoints[0]
             Endpoints.detachFromConnection(_toDelete, this.jpc)
             this.jpc.endpoints[0] = this.jpc.endpoints[0].finalEndpoint
-            Endpoints.addConnection(this.jpc.endpoints[0], this.jpc)
+            Endpoints._addConnection(this.jpc.endpoints[0], this.jpc)
         }
 
         // if optionalData was given, merge it onto the connection's data.

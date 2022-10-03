@@ -201,20 +201,6 @@ function _processOverlay<E>(component:Component, o:OverlaySpec|OverlayBase) {
     return _newOverlay
 }
 
-/**
- * @internal
- */
-// function _clazzManip(component:Component, action:ClassAction, clazz:string) {
-//
-//     for (let i in component.overlays) {
-//         if (action === ACTION_ADD) {
-//             component.instance.addOverlayClass(component.overlays[i], clazz)
-//         } else if (action === ACTION_REMOVE) {
-//             compnoent.instance.removeOverlayClass(component.overlays[i], clazz)
-//         }
-//     }
-// }
-
 export interface Component {
     overlays:Record<string, OverlayBase>
     overlayPositions:Record<string, PointXY>
@@ -228,8 +214,6 @@ export interface Component {
     
     getDefaultOverlayKey():string
     getIdPrefix():string
-    //getTypeDescriptor():string
-    //getDefaultType():ComponentTypeDescriptor
     getXY():PointXY
 
     _typeDescriptor:string
@@ -448,7 +432,6 @@ export const Components = {
         component.visible = v
         if (v) {
             this.showOverlays(component)
-            // component.showOverlays()
         } else {
             this.hideOverlays(component)
         }
@@ -461,12 +444,13 @@ export const Components = {
         }
     },
 
-    /**
-     * @internal
-     */
-    isVisible(component:Component):boolean {
-        return component.visible
-    },
+    // /**
+    //  * @internal
+    //  */
+    // isVisible(component:Component):boolean {
+    //     return component.visible
+    // },
+    //
     /**
      * Adds a css class to the component
      * @param clazz Class to add. May be a space separated list.

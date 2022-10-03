@@ -1,7 +1,7 @@
 import {createBaseRepresentation, EndpointRepresentation} from "./endpoints"
 import {Orientation} from "../factory/anchor-record-factory"
 import {Endpoint} from "./endpoint"
-import {EndpointHandler} from "../factory/endpoint-factory"
+import {EndpointHandler, Endpoints} from "./endpoints"
 import {AnchorPlacement, RectangleEndpointParams} from "@jsplumb/common"
 import {extend} from "@jsplumb/util"
 
@@ -50,3 +50,4 @@ export const RectangleEndpointHandler:EndpointHandler<RectangleEndpoint, Compute
 }
 
 
+Endpoints._registerHandler(RectangleEndpointHandler)

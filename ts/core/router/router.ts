@@ -25,8 +25,6 @@ export interface Router<T extends {E:unknown}, A> {
 
     getEndpointLocation(endpoint: Endpoint, params:AnchorComputeParams): AnchorPlacement
 
-    // TODO does this definitely have to be exposed, or does all the code that calls it now site inside router?
-    getAnchorOrientation(anchor:A, endpoint?: Endpoint): Orientation
     getEndpointOrientation(endpoint: Endpoint): Orientation
 
     setAnchorOrientation(anchor:A, orientation:Orientation):void

@@ -9,7 +9,7 @@ import {PointXY} from "@jsplumb/util"
  * contains parameters that are common between the two types, and is shared by internal methods and public methods.
  * @public
  */
-interface TypeDescriptorBase {
+export interface TypeDescriptorBase {
     /**
      * CSS class to add to the given component's representation in the UI
      */

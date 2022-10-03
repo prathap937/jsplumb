@@ -26,7 +26,7 @@ export function ensureSVGOverlayPath(o:SVGElementOverlay):SVGElement {
         if (Connections.isConnection(o.component)) {
             let connector = (o.component as Connection).connector
             parent = connector != null ? (connector as any).canvas : null
-        } else if (Endpoints.isEndpoint(o.component)) {
+        } else if (Endpoints._isEndpoint(o.component)) {
             let endpoint = (o.component as Endpoint).representation
             parent = endpoint != null ? (endpoint as any).canvas : endpoint
         }

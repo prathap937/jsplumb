@@ -3,6 +3,10 @@ import {Component, Components } from "../component/component"
 import { JsPlumbInstance } from "../core"
 import { forEach} from "@jsplumb/util"
 
+/**
+ * Base class for selections of endpoints or connections.
+ * @public
+ */
 export class SelectionBase<T extends Component>{
 
     constructor(protected instance:JsPlumbInstance, protected entries:Array<T>) { }
@@ -86,11 +90,6 @@ export class SelectionBase<T extends Component>{
         return this
     }
 
-    // setSuspendEvents(suspend:boolean):SelectionBase<T> {
-    //     this.each((c:T) => Components.setSuspendEvents(c, suspend))
-    //     return this
-    // }
-
     setParameter(name:string, value:string):SelectionBase<T> {
         this.each((c:T) => c.parameters[name] = value)
         return this
@@ -120,16 +119,6 @@ export class SelectionBase<T extends Component>{
         this.each((c:T) => Components.removeType(c, name))
         return this
     }
-
-    // bind(evt:string, handler:(a:any, e?:any) => any):SelectionBase<T> {
-    //     this.each((c:T) => c.bind(evt, handler))
-    //     return this
-    // }
-    //
-    // unbind(evt:string, handler:Function):SelectionBase<T> {
-    //     this.each((c:T) => c.unbind(evt, handler))
-    //     return this
-    // }
 
     setHover(h:boolean):SelectionBase<T> {
         this.each((c:T) => this.instance.setHover(c, h))

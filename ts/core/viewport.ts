@@ -36,9 +36,10 @@ export interface TranslatedViewportElementBase<E> extends ViewportElementBase<E>
     sr:number
 }
 
-// use Omit once we can upgrade past ~3.4.0
+/**
+ * @internal
+ */
 export type TranslatedViewportElement<E> = Omit<TranslatedViewportElementBase<E>, "dirty">
-// export type TranslatedViewportElement<E> = Pick<TranslatedViewportElementBase<E>, Exclude<keyof TranslatedViewportElementBase<E>, "dirty">>
 
 /**
  * Captures a set of elements affected by some given operation. For internal use.

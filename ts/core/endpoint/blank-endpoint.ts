@@ -1,7 +1,6 @@
-import {createBaseRepresentation, EndpointRepresentation} from "./endpoints"
+import {createBaseRepresentation, EndpointRepresentation, EndpointHandler, Endpoints} from "./endpoints"
 import {Orientation} from "../factory/anchor-record-factory"
 import {Endpoint} from "./endpoint"
-import {EndpointHandler} from "../factory/endpoint-factory"
 import {AnchorPlacement, BlankEndpointParams} from "@jsplumb/common"
 import {extend} from "@jsplumb/util"
 
@@ -33,6 +32,6 @@ export const BlankEndpointHandler:EndpointHandler<BlankEndpoint, ComputedBlankEn
     }
 }
 
-
+Endpoints._registerHandler(BlankEndpointHandler)
 
 

@@ -9,12 +9,13 @@ import { JsPlumbInstance, jsPlumbElement } from "../core"
 import {UIGroup, GroupOptions, UINode} from "./group"
 import * as Constants from "../constants"
 import {PointXY, removeWithFunction, suggest, forEach, isString} from "@jsplumb/util"
-import { WILDCARD } from "@jsplumb/common"
+import {AnchorSpec, EndpointSpec, WILDCARD} from "@jsplumb/common"
 import { Connection } from '../connector/declarations'
 import {ConnectionSelection} from "../selection/connection-selection"
 import {SELECTOR_MANAGED_ELEMENT} from "../constants"
 import { Endpoints} from '../endpoint/endpoints'
 import { Connections } from '../connector/connections'
+import {TYPE_ENDPOINT_DOT} from "@jsplumb/core"
 
 interface GroupMemberEventParams<E> {
     el:jsPlumbElement<E>,
@@ -356,7 +357,7 @@ export class GroupManager<E> {
 
         if (esgcp == null || etgcp == null || (esgcp.id !== etgcp.id)) {
             let groupEl = group.el, groupElId = this.instance.getId(groupEl)
-            this.instance.proxyConnection(conn, index, groupEl, /*groupElId, */(conn:Connection, index:number) => { return group.getEndpoint(conn, index); }, (conn:Connection, index:number) => { return group.getAnchor(conn, index); })
+            this.instance.proxyConnection(conn, index, groupEl, /*groupElId, */(conn:Connection, index:number) => { return this.getEndpoint(group, conn, index); }, (conn:Connection, index:number) => { return this.getAnchor(group, conn, index); })
             return true
         } else {
             return false
@@ -743,6 +744,18 @@ export class GroupManager<E> {
         this._connectionSourceMap = {}
         this._connectionTargetMap = {}
         this.groupMap = {}
+    }
+
+    isOverrideDrop(group:UIGroup<E>, el:any, targetGroup:UIGroup<E>):boolean {
+        return group.dropOverride && (group.revert || group.prune || group.orphan)
+    }
+
+    getAnchor (group:UIGroup<E>, conn:Connection, endpointIndex:number):AnchorSpec {
+        return group.anchor || "Continuous"
+    }
+
+    getEndpoint (group:UIGroup<E>, conn:Connection, endpointIndex:number):EndpointSpec {
+        return group.endpoint || { type:TYPE_ENDPOINT_DOT, options:{ radius:10 }}
     }
 
 }

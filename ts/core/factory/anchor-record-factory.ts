@@ -56,6 +56,14 @@ export interface AnchorRecord {
 
 /**
  * @internal
+ * @param anchors
+ */
+export function isValidAnchorsSpec(anchors:[ AnchorSpec, AnchorSpec ]):boolean {
+    return anchors != null && anchors[0] != null && anchors[1] != null
+}
+
+/**
+ * @internal
  */
 export interface ComputedPosition {curX:number,curY:number,ox:AnchorOrientationHint,oy:AnchorOrientationHint,x:number,y:number}
 

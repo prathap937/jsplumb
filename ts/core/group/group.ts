@@ -86,19 +86,19 @@ export class UIGroup<E = any> extends UINode<E> {
         return this.instance.getGroupContentArea(this)
     }
 
-    overrideDrop(el:any, targetGroup:UIGroup<E>):boolean {
-        return this.dropOverride && (this.revert || this.prune || this.orphan)
-    }
+    // overrideDrop(el:any, targetGroup:UIGroup<E>):boolean {
+    //     return this.dropOverride && (this.revert || this.prune || this.orphan)
+    // }
 
     // this function, and getEndpoint below, are stubs for a future setup in which we can choose endpoint
     // and anchor based upon the connection and the index (source/target) of the endpoint to be proxied.
-    getAnchor (conn:Connection, endpointIndex:number):AnchorSpec {
-        return this.anchor || "Continuous"
-    }
+    // getAnchor (conn:Connection, endpointIndex:number):AnchorSpec {
+    //     return this.anchor || "Continuous"
+    // }
 
-    getEndpoint (conn:Connection, endpointIndex:number):EndpointSpec {
-        return this.endpoint || { type:TYPE_ENDPOINT_DOT, options:{ radius:10 }}
-    }
+    // getEndpoint (conn:Connection, endpointIndex:number):EndpointSpec {
+    //     return this.endpoint || { type:TYPE_ENDPOINT_DOT, options:{ radius:10 }}
+    // }
 
     add(_el:E, doNotFireEvent?:boolean):void {
         const dragArea = this.instance.getGroupContentArea(this)

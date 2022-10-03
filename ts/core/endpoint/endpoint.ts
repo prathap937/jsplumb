@@ -156,7 +156,7 @@ export function createEndpoint<E>(instance:JsPlumbInstance, params:InternalEndpo
 
 //
     let ep = params.endpoint || params.existingEndpoint || instance.defaults.endpoint
-    Endpoints.setEndpoint(endpoint, ep)
+    Endpoints._setEndpoint(endpoint, ep)
 //
     if (params.preparedAnchor != null) {
         Endpoints._setPreparedAnchor(endpoint, params.preparedAnchor)

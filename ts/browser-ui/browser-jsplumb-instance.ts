@@ -1598,7 +1598,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
                 let cxy = {x: 0, y: 0}
                 if (absolutePosition) {
                     cxy = {x: absolutePosition.x, y: absolutePosition.y}
-                } else if (Endpoints.isEndpoint(component)) {
+                } else if (Endpoints._isEndpoint(component)) {
                     let locToUse:Array<number> = Array.isArray(o.location) ? o.location as Array<number> : [o.location, o.location] as Array<number>
                     cxy = {
                         x: locToUse[0] * component.representation.w,
@@ -1669,7 +1669,7 @@ export class BrowserJsPlumbInstance extends JsPlumbInstance<{E:Element}> {
      */
     setHover(component: Component, hover: boolean): void {
         component._hover = hover
-        if (Endpoints.isEndpoint(component) && component.representation != null) {
+        if (Endpoints._isEndpoint(component) && component.representation != null) {
             this.setEndpointHover((component as Endpoint), hover, -1)
         } else if (Connections.isConnection(component) && component.connector != null) {
             this.setConnectorHover((component as Connection).connector, hover)

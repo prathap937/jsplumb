@@ -5,15 +5,6 @@
  * @packageDocumentation
  */
 
-import {DotEndpointHandler} from "./endpoint/dot-endpoint"
-import {BlankEndpointHandler} from "./endpoint/blank-endpoint"
-import {RectangleEndpointHandler} from "./endpoint/rectangle-endpoint"
-
-import {StraightConnector} from "./connector/straight-connector"
-
-// import { Connectors } from './connector/connectors'
-import {EndpointFactory} from "./factory/endpoint-factory"
-
 export * from "./constants"
 export * from './params'
 export * from "./callbacks"
@@ -42,7 +33,7 @@ export * from "./selection/connection-selection"
 
 export * from './endpoint/endpoint'
 export * from './endpoint/endpoint-options'
-export * from './factory/endpoint-factory'
+//export * from './factory/endpoint-factory'
 export * from './endpoint/endpoints'
 export * from './endpoint/dot-endpoint'
 export * from './endpoint/rectangle-endpoint'
@@ -65,9 +56,9 @@ export * from './router/router'
 export * from "./factory/anchor-record-factory"
 export * from './router/lightweight-router'
 
-EndpointFactory.registerHandler(DotEndpointHandler)
-EndpointFactory.registerHandler(RectangleEndpointHandler)
-EndpointFactory.registerHandler(BlankEndpointHandler)
+// EndpointFactory.registerHandler(DotEndpointHandler)
+// EndpointFactory.registerHandler(RectangleEndpointHandler)
+// EndpointFactory.registerHandler(BlankEndpointHandler)
 
 // Connectors.register(StraightConnector.type, StraightConnector)
 

@@ -26,7 +26,7 @@ function prepareEndpoint<E>(conn:Connection<E>, existing:Endpoint, index:number,
 
     if (existing) {
         conn.endpoints[index] = existing
-        Endpoints.addConnection(existing, conn)
+        Endpoints._addConnection(existing, conn)
     } else {
 
         let ep = endpoint || conn.endpointSpec || conn.endpointsSpec[index] || conn.instance.defaults.endpoints[index] || conn.instance.defaults.endpoint
