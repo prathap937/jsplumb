@@ -241,8 +241,8 @@ var testSuite = function () {
         var e3 = _jsPlumb.addEndpoint(d3, {source: true, maxConnections: -1});
         var e4 = _jsPlumb.addEndpoint(d4, {source: true, maxConnections: -1});
         _jsPlumb.connect({sourceEndpoint: e3, targetEndpoint: e4});
-        ok(jsPlumbBrowserUI.Endpoints.isConnectedTo(e3, e4), "e3 is connected to e4");
-        ok(jsPlumbBrowserUI.Endpoints.isConnectedTo(e4, e3), "e4 is connected to e3");
+        ok(jsPlumbBrowserUI.Endpoints.areConnected(e3, e4), "e3 is connected to e4");
+        ok(jsPlumbBrowserUI.Endpoints.areConnected(e4, e3), "e4 is connected to e3");
     });
 
 // ************** ANCHORS ********************************************	

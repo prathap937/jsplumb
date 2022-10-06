@@ -4,6 +4,7 @@ import { EndpointStyle, OverlaySpec, PaintStyle, AnchorSpec, ConnectorSpec, Endp
 export declare type UUID = string;
 /**
  * Options for the `connect` call on a JsPlumbInstance
+ * @public
  */
 export interface ConnectParams<E> {
     /**
@@ -120,6 +121,7 @@ export interface ConnectParams<E> {
 }
 /**
  * Internal extension of ConnectParams containing a few extra things needed to establish a connection.
+ * @internal
  */
 export interface InternalConnectParams<E> extends ConnectParams<E> {
     sourceEndpoint?: Endpoint;
@@ -131,6 +133,7 @@ export interface InternalConnectParams<E> extends ConnectParams<E> {
 }
 /**
  * Options for the UpdateOffset method
+ * @internal
  */
 export interface UpdateOffsetOptions {
     timestamp?: string;

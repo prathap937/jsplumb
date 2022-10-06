@@ -15,7 +15,6 @@ export interface Router<T extends {
     computePath(connection: Connection, timestamp: string): void;
     computeAnchorLocation(anchor: A, params: AnchorComputeParams): AnchorPlacement;
     getEndpointLocation(endpoint: Endpoint, params: AnchorComputeParams): AnchorPlacement;
-    getAnchorOrientation(anchor: A, endpoint?: Endpoint): Orientation;
     getEndpointOrientation(endpoint: Endpoint): Orientation;
     setAnchorOrientation(anchor: A, orientation: Orientation): void;
     setAnchor(endpoint: Endpoint, anchor: A): void;

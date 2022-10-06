@@ -1,5 +1,4 @@
-import { EndpointRepresentation } from "./endpoints";
-import { EndpointHandler } from "../factory/endpoint-factory";
+import { EndpointRepresentation, EndpointHandler } from "./endpoints";
 export declare type ComputedBlankEndpoint = [number, number, number, number];
 export declare const TYPE_ENDPOINT_BLANK = "Blank";
 export interface BlankEndpoint extends EndpointRepresentation<ComputedBlankEndpoint> {

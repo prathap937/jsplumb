@@ -72,9 +72,6 @@ export declare const REMOVE_CLASS_ACTION = "remove";
  * @internal
  */
 export declare type ClassAction = typeof ADD_CLASS_ACTION | typeof REMOVE_CLASS_ACTION;
-/**
- * @internal
- */
 export interface Component {
     overlays: Record<string, OverlayBase>;
     overlayPositions: Record<string, PointXY>;
@@ -116,10 +113,6 @@ export declare const Components: {
      */
     _setComponentVisible(component: Component, v: boolean): void;
     setVisible(component: Component, v: boolean): void;
-    /**
-     * @internal
-     */
-    isVisible(component: Component): boolean;
     /**
      * Adds a css class to the component
      * @param clazz Class to add. May be a space separated list.

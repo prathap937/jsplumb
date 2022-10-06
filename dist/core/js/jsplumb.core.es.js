@@ -1,36 +1,6 @@
-import { log, isString, uuid, Events, extend, isFunction, isNumber, map, merge, isObject, clone, setToArray, populate, getWithFunction, removeWithFunction, suggest, forEach, getsert, EventGenerator, insertSorted, findWithFunction, quadrant, rotatePoint, lineLength, pointOnLine, gradient, filterList, functionChain, addToDictionary, normal, theta, TWO_PI, perpendicularLineTo } from '@jsplumb/util';
+import { isString, uuid, Events, extend, isFunction, isNumber, map, merge, isObject, clone, log, setToArray, populate, getWithFunction, removeWithFunction, suggest, forEach, getsert, insertSorted, quadrant, rotatePoint, findWithFunction, lineLength, pointOnLine, gradient, filterList, functionChain, addToDictionary, EventGenerator, normal, theta, TWO_PI, perpendicularLineTo } from '@jsplumb/util';
 import { PerimeterAnchorShapes, AnchorLocations, DEFAULT, EMPTY_BOUNDS, WILDCARD, defaultSegmentHandler } from '@jsplumb/common';
-
-var endpointComputers = {};
-var handlers = {};
-var EndpointFactory = {
-  get: function get(ep, name, params) {
-    var e = handlers[name];
-    if (!e) {
-      throw {
-        message: "jsPlumb: unknown endpoint type '" + name + "'"
-      };
-    } else {
-      return e.create(ep, params);
-    }
-  },
-  clone: function clone(epr) {
-    var handler = handlers[epr.type];
-    return EndpointFactory.get(epr.endpoint, epr.type, handler.getParams(epr));
-  },
-  compute: function compute(endpoint, anchorPoint, orientation, endpointStyle) {
-    var c = endpointComputers[endpoint.type];
-    if (c != null) {
-      return c(endpoint, anchorPoint, orientation, endpointStyle);
-    } else {
-      log("jsPlumb: cannot find endpoint calculator for endpoint of type ", endpoint.type);
-    }
-  },
-  registerHandler: function registerHandler(eph) {
-    handlers[eph.type] = eph;
-    endpointComputers[eph.type] = eph.compute;
-  }
-};
+import { TYPE_ENDPOINT_DOT as TYPE_ENDPOINT_DOT$1 } from '@jsplumb/core';
 
 function cls() {
   for (var _len = arguments.length, className = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -308,6 +278,28 @@ function _nonIterableRest() {
   throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 
+var DEFAULT_KEY_ALLOW_NESTED_GROUPS = "allowNestedGroups";
+var DEFAULT_KEY_ANCHOR = "anchor";
+var DEFAULT_KEY_ANCHORS = "anchors";
+var DEFAULT_KEY_CONNECTION_OVERLAYS = "connectionOverlays";
+var DEFAULT_KEY_CONNECTIONS_DETACHABLE = "connectionsDetachable";
+var DEFAULT_KEY_CONNECTOR = "connector";
+var DEFAULT_KEY_CONTAINER = "container";
+var DEFAULT_KEY_ENDPOINT = "endpoint";
+var DEFAULT_KEY_ENDPOINT_OVERLAYS = "endpointOverlays";
+var DEFAULT_KEY_ENDPOINTS = "endpoints";
+var DEFAULT_KEY_ENDPOINT_STYLE = "endpointStyle";
+var DEFAULT_KEY_ENDPOINT_STYLES = "endpointStyles";
+var DEFAULT_KEY_ENDPOINT_HOVER_STYLE = "endpointHoverStyle";
+var DEFAULT_KEY_ENDPOINT_HOVER_STYLES = "endpointHoverStyles";
+var DEFAULT_KEY_HOVER_CLASS = "hoverClass";
+var DEFAULT_KEY_HOVER_PAINT_STYLE = "hoverPaintStyle";
+var DEFAULT_KEY_LIST_STYLE = "listStyle";
+var DEFAULT_KEY_MAX_CONNECTIONS = "maxConnections";
+var DEFAULT_KEY_PAINT_STYLE = "paintStyle";
+var DEFAULT_KEY_REATTACH_CONNECTIONS = "reattachConnections";
+var DEFAULT_KEY_SCOPE = "scope";
+
 function isFullOverlaySpec(o) {
   return o.type != null && o.options != null;
 }
@@ -497,6 +489,9 @@ var RIGHT = FaceValues.right;
 var BOTTOM = FaceValues.bottom;
 var X_AXIS_FACES = [LEFT, RIGHT];
 var Y_AXIS_FACES = [TOP, BOTTOM];
+function isValidAnchorsSpec(anchors) {
+  return anchors != null && anchors[0] != null && anchors[1] != null;
+}
 var LightweightFloatingAnchor = function () {
   function LightweightFloatingAnchor(instance, element, elementId) {
     _classCallCheck(this, LightweightFloatingAnchor);
@@ -937,7 +932,7 @@ function prepareEndpoint(conn, existing, index, anchor, element, elementId, endp
   var e;
   if (existing) {
     conn.endpoints[index] = existing;
-    Endpoints.addConnection(existing, conn);
+    Endpoints._addConnection(existing, conn);
   } else {
     var ep = endpoint || conn.endpointSpec || conn.endpointsSpec[index] || conn.instance.defaults.endpoints[index] || conn.instance.defaults.endpoint;
     var es = conn.endpointStyles[index] || conn.endpointStyle || conn.instance.defaults.endpointStyles[index] || conn.instance.defaults.endpointStyle;
@@ -973,7 +968,7 @@ function prepareEndpoint(conn, existing, index, anchor, element, elementId, endp
       reattachConnections: conn.reattach || conn.instance.defaults.reattachConnections,
       connectionsDetachable: conn.detachable || conn.instance.defaults.connectionsDetachable
     });
-    conn.instance._refreshEndpoint(e);
+    Endpoints._refreshEndpointClasses(e);
     if (existing == null) {
       e.deleteOnEmpty = true;
     }
@@ -1549,9 +1544,6 @@ var Components = {
       Connections.setVisible(component, v);
     }
   },
-  isVisible: function isVisible(component) {
-    return component.visible;
-  },
   addBaseClass: function addBaseClass(component, clazz, cascade) {
     var parts = (component.cssClass || "").split(" ");
     parts.push(clazz);
@@ -1840,6 +1832,42 @@ var Components = {
 };
 
 var TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION = "endpoint-representation";
+var endpointComputers = {};
+var handlers = {};
+function _get(ep, name, params) {
+  var e = handlers[name];
+  if (!e) {
+    throw {
+      message: "jsPlumb: unknown endpoint type '" + name + "'"
+    };
+  } else {
+    return e.create(ep, params);
+  }
+}
+function _clone(epr) {
+  var handler = handlers[epr.type];
+  return _get(epr.endpoint, epr.type, handler.getParams(epr));
+}
+function _prepareEndpoint(endpoint, ep, typeId) {
+  var endpointArgs = {
+    cssClass: endpoint.cssClass,
+    endpoint: endpoint
+  };
+  var endpointRep;
+  if (isEndpointRepresentation(ep)) {
+    var epr = ep;
+    endpointRep = _clone(epr);
+    endpointRep.classes = endpointArgs.cssClass.split(" ");
+  } else if (isString(ep)) {
+    endpointRep = _get(endpoint, ep, endpointArgs);
+  } else {
+    var fep = ep;
+    extend(endpointArgs, fep.options || {});
+    endpointRep = _get(endpoint, fep.type, endpointArgs);
+  }
+  endpointRep.typeId = typeId;
+  return endpointRep;
+}
 function isEndpointRepresentation(ep) {
   return ep.typeDescriptor != null && ep.typeDescriptor === TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION;
 }
@@ -1963,9 +1991,9 @@ var Endpoints = {
     this._setPreparedAnchor(endpoint, a);
     return endpoint;
   },
-  addConnection: function addConnection(endpoint, conn) {
+  _addConnection: function _addConnection(endpoint, conn) {
     endpoint.connections.push(conn);
-    endpoint.instance._refreshEndpoint(endpoint);
+    Endpoints._refreshEndpointClasses(endpoint);
   },
   deleteEveryConnection: function deleteEveryConnection(endpoint, params) {
     var c = endpoint.connections.length;
@@ -1985,23 +2013,23 @@ var Endpoints = {
     }
     return endpoint;
   },
-  detachFromConnection: function detachFromConnection(endpoint, connection, idx, transientDetach) {
+  detachFromConnection: function detachFromConnection(endpoint, connection, idx, _transientDetach) {
     idx = idx == null ? endpoint.connections.indexOf(connection) : idx;
     if (idx >= 0) {
       endpoint.connections.splice(idx, 1);
-      endpoint.instance._refreshEndpoint(endpoint);
+      Endpoints._refreshEndpointClasses(endpoint);
     }
-    if (!transientDetach && endpoint.deleteOnEmpty && endpoint.connections.length === 0) {
+    if (!_transientDetach && endpoint.deleteOnEmpty && endpoint.connections.length === 0) {
       endpoint.instance.deleteEndpoint(endpoint);
     }
   },
   isFull: function isFull(endpoint) {
-    return endpoint.maxConnections === 0 ? true : !(this.isFloating(endpoint) || endpoint.maxConnections < 0 || endpoint.connections.length < endpoint.maxConnections);
+    return endpoint.maxConnections === 0 ? true : !(this._isFloating(endpoint) || endpoint.maxConnections < 0 || endpoint.connections.length < endpoint.maxConnections);
   },
-  isFloating: function isFloating(endpoint) {
+  _isFloating: function _isFloating(endpoint) {
     return endpoint.instance.router.isFloating(endpoint);
   },
-  isConnectedTo: function isConnectedTo(endpoint, otherEndpoint) {
+  areConnected: function areConnected(endpoint, otherEndpoint) {
     var found = false;
     if (otherEndpoint) {
       for (var i = 0; i < endpoint.connections.length; i++) {
@@ -2013,158 +2041,50 @@ var Endpoints = {
     }
     return found;
   },
-  isEndpoint: function isEndpoint(component) {
+  _isEndpoint: function _isEndpoint(component) {
     return component._typeDescriptor != null && component._typeDescriptor == TYPE_DESCRIPTOR_ENDPOINT;
   },
-  prepareEndpoint: function prepareEndpoint(endpoint, ep, typeId) {
-    var endpointArgs = {
-      cssClass: endpoint.cssClass,
-      endpoint: endpoint
-    };
-    var endpointRep;
-    if (isEndpointRepresentation(ep)) {
-      var epr = ep;
-      endpointRep = EndpointFactory.clone(epr);
-      endpointRep.classes = endpointArgs.cssClass.split(" ");
-    } else if (isString(ep)) {
-      endpointRep = EndpointFactory.get(endpoint, ep, endpointArgs);
-    } else {
-      var fep = ep;
-      extend(endpointArgs, fep.options || {});
-      endpointRep = EndpointFactory.get(endpoint, fep.type, endpointArgs);
-    }
-    endpointRep.typeId = typeId;
-    return endpointRep;
+  _setEndpoint: function _setEndpoint(endpoint, ep) {
+    var _ep = _prepareEndpoint(endpoint, ep);
+    this._setPreparedEndpoint(endpoint, _ep);
   },
-  setEndpoint: function setEndpoint(endpoint, ep) {
-    var _ep = this.prepareEndpoint(endpoint, ep);
-    this.setPreparedEndpoint(endpoint, _ep);
-  },
-  setPreparedEndpoint: function setPreparedEndpoint(endpoint, ep) {
+  _setPreparedEndpoint: function _setPreparedEndpoint(endpoint, ep) {
     if (endpoint.representation != null) {
       endpoint.instance.destroyEndpoint(endpoint);
     }
     endpoint.representation = ep;
   },
-  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
-    ep.computedValue = EndpointFactory.compute(ep, anchorPoint, orientation, endpointStyle);
-    ep.bounds.xmin = ep.x;
-    ep.bounds.ymin = ep.y;
-    ep.bounds.xmax = ep.x + ep.w;
-    ep.bounds.ymax = ep.y + ep.h;
-  }
-};
-
-var TYPE_ENDPOINT_DOT = "Dot";
-var DotEndpointHandler = {
-  type: TYPE_ENDPOINT_DOT,
-  create: function create(endpoint, params) {
-    var base = createBaseRepresentation(TYPE_ENDPOINT_DOT, endpoint, params);
-    var radius = params.radius || 5;
-    return extend(base, {
-      type: TYPE_ENDPOINT_DOT,
-      radius: radius,
-      defaultOffset: 0.5 * radius,
-      defaultInnerRadius: radius / 3
-    });
-  },
-  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
-    var x = anchorPoint.curX - ep.radius,
-        y = anchorPoint.curY - ep.radius,
-        w = ep.radius * 2,
-        h = ep.radius * 2;
-    if (endpointStyle && endpointStyle.stroke) {
-      var lw = endpointStyle.strokeWidth || 1;
-      x -= lw;
-      y -= lw;
-      w += lw * 2;
-      h += lw * 2;
+  _compute: function _compute(ep, anchorPoint, orientation, endpointStyle) {
+    var c = endpointComputers[ep.type];
+    if (c != null) {
+      ep.computedValue = c(ep, anchorPoint, orientation, endpointStyle);
+      ep.bounds.xmin = ep.x;
+      ep.bounds.ymin = ep.y;
+      ep.bounds.xmax = ep.x + ep.w;
+      ep.bounds.ymax = ep.y + ep.h;
+    } else {
+      log("jsPlumb: cannot find endpoint calculator for endpoint of type ", ep.type);
     }
-    ep.x = x;
-    ep.y = y;
-    ep.w = w;
-    ep.h = h;
-    return [x, y, w, h, ep.radius];
   },
-  getParams: function getParams(ep) {
-    return {
-      radius: ep.radius
-    };
+  _registerHandler: function _registerHandler(eph) {
+    handlers[eph.type] = eph;
+    endpointComputers[eph.type] = eph.compute;
+  },
+  _refreshEndpointClasses: function _refreshEndpointClasses(endpoint) {
+    if (!endpoint._anchor.isFloating) {
+      if (endpoint.connections.length > 0) {
+        endpoint.instance.addEndpointClass(endpoint, endpoint.instance.endpointConnectedClass);
+      } else {
+        endpoint.instance.removeEndpointClass(endpoint, endpoint.instance.endpointConnectedClass);
+      }
+      if (Endpoints.isFull(endpoint)) {
+        endpoint.instance.addEndpointClass(endpoint, endpoint.instance.endpointFullClass);
+      } else {
+        endpoint.instance.removeEndpointClass(endpoint, endpoint.instance.endpointFullClass);
+      }
+    }
   }
 };
-
-var TYPE_ENDPOINT_BLANK = "Blank";
-var BlankEndpointHandler = {
-  type: TYPE_ENDPOINT_BLANK,
-  create: function create(endpoint, params) {
-    var base = createBaseRepresentation(TYPE_ENDPOINT_BLANK, endpoint, params);
-    return extend(base, {
-      type: TYPE_ENDPOINT_BLANK
-    });
-  },
-  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
-    ep.x = anchorPoint.curX;
-    ep.y = anchorPoint.curY;
-    ep.w = 10;
-    ep.h = 0;
-    return [anchorPoint.curX, anchorPoint.curY, 10, 0];
-  },
-  getParams: function getParams(ep) {
-    return {};
-  }
-};
-
-var TYPE_ENDPOINT_RECTANGLE = "Rectangle";
-var RectangleEndpointHandler = {
-  type: TYPE_ENDPOINT_RECTANGLE,
-  create: function create(endpoint, params) {
-    var base = createBaseRepresentation(TYPE_ENDPOINT_RECTANGLE, endpoint, params);
-    return extend(base, {
-      type: TYPE_ENDPOINT_RECTANGLE,
-      width: params.width || 10,
-      height: params.height || 10
-    });
-  },
-  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
-    var width = endpointStyle.width || ep.width,
-        height = endpointStyle.height || ep.height,
-        x = anchorPoint.curX - width / 2,
-        y = anchorPoint.curY - height / 2;
-    ep.x = x;
-    ep.y = y;
-    ep.w = width;
-    ep.h = height;
-    return [x, y, width, height];
-  },
-  getParams: function getParams(ep) {
-    return {
-      width: ep.width,
-      height: ep.height
-    };
-  }
-};
-
-var DEFAULT_KEY_ALLOW_NESTED_GROUPS = "allowNestedGroups";
-var DEFAULT_KEY_ANCHOR = "anchor";
-var DEFAULT_KEY_ANCHORS = "anchors";
-var DEFAULT_KEY_CONNECTION_OVERLAYS = "connectionOverlays";
-var DEFAULT_KEY_CONNECTIONS_DETACHABLE = "connectionsDetachable";
-var DEFAULT_KEY_CONNECTOR = "connector";
-var DEFAULT_KEY_CONTAINER = "container";
-var DEFAULT_KEY_ENDPOINT = "endpoint";
-var DEFAULT_KEY_ENDPOINT_OVERLAYS = "endpointOverlays";
-var DEFAULT_KEY_ENDPOINTS = "endpoints";
-var DEFAULT_KEY_ENDPOINT_STYLE = "endpointStyle";
-var DEFAULT_KEY_ENDPOINT_STYLES = "endpointStyles";
-var DEFAULT_KEY_ENDPOINT_HOVER_STYLE = "endpointHoverStyle";
-var DEFAULT_KEY_ENDPOINT_HOVER_STYLES = "endpointHoverStyles";
-var DEFAULT_KEY_HOVER_CLASS = "hoverClass";
-var DEFAULT_KEY_HOVER_PAINT_STYLE = "hoverPaintStyle";
-var DEFAULT_KEY_LIST_STYLE = "listStyle";
-var DEFAULT_KEY_MAX_CONNECTIONS = "maxConnections";
-var DEFAULT_KEY_PAINT_STYLE = "paintStyle";
-var DEFAULT_KEY_REATTACH_CONNECTIONS = "reattachConnections";
-var DEFAULT_KEY_SCOPE = "scope";
 
 var ID_PREFIX_ENDPOINT = "_jsplumb_e";
 var DEFAULT_OVERLAY_KEY_ENDPOINTS = "endpointOverlays";
@@ -2251,7 +2171,7 @@ function createEndpoint(instance, params) {
     }
   });
   var ep = params.endpoint || params.existingEndpoint || instance.defaults.endpoint;
-  Endpoints.setEndpoint(endpoint, ep);
+  Endpoints._setEndpoint(endpoint, ep);
   if (params.preparedAnchor != null) {
     Endpoints._setPreparedAnchor(endpoint, params.preparedAnchor);
   } else {
@@ -2262,6 +2182,45 @@ function createEndpoint(instance, params) {
   Components.addType(endpoint, type, params.data);
   return endpoint;
 }
+
+var TYPE_ENDPOINT_DOT = "Dot";
+var DotEndpointHandler = {
+  type: TYPE_ENDPOINT_DOT,
+  create: function create(endpoint, params) {
+    var base = createBaseRepresentation(TYPE_ENDPOINT_DOT, endpoint, params);
+    var radius = params.radius || 5;
+    return extend(base, {
+      type: TYPE_ENDPOINT_DOT,
+      radius: radius,
+      defaultOffset: 0.5 * radius,
+      defaultInnerRadius: radius / 3
+    });
+  },
+  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
+    var x = anchorPoint.curX - ep.radius,
+        y = anchorPoint.curY - ep.radius,
+        w = ep.radius * 2,
+        h = ep.radius * 2;
+    if (endpointStyle && endpointStyle.stroke) {
+      var lw = endpointStyle.strokeWidth || 1;
+      x -= lw;
+      y -= lw;
+      w += lw * 2;
+      h += lw * 2;
+    }
+    ep.x = x;
+    ep.y = y;
+    ep.w = w;
+    ep.h = h;
+    return [x, y, w, h, ep.radius];
+  },
+  getParams: function getParams(ep) {
+    return {
+      radius: ep.radius
+    };
+  }
+};
+Endpoints._registerHandler(DotEndpointHandler);
 
 var UINode = function UINode(instance, el) {
   _classCallCheck(this, UINode);
@@ -2322,26 +2281,6 @@ var UIGroup = function (_UINode) {
     key: "contentArea",
     get: function get() {
       return this.instance.getGroupContentArea(this);
-    }
-  }, {
-    key: "overrideDrop",
-    value: function overrideDrop(el, targetGroup) {
-      return this.dropOverride && (this.revert || this.prune || this.orphan);
-    }
-  }, {
-    key: "getAnchor",
-    value: function getAnchor(conn, endpointIndex) {
-      return this.anchor || "Continuous";
-    }
-  }, {
-    key: "getEndpoint",
-    value: function getEndpoint(conn, endpointIndex) {
-      return this.endpoint || {
-        type: TYPE_ENDPOINT_DOT,
-        options: {
-          radius: 10
-        }
-      };
     }
   }, {
     key: "add",
@@ -2802,6 +2741,7 @@ var GroupManager = function () {
   }, {
     key: "_collapseConnection",
     value: function _collapseConnection(conn, index, group) {
+      var _this4 = this;
       var otherEl = conn.endpoints[index === 0 ? 1 : 0].element;
       if (otherEl._jsPlumbParentGroup && !otherEl._jsPlumbParentGroup.proxied && otherEl._jsPlumbParentGroup.collapsed) {
         return false;
@@ -2817,9 +2757,9 @@ var GroupManager = function () {
             this.instance.getId(groupEl);
         this.instance.proxyConnection(conn, index, groupEl,
         function (conn, index) {
-          return group.getEndpoint(conn, index);
+          return _this4.getEndpoint(group, conn, index);
         }, function (conn, index) {
-          return group.getAnchor(conn, index);
+          return _this4.getAnchor(group, conn, index);
         });
         return true;
       } else {
@@ -2851,7 +2791,7 @@ var GroupManager = function () {
   }, {
     key: "collapseGroup",
     value: function collapseGroup(group) {
-      var _this4 = this;
+      var _this5 = this;
       var actualGroup = this.getGroup(group);
       if (actualGroup == null || actualGroup.collapsed) {
         return;
@@ -2867,7 +2807,7 @@ var GroupManager = function () {
           var _collapseSet = function _collapseSet(conns, index) {
             for (var i = 0; i < conns.length; i++) {
               var c = conns[i];
-              if (_this4._collapseConnection(c, index, actualGroup) === true) {
+              if (_this5._collapseConnection(c, index, actualGroup) === true) {
                 collapsedConnectionIds.add(c.id);
               }
             }
@@ -2875,7 +2815,7 @@ var GroupManager = function () {
           _collapseSet(actualGroup.connections.source, 0);
           _collapseSet(actualGroup.connections.target, 1);
           forEach(actualGroup.getGroups(), function (cg) {
-            _this4.cascadeCollapse(actualGroup, cg, collapsedConnectionIds);
+            _this5.cascadeCollapse(actualGroup, cg, collapsedConnectionIds);
           });
         }
         this.instance.revalidate(groupEl);
@@ -2892,13 +2832,13 @@ var GroupManager = function () {
   }, {
     key: "cascadeCollapse",
     value: function cascadeCollapse(collapsedGroup, targetGroup, collapsedIds) {
-      var _this5 = this;
+      var _this6 = this;
       if (collapsedGroup.proxied) {
         var _collapseSet = function _collapseSet(conns, index) {
           for (var i = 0; i < conns.length; i++) {
             var c = conns[i];
             if (!collapsedIds.has(c.id)) {
-              if (_this5._collapseConnection(c, index, collapsedGroup) === true) {
+              if (_this6._collapseConnection(c, index, collapsedGroup) === true) {
                 collapsedIds.add(c.id);
               }
             }
@@ -2908,13 +2848,13 @@ var GroupManager = function () {
         _collapseSet(targetGroup.connections.target, 1);
       }
       forEach(targetGroup.getGroups(), function (cg) {
-        _this5.cascadeCollapse(collapsedGroup, cg, collapsedIds);
+        _this6.cascadeCollapse(collapsedGroup, cg, collapsedIds);
       });
     }
   }, {
     key: "expandGroup",
     value: function expandGroup(group, doNotFireEvent) {
-      var _this6 = this;
+      var _this7 = this;
       var actualGroup = this.getGroup(group);
       if (actualGroup == null) {
         return;
@@ -2929,7 +2869,7 @@ var GroupManager = function () {
           var _expandSet = function _expandSet(conns, index) {
             for (var i = 0; i < conns.length; i++) {
               var c = conns[i];
-              _this6._expandConnection(c, index, actualGroup);
+              _this7._expandConnection(c, index, actualGroup);
             }
           };
           _expandSet(actualGroup.connections.source, 0);
@@ -2939,7 +2879,7 @@ var GroupManager = function () {
               var _collapseSet = function _collapseSet(conns, index) {
                 for (var i = 0; i < conns.length; i++) {
                   var c = conns[i];
-                  _this6._collapseConnection(c, index, group.collapseParent || group);
+                  _this7._collapseConnection(c, index, group.collapseParent || group);
                 }
               };
               _collapseSet(group.connections.source, 0);
@@ -2951,7 +2891,7 @@ var GroupManager = function () {
                 return _expandNestedGroup(g, true);
               });
             } else {
-              _this6.expandGroup(group, true);
+              _this7.expandGroup(group, true);
             }
           };
           forEach(actualGroup.getGroups(), _expandNestedGroup);
@@ -2993,7 +2933,7 @@ var GroupManager = function () {
   }, {
     key: "addToGroup",
     value: function addToGroup(group, doNotFireEvent) {
-      var _this7 = this;
+      var _this8 = this;
       var actualGroup = this.getGroup(group);
       if (actualGroup) {
         var groupEl = actualGroup.el;
@@ -3006,13 +2946,13 @@ var GroupManager = function () {
               droppingGroup = jel._jsPlumbGroup,
               currentGroup = jel._jsPlumbParentGroup;
           if (currentGroup !== actualGroup) {
-            var entry = _this7.instance.manage(_el);
-            var elpos = _this7.instance.getOffset(_el);
-            var cpos = actualGroup.collapsed ? _this7.instance.getOffsetRelativeToRoot(groupEl) : _this7.instance.getOffset(_this7.instance.getGroupContentArea(actualGroup));
+            var entry = _this8.instance.manage(_el);
+            var elpos = _this8.instance.getOffset(_el);
+            var cpos = actualGroup.collapsed ? _this8.instance.getOffsetRelativeToRoot(groupEl) : _this8.instance.getOffset(_this8.instance.getGroupContentArea(actualGroup));
             entry.group = actualGroup.elId;
             if (currentGroup != null) {
               currentGroup.remove(_el, false, doNotFireEvent, false, actualGroup);
-              _this7._updateConnectionsForGroup(currentGroup);
+              _this8._updateConnectionsForGroup(currentGroup);
             }
             if (isGroup) {
               actualGroup.addGroup(droppingGroup);
@@ -3025,18 +2965,18 @@ var GroupManager = function () {
                 Connections.setVisible(c, false);
                 if (c.endpoints[oidx].element._jsPlumbGroup === actualGroup) {
                   Endpoints.setVisible(c.endpoints[oidx], false);
-                  _this7._expandConnection(c, oidx, actualGroup);
+                  _this8._expandConnection(c, oidx, actualGroup);
                 } else {
                   Endpoints.setVisible(c.endpoints[index], false);
-                  _this7._collapseConnection(c, index, actualGroup);
+                  _this8._collapseConnection(c, index, actualGroup);
                 }
               });
             };
             if (actualGroup.collapsed) {
-              handleDroppedConnections(_this7.instance.select({
+              handleDroppedConnections(_this8.instance.select({
                 source: _el
               }), 0);
-              handleDroppedConnections(_this7.instance.select({
+              handleDroppedConnections(_this8.instance.select({
                 target: _el
               }), 1);
             }
@@ -3044,9 +2984,9 @@ var GroupManager = function () {
               x: elpos.x - cpos.x,
               y: elpos.y - cpos.y
             };
-            _this7.instance.setPosition(_el, newPosition);
-            _this7._updateConnectionsForGroup(actualGroup);
-            _this7.instance.revalidate(_el);
+            _this8.instance.setPosition(_el, newPosition);
+            _this8._updateConnectionsForGroup(actualGroup);
+            _this8.instance.revalidate(_el);
             if (!doNotFireEvent) {
               var p = {
                 group: actualGroup,
@@ -3056,7 +2996,7 @@ var GroupManager = function () {
               if (currentGroup) {
                 p.sourceGroup = currentGroup;
               }
-              _this7.instance.fire(EVENT_GROUP_MEMBER_ADDED, p);
+              _this8.instance.fire(EVENT_GROUP_MEMBER_ADDED, p);
             }
           }
         });
@@ -3065,7 +3005,7 @@ var GroupManager = function () {
   }, {
     key: "removeFromGroup",
     value: function removeFromGroup(group, doNotFireEvent) {
-      var _this8 = this;
+      var _this9 = this;
       var actualGroup = this.getGroup(group);
       if (actualGroup) {
         var _one = function _one(_el) {
@@ -3077,8 +3017,8 @@ var GroupManager = function () {
                   for (var j = 0; j < c.proxies.length; j++) {
                     if (c.proxies[j] != null) {
                       var proxiedElement = c.proxies[j].originalEp.element;
-                      if (proxiedElement === _el || _this8.isElementDescendant(proxiedElement, _el)) {
-                        _this8._expandConnection(c, index, actualGroup);
+                      if (proxiedElement === _el || _this9.isElementDescendant(proxiedElement, _el)) {
+                        _this9._expandConnection(c, index, actualGroup);
                       }
                     }
                   }
@@ -3089,7 +3029,7 @@ var GroupManager = function () {
             _expandSet(actualGroup.connections.target.slice(), 1);
           }
           actualGroup.remove(_el, null, doNotFireEvent);
-          var entry = _this8.instance.getManagedElements()[_this8.instance.getId(_el)];
+          var entry = _this9.instance.getManagedElements()[_this9.instance.getId(_el)];
           if (entry) {
             delete entry.group;
           }
@@ -3145,6 +3085,26 @@ var GroupManager = function () {
       this._connectionSourceMap = {};
       this._connectionTargetMap = {};
       this.groupMap = {};
+    }
+  }, {
+    key: "isOverrideDrop",
+    value: function isOverrideDrop(group, el, targetGroup) {
+      return group.dropOverride && (group.revert || group.prune || group.orphan);
+    }
+  }, {
+    key: "getAnchor",
+    value: function getAnchor(group, conn, endpointIndex) {
+      return group.anchor || "Continuous";
+    }
+  }, {
+    key: "getEndpoint",
+    value: function getEndpoint(group, conn, endpointIndex) {
+      return group.endpoint || {
+        type: TYPE_ENDPOINT_DOT$1,
+        options: {
+          radius: 10
+        }
+      };
     }
   }]);
   return GroupManager;
@@ -3347,7 +3307,8 @@ var EndpointSelection = function (_SelectionBase) {
   }
   _createClass(EndpointSelection, [{
     key: "setEnabled",
-    value: function setEnabled(e) {
+    value:
+    function setEnabled(e) {
       this.each(function (ep) {
         return ep.enabled = e;
       });
@@ -3436,12 +3397,9 @@ var ConnectionSelection = function (_SelectionBase) {
   return ConnectionSelection;
 }(SelectionBase);
 
-var Transaction = function Transaction() {
-  _classCallCheck(this, Transaction);
-  _defineProperty(this, "affectedElements", new Set());
-};
-function EMPTY_POSITION() {
+function EMPTY_POSITION(id) {
   return {
+    id: id,
     x: 0,
     y: 0,
     w: 0,
@@ -3454,6 +3412,7 @@ function EMPTY_POSITION() {
     x2: 0,
     y2: 0,
     t: {
+      id: id,
       x: 0,
       y: 0,
       c: {
@@ -3467,11 +3426,10 @@ function EMPTY_POSITION() {
       y2: 0,
       cr: 0,
       sr: 0
-    },
-    dirty: true
+    }
   };
 }
-function rotate(x, y, w, h, r) {
+function rotate(id, x, y, w, h, r) {
   var center = {
     x: x + w / 2,
     y: y + h / 2
@@ -3503,7 +3461,8 @@ function rotate(x, y, w, h, r) {
     x2: xmax,
     y2: ymax,
     cr: cr,
-    sr: sr
+    sr: sr,
+    id: id
   };
 }
 var entryComparator = function entryComparator(value, arrayEntry) {
@@ -3515,60 +3474,46 @@ var entryComparator = function entryComparator(value, arrayEntry) {
   }
   return c;
 };
-var reverseEntryComparator = function reverseEntryComparator(value, arrayEntry) {
-  return entryComparator(value, arrayEntry) * -1;
-};
-function _updateElementIndex(id, value, array, sortDescending) {
-  insertSorted([id, value], array, entryComparator, sortDescending);
+function _updateElementIndex(element, value, array, sortDescending) {
+  _clearElementIndex(element.id, array);
+  insertSorted([element, value], array, entryComparator, sortDescending);
 }
 function _clearElementIndex(id, array) {
-  var idx = findWithFunction(array, function (entry) {
-    return entry[0] === id;
+  var idx = array.findIndex(function (entry) {
+    return entry[0].id === id;
   });
   if (idx > -1) {
     array.splice(idx, 1);
   }
 }
-var Viewport = function (_EventGenerator) {
-  _inherits(Viewport, _EventGenerator);
-  var _super = _createSuper(Viewport);
+var Viewport = function () {
   function Viewport(instance) {
-    var _this;
     _classCallCheck(this, Viewport);
-    _this = _super.call(this);
-    _this.instance = instance;
-    _defineProperty(_assertThisInitialized(_this), "_currentTransaction", null);
-    _defineProperty(_assertThisInitialized(_this), "_sortedElements", {
+    this.instance = instance;
+    _defineProperty(this, "_sortedElements", {
       xmin: [],
       xmax: [],
       ymin: [],
       ymax: []
     });
-    _defineProperty(_assertThisInitialized(_this), "_elementMap", new Map());
-    _defineProperty(_assertThisInitialized(_this), "_transformedElementMap", new Map());
-    _defineProperty(_assertThisInitialized(_this), "_bounds", {
+    _defineProperty(this, "_elementMap", new Map());
+    _defineProperty(this, "_transformedElementMap", new Map());
+    _defineProperty(this, "_bounds", {
       minx: 0,
       maxx: 0,
       miny: 0,
       maxy: 0
     });
-    return _this;
   }
   _createClass(Viewport, [{
     key: "_updateBounds",
-    value: function _updateBounds(id, updatedElement, doNotRecalculateBounds) {
+    value: function _updateBounds(id, updatedElement) {
       if (updatedElement != null) {
-        _clearElementIndex(id, this._sortedElements.xmin);
-        _clearElementIndex(id, this._sortedElements.xmax);
-        _clearElementIndex(id, this._sortedElements.ymin);
-        _clearElementIndex(id, this._sortedElements.ymax);
-        _updateElementIndex(id, updatedElement.t.x, this._sortedElements.xmin, false);
-        _updateElementIndex(id, updatedElement.t.x + updatedElement.t.w, this._sortedElements.xmax, true);
-        _updateElementIndex(id, updatedElement.t.y, this._sortedElements.ymin, false);
-        _updateElementIndex(id, updatedElement.t.y + updatedElement.t.h, this._sortedElements.ymax, true);
-        if (doNotRecalculateBounds !== true) {
-          this._recalculateBounds();
-        }
+        _updateElementIndex(updatedElement, updatedElement.t.x, this._sortedElements.xmin, false);
+        _updateElementIndex(updatedElement, updatedElement.t.x + updatedElement.t.w, this._sortedElements.xmax, true);
+        _updateElementIndex(updatedElement, updatedElement.t.y, this._sortedElements.ymin, false);
+        _updateElementIndex(updatedElement, updatedElement.t.y + updatedElement.t.h, this._sortedElements.ymax, true);
+        this._recalculateBounds();
       }
     }
   }, {
@@ -3580,73 +3525,11 @@ var Viewport = function (_EventGenerator) {
       this._bounds.maxy = this._sortedElements.ymax.length > 0 ? this._sortedElements.ymax[0][1] : 0;
     }
   }, {
-    key: "recomputeBounds",
-    value: function recomputeBounds() {
-      var _this2 = this;
-      this._sortedElements.xmin.length = 0;
-      this._sortedElements.xmax.length = 0;
-      this._sortedElements.ymin.length = 0;
-      this._sortedElements.ymax.length = 0;
-      this._elementMap.forEach(function (vp, id) {
-        _this2._sortedElements.xmin.push([id, vp.t.x]);
-        _this2._sortedElements.xmax.push([id, vp.t.x + vp.t.w]);
-        _this2._sortedElements.ymin.push([id, vp.t.y]);
-        _this2._sortedElements.ymax.push([id, vp.t.y + vp.t.h]);
-      });
-      this._sortedElements.xmin.sort(entryComparator);
-      this._sortedElements.ymin.sort(entryComparator);
-      this._sortedElements.xmax.sort(reverseEntryComparator);
-      this._sortedElements.ymax.sort(reverseEntryComparator);
-      this._recalculateBounds();
-    }
-  }, {
-    key: "_finaliseUpdate",
-    value: function _finaliseUpdate(id, e, doNotRecalculateBounds) {
-      e.t = rotate(e.x, e.y, e.w, e.h, e.r);
-      this._transformedElementMap.set(id, e.t);
-      if (doNotRecalculateBounds !== true) {
-        this._updateBounds(id, e, doNotRecalculateBounds);
-      }
-    }
-  }, {
-    key: "shouldFireEvent",
-    value: function shouldFireEvent(event, value, originalEvent) {
-      return true;
-    }
-  }, {
-    key: "startTransaction",
-    value: function startTransaction() {
-      if (this._currentTransaction != null) {
-        throw new Error("Viewport: cannot start transaction; a transaction is currently active.");
-      }
-      this._currentTransaction = new Transaction();
-    }
-  }, {
-    key: "endTransaction",
-    value: function endTransaction() {
-      var _this3 = this;
-      if (this._currentTransaction != null) {
-        this._currentTransaction.affectedElements.forEach(function (id) {
-          var entry = _this3.getPosition(id);
-          _this3._finaliseUpdate(id, entry, true);
-        });
-        this.recomputeBounds();
-        this._currentTransaction = null;
-      }
-    }
-  }, {
-    key: "updateElements",
-    value: function updateElements(entries) {
-      var _this4 = this;
-      forEach(entries, function (e) {
-        return _this4.updateElement(e.id, e.x, e.y, e.width, e.height, e.rotation);
-      });
-    }
-  }, {
     key: "updateElement",
     value: function updateElement(id, x, y, width, height, rotation, doNotRecalculateBounds) {
-      var e = getsert(this._elementMap, id, EMPTY_POSITION);
-      e.dirty = x == null && e.x == null || y == null && e.y == null || width == null && e.w == null || height == null && e.h == null;
+      var e = getsert(this._elementMap, id, function () {
+        return EMPTY_POSITION(id);
+      });
       if (x != null) {
         e.x = x;
       }
@@ -3666,21 +3549,20 @@ var Viewport = function (_EventGenerator) {
       e.c.y = e.y + e.h / 2;
       e.x2 = e.x + e.w;
       e.y2 = e.y + e.h;
-      if (this._currentTransaction == null) {
-        this._finaliseUpdate(id, e, doNotRecalculateBounds);
-      } else {
-        this._currentTransaction.affectedElements.add(id);
+      e.t = rotate(id, e.x, e.y, e.w, e.h, e.r);
+      this._transformedElementMap.set(id, e.t);
+      if (doNotRecalculateBounds !== true) {
+        this._updateBounds(id, e);
       }
       return e;
     }
   }, {
     key: "refreshElement",
     value: function refreshElement(elId, doNotRecalculateBounds) {
-      var me = this.instance.getManagedElements();
-      var s = me[elId] ? me[elId].el : null;
-      if (s != null) {
-        var size = this.getSize(s);
-        var offset = this.getOffset(s);
+      var m = this.instance.getManagedElements()[elId];
+      if (m != null && m.el != null) {
+        var size = this.getSize(m.el);
+        var offset = this.getOffset(m.el);
         return this.updateElement(elId, offset.x, offset.y, size.w, size.h, null, doNotRecalculateBounds);
       } else {
         return null;
@@ -3709,41 +3591,38 @@ var Viewport = function (_EventGenerator) {
   }, {
     key: "rotateElement",
     value: function rotateElement(id, rotation) {
-      var e = getsert(this._elementMap, id, EMPTY_POSITION);
-      e.r = rotation || 0;
-      this._finaliseUpdate(id, e);
-      return e;
+      return this.updateElement(id, null, null, null, null, rotation);
     }
   }, {
-    key: "getBoundsWidth",
-    value: function getBoundsWidth() {
+    key: "boundsWidth",
+    get: function get() {
       return this._bounds.maxx - this._bounds.minx;
     }
   }, {
-    key: "getBoundsHeight",
-    value: function getBoundsHeight() {
+    key: "boundsHeight",
+    get: function get() {
       return this._bounds.maxy - this._bounds.miny;
     }
   }, {
-    key: "getX",
-    value: function getX() {
+    key: "boundsMinX",
+    get: function get() {
       return this._bounds.minx;
     }
   }, {
-    key: "getY",
-    value: function getY() {
+    key: "boundsMinY",
+    get: function get() {
       return this._bounds.miny;
     }
   }, {
-    key: "setSize",
-    value: function setSize(id, w, h) {
+    key: "sizeChanged",
+    value: function sizeChanged(id, w, h) {
       if (this._elementMap.has(id)) {
         return this.updateElement(id, null, null, w, h, null);
       }
     }
   }, {
-    key: "setPosition",
-    value: function setPosition(id, x, y) {
+    key: "positionChanged",
+    value: function positionChanged(id, x, y) {
       if (this._elementMap.has(id)) {
         return this.updateElement(id, x, y, null, null, null);
       }
@@ -3760,8 +3639,8 @@ var Viewport = function (_EventGenerator) {
       this._recalculateBounds();
     }
   }, {
-    key: "remove",
-    value: function remove(id) {
+    key: "elementRemoved",
+    value: function elementRemoved(id) {
       _clearElementIndex(id, this._sortedElements.xmin);
       _clearElementIndex(id, this._sortedElements.xmax);
       _clearElementIndex(id, this._sortedElements.ymin);
@@ -3787,7 +3666,7 @@ var Viewport = function (_EventGenerator) {
     }
   }]);
   return Viewport;
-}(EventGenerator);
+}();
 
 var segmentMap = {};
 var Segments = {
@@ -5370,12 +5249,7 @@ var JsPlumbInstance = function (_EventGenerator) {
   }, {
     key: "areDefaultAnchorsSet",
     value: function areDefaultAnchorsSet() {
-      return this.validAnchorsSpec(this.defaults.anchors);
-    }
-  }, {
-    key: "validAnchorsSpec",
-    value: function validAnchorsSpec(anchors) {
-      return anchors != null && anchors[0] != null && anchors[1] != null;
+      return isValidAnchorsSpec(this.defaults.anchors);
     }
   }, {
     key: "getContainer",
@@ -5538,9 +5412,9 @@ var JsPlumbInstance = function (_EventGenerator) {
         connection: c,
         newEndpoint: oldEndpoint
       };
-      if (Endpoints.isEndpoint(el)) {
+      if (Endpoints._isEndpoint(el)) {
         ep = el;
-        Endpoints.addConnection(ep, c);
+        Endpoints._addConnection(ep, c);
       } else {
         sid = this.getId(el);
         if (sid === c[_st.elId]) {
@@ -5595,7 +5469,6 @@ var JsPlumbInstance = function (_EventGenerator) {
         this._suspendedAt = "" + new Date().getTime();
       } else {
         this._suspendedAt = null;
-        this.viewport.recomputeBounds();
       }
       if (repaintAfterwards) {
         this.repaintEverything();
@@ -5723,7 +5596,7 @@ var JsPlumbInstance = function (_EventGenerator) {
   }, {
     key: "fireMoveEvent",
     value: function fireMoveEvent(params, evt) {
-      this.fire(EVENT_CONNECTION_MOVED, params, evt);
+      Events.fire(this, EVENT_CONNECTION_MOVED, params, evt);
     }
   }, {
     key: "manageAll",
@@ -5803,7 +5676,7 @@ var JsPlumbInstance = function (_EventGenerator) {
         var id = _this3.getId(_el);
         _this3.removeAttribute(_el, ATTRIBUTE_MANAGED);
         delete _this3._managedElements[id];
-        _this3.viewport.remove(id);
+        _this3.viewport.elementRemoved(id);
         _this3.fire(EVENT_UNMANAGE_ELEMENT, {
           el: _el,
           id: id
@@ -5958,9 +5831,8 @@ var JsPlumbInstance = function (_EventGenerator) {
       var timestamp = uuid(),
           elId;
       for (elId in this._managedElements) {
-        this.viewport.refreshElement(elId, true);
+        this.viewport.refreshElement(elId, null);
       }
-      this.viewport.recomputeBounds();
       for (elId in this._managedElements) {
         this.repaint(this._managedElements[elId].el, timestamp, true);
       }
@@ -5970,7 +5842,7 @@ var JsPlumbInstance = function (_EventGenerator) {
     key: "setElementPosition",
     value: function setElementPosition(el, x, y) {
       var id = this.getId(el);
-      this.viewport.setPosition(id, x, y);
+      this.viewport.positionChanged(id, x, y);
       return this.repaint(el);
     }
   }, {
@@ -6532,7 +6404,7 @@ var JsPlumbInstance = function (_EventGenerator) {
       delete connection.proxies[index].originalEp.proxiedBy;
       this.sourceOrTargetChanged(proxyElId, originalElementId, connection, originalElement, index);
       Endpoints.detachFromConnection(connection.proxies[index].ep, connection, null);
-      Endpoints.addConnection(connection.proxies[index].originalEp, connection);
+      Endpoints._addConnection(connection.proxies[index].originalEp, connection);
       if (connection.visible) {
         Endpoints.setVisible(connection.proxies[index].originalEp, true);
       }
@@ -6671,7 +6543,7 @@ var JsPlumbInstance = function (_EventGenerator) {
             anchorParams.rotation = this._getRotations(endpoint.elementId);
             ap = this.router.computeAnchorLocation(endpoint._anchor, anchorParams);
           }
-          Endpoints.compute(endpoint.representation, ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse);
+          Endpoints._compute(endpoint.representation, ap, this.router.getEndpointOrientation(endpoint), endpoint.paintStyleInUse);
           this.renderEndpoint(endpoint, endpoint.paintStyleInUse);
           endpoint.timestamp = timestamp;
           for (var i in endpoint.overlays) {
@@ -6740,27 +6612,11 @@ var JsPlumbInstance = function (_EventGenerator) {
       }
     }
   }, {
-    key: "_refreshEndpoint",
-    value: function _refreshEndpoint(endpoint) {
-      if (!endpoint._anchor.isFloating) {
-        if (endpoint.connections.length > 0) {
-          this.addEndpointClass(endpoint, this.endpointConnectedClass);
-        } else {
-          this.removeEndpointClass(endpoint, this.endpointConnectedClass);
-        }
-        if (Endpoints.isFull(endpoint)) {
-          this.addEndpointClass(endpoint, this.endpointFullClass);
-        } else {
-          this.removeEndpointClass(endpoint, this.endpointFullClass);
-        }
-      }
-    }
-  }, {
     key: "addOverlay",
     value: function addOverlay(component, overlay, doNotRevalidate) {
       Components.addOverlay(component, overlay);
       if (!doNotRevalidate) {
-        var relatedElement = Endpoints.isEndpoint(component) ? component.element : component.source;
+        var relatedElement = Endpoints._isEndpoint(component) ? component.element : component.source;
         this.revalidate(relatedElement);
       }
     }
@@ -6768,7 +6624,7 @@ var JsPlumbInstance = function (_EventGenerator) {
     key: "removeOverlay",
     value: function removeOverlay(component, overlayId) {
       Components.removeOverlay(component, overlayId);
-      var relatedElement = Endpoints.isEndpoint(component) ? component.element : component.source;
+      var relatedElement = Endpoints._isEndpoint(component) ? component.element : component.source;
       this.revalidate(relatedElement);
     }
   }, {
@@ -7011,6 +6867,59 @@ var ArcSegmentHandler = {
 };
 Segments.register(SEGMENT_TYPE_ARC, ArcSegmentHandler);
 
+var TYPE_ENDPOINT_RECTANGLE = "Rectangle";
+var RectangleEndpointHandler = {
+  type: TYPE_ENDPOINT_RECTANGLE,
+  create: function create(endpoint, params) {
+    var base = createBaseRepresentation(TYPE_ENDPOINT_RECTANGLE, endpoint, params);
+    return extend(base, {
+      type: TYPE_ENDPOINT_RECTANGLE,
+      width: params.width || 10,
+      height: params.height || 10
+    });
+  },
+  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
+    var width = endpointStyle.width || ep.width,
+        height = endpointStyle.height || ep.height,
+        x = anchorPoint.curX - width / 2,
+        y = anchorPoint.curY - height / 2;
+    ep.x = x;
+    ep.y = y;
+    ep.w = width;
+    ep.h = height;
+    return [x, y, width, height];
+  },
+  getParams: function getParams(ep) {
+    return {
+      width: ep.width,
+      height: ep.height
+    };
+  }
+};
+Endpoints._registerHandler(RectangleEndpointHandler);
+
+var TYPE_ENDPOINT_BLANK = "Blank";
+var BlankEndpointHandler = {
+  type: TYPE_ENDPOINT_BLANK,
+  create: function create(endpoint, params) {
+    var base = createBaseRepresentation(TYPE_ENDPOINT_BLANK, endpoint, params);
+    return extend(base, {
+      type: TYPE_ENDPOINT_BLANK
+    });
+  },
+  compute: function compute(ep, anchorPoint, orientation, endpointStyle) {
+    ep.x = anchorPoint.curX;
+    ep.y = anchorPoint.curY;
+    ep.w = 10;
+    ep.h = 0;
+    return [anchorPoint.curX, anchorPoint.curY, 10, 0];
+  },
+  getParams: function getParams(ep) {
+    return {};
+  }
+};
+Endpoints._registerHandler(BlankEndpointHandler);
+
 var DEFAULT_WIDTH = 20;
 var DEFAULT_LENGTH = 20;
 var TYPE_OVERLAY_ARROW = "Arrow";
@@ -7155,8 +7064,4 @@ var CustomOverlayHandler = {
 };
 OverlayFactory.register(TYPE_OVERLAY_CUSTOM, CustomOverlayHandler);
 
-EndpointFactory.registerHandler(DotEndpointHandler);
-EndpointFactory.registerHandler(RectangleEndpointHandler);
-EndpointFactory.registerHandler(BlankEndpointHandler);
-
-export { ABSOLUTE, ADD_CLASS_ACTION, ATTRIBUTE_GROUP, ATTRIBUTE_MANAGED, ATTRIBUTE_NOT_DRAGGABLE, ATTRIBUTE_SCOPE, ATTRIBUTE_SCOPE_PREFIX, ATTRIBUTE_TABINDEX, ArrowOverlayHandler, BLOCK, BOTTOM, BlankEndpointHandler, CHECK_CONDITION, CHECK_DROP_ALLOWED, CLASS_CONNECTED, CLASS_CONNECTOR, CLASS_CONNECTOR_OUTLINE, CLASS_ENDPOINT, CLASS_ENDPOINT_ANCHOR_PREFIX, CLASS_ENDPOINT_CONNECTED, CLASS_ENDPOINT_DROP_ALLOWED, CLASS_ENDPOINT_DROP_FORBIDDEN, CLASS_ENDPOINT_FLOATING, CLASS_ENDPOINT_FULL, CLASS_GROUP_COLLAPSED, CLASS_GROUP_EXPANDED, CLASS_OVERLAY, CONNECTOR_TYPE_STRAIGHT, Components, ConnectionDragSelector, ConnectionSelection, Connections, Connectors, DEFAULT_KEY_ALLOW_NESTED_GROUPS, DEFAULT_KEY_ANCHOR, DEFAULT_KEY_ANCHORS, DEFAULT_KEY_CONNECTIONS_DETACHABLE, DEFAULT_KEY_CONNECTION_OVERLAYS, DEFAULT_KEY_CONNECTOR, DEFAULT_KEY_CONTAINER, DEFAULT_KEY_ENDPOINT, DEFAULT_KEY_ENDPOINTS, DEFAULT_KEY_ENDPOINT_HOVER_STYLE, DEFAULT_KEY_ENDPOINT_HOVER_STYLES, DEFAULT_KEY_ENDPOINT_OVERLAYS, DEFAULT_KEY_ENDPOINT_STYLE, DEFAULT_KEY_ENDPOINT_STYLES, DEFAULT_KEY_HOVER_CLASS, DEFAULT_KEY_HOVER_PAINT_STYLE, DEFAULT_KEY_LIST_STYLE, DEFAULT_KEY_MAX_CONNECTIONS, DEFAULT_KEY_PAINT_STYLE, DEFAULT_KEY_REATTACH_CONNECTIONS, DEFAULT_KEY_SCOPE, DEFAULT_LABEL_LOCATION_CONNECTION, DEFAULT_LABEL_LOCATION_ENDPOINT, DEFAULT_LENGTH, DEFAULT_OVERLAY_KEY_ENDPOINTS, DotEndpointHandler, ERROR_SOURCE_DOES_NOT_EXIST, ERROR_SOURCE_ENDPOINT_FULL, ERROR_TARGET_DOES_NOT_EXIST, ERROR_TARGET_ENDPOINT_FULL, EVENT_ANCHOR_CHANGED, EVENT_CONNECTION, EVENT_CONNECTION_DETACHED, EVENT_CONNECTION_MOVED, EVENT_CONTAINER_CHANGE, EVENT_ENDPOINT_REPLACED, EVENT_GROUP_ADDED, EVENT_GROUP_COLLAPSE, EVENT_GROUP_EXPAND, EVENT_GROUP_MEMBER_ADDED, EVENT_GROUP_MEMBER_REMOVED, EVENT_GROUP_REMOVED, EVENT_INTERNAL_CONNECTION, EVENT_INTERNAL_CONNECTION_DETACHED, EVENT_INTERNAL_ENDPOINT_UNREGISTERED, EVENT_MANAGE_ELEMENT, EVENT_MAX_CONNECTIONS, EVENT_NESTED_GROUP_ADDED, EVENT_NESTED_GROUP_REMOVED, EVENT_UNMANAGE_ELEMENT, EVENT_ZOOM, EndpointFactory, EndpointSelection, Endpoints, FIXED, GroupManager, ID_PREFIX_CONNECTION, ID_PREFIX_ENDPOINT, INTERCEPT_BEFORE_DETACH, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_DROP, INTERCEPT_BEFORE_START_DETACH, IS_DETACH_ALLOWED, JsPlumbInstance, KEY_CONNECTION_OVERLAYS, LEFT, Labels, LightweightFloatingAnchor, LightweightRouter, NONE, OverlayFactory, Overlays, REDROP_POLICY_ANY, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_SOURCE_OR_TARGET, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_STRICT, REMOVE_CLASS_ACTION, RIGHT, RectangleEndpointHandler, SEGMENT_TYPE_ARC, SEGMENT_TYPE_STRAIGHT, SELECTOR_MANAGED_ELEMENT, SOURCE, SOURCE_INDEX, STATIC, Segments, TARGET, TARGET_INDEX, TOP, TYPE_DESCRIPTOR_CONNECTION, TYPE_DESCRIPTOR_CONNECTOR, TYPE_DESCRIPTOR_ENDPOINT, TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION, TYPE_ENDPOINT_BLANK, TYPE_ENDPOINT_DOT, TYPE_ENDPOINT_RECTANGLE, TYPE_ID_CONNECTION, TYPE_ITEM_ANCHORS, TYPE_ITEM_CONNECTOR, TYPE_OVERLAY_ARROW, TYPE_OVERLAY_CUSTOM, TYPE_OVERLAY_DIAMOND, TYPE_OVERLAY_LABEL, TYPE_OVERLAY_PLAIN_ARROW, UIGroup, UINode, Viewport, X_AXIS_FACES, Y_AXIS_FACES, _addSegment, _clearSegments, _createPerimeterAnchor, _findSegmentForLocation, _removeTypeCssHelper, _updateHoverStyle, _updateSegmentProportions, att, classList, cls, compute, connectorBoundingBoxIntersection, connectorBoxIntersection, convertToFullOverlaySpec, createBaseRepresentation, createComponentBase, createConnectorBase, createEndpoint, createFloatingAnchor, createOverlayBase, defaultConnectorHandler, dumpSegmentsToConsole, findSegmentForPoint, getDefaultFace, gradientAtComponentPoint, isArrowOverlay, isContinuous, isCustomOverlay, isDiamondOverlay, isDynamic, isEdgeSupported, isEndpointRepresentation, _isFloating as isFloating, isFullOverlaySpec, isLabelOverlay, isPlainArrowOverlay, lineIntersection, makeLightweightAnchorFromSpec, pointAlongComponentPathFrom, pointOnComponentPath, resetBounds, resetGeometry, setGeometry, setPreparedConnector, transformAnchorPlacement, updateBounds };
+export { ABSOLUTE, ADD_CLASS_ACTION, ATTRIBUTE_GROUP, ATTRIBUTE_MANAGED, ATTRIBUTE_NOT_DRAGGABLE, ATTRIBUTE_SCOPE, ATTRIBUTE_SCOPE_PREFIX, ATTRIBUTE_TABINDEX, ArrowOverlayHandler, BLOCK, BOTTOM, BlankEndpointHandler, CHECK_CONDITION, CHECK_DROP_ALLOWED, CLASS_CONNECTED, CLASS_CONNECTOR, CLASS_CONNECTOR_OUTLINE, CLASS_ENDPOINT, CLASS_ENDPOINT_ANCHOR_PREFIX, CLASS_ENDPOINT_CONNECTED, CLASS_ENDPOINT_DROP_ALLOWED, CLASS_ENDPOINT_DROP_FORBIDDEN, CLASS_ENDPOINT_FLOATING, CLASS_ENDPOINT_FULL, CLASS_GROUP_COLLAPSED, CLASS_GROUP_EXPANDED, CLASS_OVERLAY, CONNECTOR_TYPE_STRAIGHT, Components, ConnectionDragSelector, ConnectionSelection, Connections, Connectors, DEFAULT_KEY_ALLOW_NESTED_GROUPS, DEFAULT_KEY_ANCHOR, DEFAULT_KEY_ANCHORS, DEFAULT_KEY_CONNECTIONS_DETACHABLE, DEFAULT_KEY_CONNECTION_OVERLAYS, DEFAULT_KEY_CONNECTOR, DEFAULT_KEY_CONTAINER, DEFAULT_KEY_ENDPOINT, DEFAULT_KEY_ENDPOINTS, DEFAULT_KEY_ENDPOINT_HOVER_STYLE, DEFAULT_KEY_ENDPOINT_HOVER_STYLES, DEFAULT_KEY_ENDPOINT_OVERLAYS, DEFAULT_KEY_ENDPOINT_STYLE, DEFAULT_KEY_ENDPOINT_STYLES, DEFAULT_KEY_HOVER_CLASS, DEFAULT_KEY_HOVER_PAINT_STYLE, DEFAULT_KEY_LIST_STYLE, DEFAULT_KEY_MAX_CONNECTIONS, DEFAULT_KEY_PAINT_STYLE, DEFAULT_KEY_REATTACH_CONNECTIONS, DEFAULT_KEY_SCOPE, DEFAULT_LABEL_LOCATION_CONNECTION, DEFAULT_LABEL_LOCATION_ENDPOINT, DEFAULT_LENGTH, DEFAULT_OVERLAY_KEY_ENDPOINTS, DotEndpointHandler, ERROR_SOURCE_DOES_NOT_EXIST, ERROR_SOURCE_ENDPOINT_FULL, ERROR_TARGET_DOES_NOT_EXIST, ERROR_TARGET_ENDPOINT_FULL, EVENT_ANCHOR_CHANGED, EVENT_CONNECTION, EVENT_CONNECTION_DETACHED, EVENT_CONNECTION_MOVED, EVENT_CONTAINER_CHANGE, EVENT_ENDPOINT_REPLACED, EVENT_GROUP_ADDED, EVENT_GROUP_COLLAPSE, EVENT_GROUP_EXPAND, EVENT_GROUP_MEMBER_ADDED, EVENT_GROUP_MEMBER_REMOVED, EVENT_GROUP_REMOVED, EVENT_INTERNAL_CONNECTION, EVENT_INTERNAL_CONNECTION_DETACHED, EVENT_INTERNAL_ENDPOINT_UNREGISTERED, EVENT_MANAGE_ELEMENT, EVENT_MAX_CONNECTIONS, EVENT_NESTED_GROUP_ADDED, EVENT_NESTED_GROUP_REMOVED, EVENT_UNMANAGE_ELEMENT, EVENT_ZOOM, EndpointSelection, Endpoints, FIXED, GroupManager, ID_PREFIX_CONNECTION, ID_PREFIX_ENDPOINT, INTERCEPT_BEFORE_DETACH, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_DROP, INTERCEPT_BEFORE_START_DETACH, IS_DETACH_ALLOWED, JsPlumbInstance, KEY_CONNECTION_OVERLAYS, LEFT, Labels, LightweightFloatingAnchor, LightweightRouter, NONE, OverlayFactory, Overlays, REDROP_POLICY_ANY, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_SOURCE_OR_TARGET, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_STRICT, REMOVE_CLASS_ACTION, RIGHT, RectangleEndpointHandler, SEGMENT_TYPE_ARC, SEGMENT_TYPE_STRAIGHT, SELECTOR_MANAGED_ELEMENT, SOURCE, SOURCE_INDEX, STATIC, Segments, TARGET, TARGET_INDEX, TOP, TYPE_DESCRIPTOR_CONNECTION, TYPE_DESCRIPTOR_CONNECTOR, TYPE_DESCRIPTOR_ENDPOINT, TYPE_DESCRIPTOR_ENDPOINT_REPRESENTATION, TYPE_ENDPOINT_BLANK, TYPE_ENDPOINT_DOT, TYPE_ENDPOINT_RECTANGLE, TYPE_ID_CONNECTION, TYPE_ITEM_ANCHORS, TYPE_ITEM_CONNECTOR, TYPE_OVERLAY_ARROW, TYPE_OVERLAY_CUSTOM, TYPE_OVERLAY_DIAMOND, TYPE_OVERLAY_LABEL, TYPE_OVERLAY_PLAIN_ARROW, UIGroup, UINode, Viewport, X_AXIS_FACES, Y_AXIS_FACES, _addSegment, _clearSegments, _createPerimeterAnchor, _findSegmentForLocation, _removeTypeCssHelper, _updateHoverStyle, _updateSegmentProportions, att, classList, cls, compute, connectorBoundingBoxIntersection, connectorBoxIntersection, convertToFullOverlaySpec, createBaseRepresentation, createComponentBase, createConnectorBase, createEndpoint, createFloatingAnchor, createOverlayBase, defaultConnectorHandler, dumpSegmentsToConsole, findSegmentForPoint, getDefaultFace, gradientAtComponentPoint, isArrowOverlay, isContinuous, isCustomOverlay, isDiamondOverlay, isDynamic, isEdgeSupported, isEndpointRepresentation, _isFloating as isFloating, isFullOverlaySpec, isLabelOverlay, isPlainArrowOverlay, isValidAnchorsSpec, lineIntersection, makeLightweightAnchorFromSpec, pointAlongComponentPathFrom, pointOnComponentPath, resetBounds, resetGeometry, setGeometry, setPreparedConnector, transformAnchorPlacement, updateBounds };

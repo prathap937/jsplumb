@@ -117,11 +117,6 @@ export declare abstract class JsPlumbInstance<T extends {
      * @internal
      */
     areDefaultAnchorsSet(): boolean;
-    /**
-     * @internal
-     * @param anchors
-     */
-    validAnchorsSpec(anchors: [AnchorSpec, AnchorSpec]): boolean;
     getContainer(): any;
     setZoom(z: number, repaintEverything?: boolean): boolean;
     _idstamp(): string;
@@ -635,11 +630,6 @@ export declare abstract class JsPlumbInstance<T extends {
     _paintConnection(connection: Connection, params?: {
         timestamp?: string;
     }): void;
-    /**
-     * @internal
-     * @param endpoint
-     */
-    _refreshEndpoint(endpoint: Endpoint): void;
     /**
      * Adds an overlay to the given component, repainting the UI as necessary.
      * @param component - A Connection or Endpoint to add the overlay to

@@ -329,9 +329,7 @@ export function _clearSegments(connector: ConnectorBase): void;
 // @public (undocumented)
 export function cls(...className: Array<string>): string;
 
-// Warning: (ae-internal-missing-underscore) The name "Component" should be prefixed with an underscore because the declaration is marked as @internal
-//
-// @internal (undocumented)
+// @public (undocumented)
 export interface Component {
     // (undocumented)
     beforeDetach: BeforeDetachInterceptor;
@@ -341,6 +339,8 @@ export interface Component {
     cssClass: string;
     // (undocumented)
     data: Record<string, any>;
+    // Warning: (ae-incompatible-release-tags) The symbol "_defaultType" is marked as @public, but its signature references "ComponentTypeDescriptor" which is marked as @internal
+    //
     // (undocumented)
     _defaultType: ComponentTypeDescriptor;
     // (undocumented)
@@ -425,7 +425,6 @@ export const Components: {
     destroy(component: Component): void;
     _setComponentVisible(component: Component, v: boolean): void;
     setVisible(component: Component, v: boolean): void;
-    isVisible(component: Component): boolean;
     addBaseClass(component: Component, clazz: string, cascade?: boolean): void;
     removeBaseClass(component: Component, clazz: string, cascade?: boolean): void;
     addClass(component: Component, clazz: string, cascade?: boolean): void;
@@ -466,7 +465,6 @@ export const Components: {
     getAbsoluteOverlayPosition(component: Component, overlay: OverlayBase): PointXY;
 };
 
-// Warning: (ae-forgotten-export) The symbol "TypeDescriptorBase" needs to be exported by the entry point index.d.ts
 // Warning: (ae-internal-missing-underscore) The name "ComponentTypeDescriptor" should be prefixed with an underscore because the declaration is marked as @internal
 //
 // @internal
@@ -507,8 +505,6 @@ export interface ComputedPosition {
 // @public (undocumented)
 export type ComputedRectangleEndpoint = [number, number, number, number];
 
-// Warning: (ae-incompatible-release-tags) The symbol "Connection" is marked as @public, but its signature references "Component" which is marked as @internal
-//
 // @public
 export interface Connection<E = any> extends Component {
     // Warning: (ae-incompatible-release-tags) The symbol "connector" is marked as @public, but its signature references "ConnectorBase" which is marked as @internal
@@ -876,7 +872,6 @@ export function convertToFullOverlaySpec(spec: string | OverlaySpec): FullOverla
 export function createBaseRepresentation(type: string, endpoint: Endpoint, params?: EndpointRepresentationParams): EndpointRepresentation<any>;
 
 // Warning: (ae-incompatible-release-tags) The symbol "createComponentBase" is marked as @public, but its signature references "ComponentOptions" which is marked as @internal
-// Warning: (ae-incompatible-release-tags) The symbol "createComponentBase" is marked as @public, but its signature references "Component" which is marked as @internal
 //
 // @public (undocumented)
 export function createComponentBase(instance: JsPlumbInstance, idPrefix: string, typeDescriptor: string, defaultOverlayKey: string, defaultType: Record<string, any>, defaultLabelLocation: number | [number, number], params?: ComponentOptions): Component;
@@ -892,8 +887,6 @@ export function createEndpoint<E>(instance: JsPlumbInstance, params: InternalEnd
 // @public (undocumented)
 export function createFloatingAnchor(instance: JsPlumbInstance, element: Element, elementId: string): LightweightFloatingAnchor;
 
-// Warning: (ae-incompatible-release-tags) The symbol "createOverlayBase" is marked as @public, but its signature references "Component" which is marked as @internal
-//
 // @public (undocumented)
 export function createOverlayBase(instance: JsPlumbInstance, component: Component, p: OverlayOptions): OverlayBase;
 
@@ -902,16 +895,12 @@ export function _createPerimeterAnchor(params: Record<string, any>): Lightweight
 
 // @public (undocumented)
 export interface CustomOverlay extends OverlayBase {
-    // Warning: (ae-incompatible-release-tags) The symbol "create" is marked as @public, but its signature references "Component" which is marked as @internal
-    //
     // (undocumented)
     create: (c: Component) => any;
 }
 
 // @public (undocumented)
 export interface CustomOverlayOptions extends OverlayOptions {
-    // Warning: (ae-incompatible-release-tags) The symbol "create" is marked as @public, but its signature references "Component" which is marked as @internal
-    //
     // (undocumented)
     create: (c: Component) => any;
 }
@@ -1030,8 +1019,6 @@ export function dumpSegmentsToConsole(connector: ConnectorBase): void;
 // @public (undocumented)
 export type ElementSelectionSpecifier<E> = E | Array<E> | '*';
 
-// Warning: (ae-incompatible-release-tags) The symbol "Endpoint" is marked as @public, but its signature references "Component" which is marked as @internal
-//
 // @public (undocumented)
 export interface Endpoint extends Component {
     // (undocumented)
@@ -1102,14 +1089,6 @@ export interface Endpoint extends Component {
 
 // @public (undocumented)
 export type EndpointComputeFunction<T> = (endpoint: EndpointRepresentation<T>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any) => T;
-
-// @public (undocumented)
-export const EndpointFactory: {
-    get: (ep: Endpoint, name: string, params: any) => EndpointRepresentation<any>;
-    clone: <C, ElementType>(epr: EndpointRepresentation<C>) => EndpointRepresentation<C>;
-    compute: <T, ElementType_1>(endpoint: EndpointRepresentation<T>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any) => T;
-    registerHandler: <E, T_1>(eph: EndpointHandler<E, T_1>) => void;
-};
 
 // @public (undocumented)
 export interface EndpointHandler<EndpointClass, T> {
@@ -1191,7 +1170,7 @@ export interface EndpointRepresentation<C> {
     y: number;
 }
 
-// @public (undocumented)
+// @public
 export const Endpoints: {
     applyType(endpoint: Endpoint, t: any, typeMap: any): void;
     destroy(endpoint: Endpoint): void;
@@ -1202,29 +1181,25 @@ export const Endpoints: {
     _updateAnchorClass(endpoint: Endpoint): void;
     _anchorLocationChanged(endpoint: Endpoint, currentAnchor: LightweightAnchor): void;
     setAnchor(endpoint: Endpoint, anchorParams: AnchorSpec | Array<AnchorSpec>): Endpoint;
-    addConnection(endpoint: Endpoint, conn: Connection): void;
+    _addConnection(endpoint: Endpoint, conn: Connection): void;
     deleteEveryConnection(endpoint: Endpoint, params?: DeleteConnectionOptions): void;
     detachFrom(endpoint: Endpoint, otherEndpoint: Endpoint): Endpoint;
-    detachFromConnection(endpoint: Endpoint, connection: Connection, idx?: number, transientDetach?: boolean): void;
+    detachFromConnection(endpoint: Endpoint, connection: Connection, idx?: number, _transientDetach?: boolean): void;
     isFull(endpoint: Endpoint): boolean;
-    isFloating(endpoint: Endpoint): boolean;
-    isConnectedTo(endpoint: Endpoint, otherEndpoint: Endpoint): boolean;
-    isEndpoint(component: any): component is Endpoint;
-    prepareEndpoint<C>(endpoint: Endpoint, ep: EndpointSpec | EndpointRepresentation<C>, typeId?: string): EndpointRepresentation<C>;
-    setEndpoint<C_1>(endpoint: Endpoint, ep: EndpointSpec | EndpointRepresentation<C_1>): void;
-    setPreparedEndpoint<C_2>(endpoint: Endpoint, ep: EndpointRepresentation<C_2>): void;
-    compute(ep: EndpointRepresentation<any>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any): void;
+    _isFloating(endpoint: Endpoint): boolean;
+    areConnected(endpoint: Endpoint, otherEndpoint: Endpoint): boolean;
+    _isEndpoint(component: any): component is Endpoint;
+    _setEndpoint<C>(endpoint: Endpoint, ep: EndpointSpec | EndpointRepresentation<C>): void;
+    _setPreparedEndpoint<C_1>(endpoint: Endpoint, ep: EndpointRepresentation<C_1>): void;
+    _compute<T, ElementType>(ep: EndpointRepresentation<T>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any): void;
+    _registerHandler<E, T_1>(eph: EndpointHandler<E, T_1>): void;
 };
 
-// @public (undocumented)
+// @public
 export class EndpointSelection extends SelectionBase<Endpoint> {
-    // (undocumented)
     deleteAll(): EndpointSelection;
-    // (undocumented)
     deleteEveryConnection(): EndpointSelection;
-    // (undocumented)
     setAnchor(a: AnchorSpec): EndpointSelection;
-    // (undocumented)
     setEnabled(e: boolean): EndpointSelection;
 }
 
@@ -1376,7 +1351,11 @@ export class GroupManager<E> {
     // (undocumented)
     getAncestors(group: UIGroup<E>): Array<UIGroup<E>>;
     // (undocumented)
+    getAnchor(group: UIGroup<E>, conn: Connection, endpointIndex: number): AnchorSpec;
+    // (undocumented)
     getDescendants(group: UIGroup<E>): Array<UIGroup<E>>;
+    // (undocumented)
+    getEndpoint(group: UIGroup<E>, conn: Connection, endpointIndex: number): EndpointSpec;
     // (undocumented)
     getGroup(groupId: string | UIGroup<E>): UIGroup<E>;
     // (undocumented)
@@ -1390,6 +1369,8 @@ export class GroupManager<E> {
     isAncestor(group: UIGroup<E>, possibleAncestor: UIGroup<E>): boolean;
     // (undocumented)
     isDescendant(possibleDescendant: UIGroup<E>, ancestor: UIGroup<E>): boolean;
+    // (undocumented)
+    isOverrideDrop(group: UIGroup<E>, el: any, targetGroup: UIGroup<E>): boolean;
     // (undocumented)
     orphan(el: E, doNotTransferToAncestor: boolean): {
         id: string;
@@ -1459,7 +1440,9 @@ export const INTERCEPT_BEFORE_DROP = "beforeDrop";
 // @public (undocumented)
 export const INTERCEPT_BEFORE_START_DETACH = "beforeStartDetach";
 
-// @public
+// Warning: (ae-internal-missing-underscore) The name "InternalConnectParams" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
 export interface InternalConnectParams<E> extends ConnectParams<E> {
     // (undocumented)
     id?: string;
@@ -1535,6 +1518,11 @@ export function isLabelOverlay(o: OverlayBase): o is LabelOverlay;
 // @public (undocumented)
 export function isPlainArrowOverlay(o: OverlayBase): o is PlainArrowOverlay;
 
+// Warning: (ae-internal-missing-underscore) The name "isValidAnchorsSpec" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal (undocumented)
+export function isValidAnchorsSpec(anchors: [AnchorSpec, AnchorSpec]): boolean;
+
 // @public (undocumented)
 export interface JsPlumbDefaults<E> {
     // (undocumented)
@@ -1609,7 +1597,6 @@ export abstract class JsPlumbInstance<T extends {
     abstract addEndpointClass(ep: Endpoint, c: string): void;
     addEndpoints(el: T["E"], endpoints: Array<EndpointOptions<T["E"]>>, referenceParams?: EndpointOptions<T["E"]>): Array<Endpoint>;
     addGroup(params: AddGroupOptions<T["E"]>): UIGroup<T["E"]>;
-    // Warning: (ae-incompatible-release-tags) The symbol "addOverlay" is marked as @public, but its signature references "Component" which is marked as @internal
     addOverlay(component: Component, overlay: OverlaySpec, doNotRevalidate?: boolean): void;
     // (undocumented)
     abstract addOverlayClass(o: OverlayBase, clazz: string): void;
@@ -1676,8 +1663,6 @@ export abstract class JsPlumbInstance<T extends {
     abstract destroyEndpoint(ep: Endpoint): void;
     // (undocumented)
     abstract destroyOverlay(o: OverlayBase): void;
-    // Warning: (ae-incompatible-release-tags) The symbol "drawOverlay" is marked as @public, but its signature references "Component" which is marked as @internal
-    //
     // (undocumented)
     abstract drawOverlay(overlay: OverlayBase, component: Component, paintStyle: PaintStyle, absolutePosition?: PointXY): any;
     each(spec: T["E"] | Array<T["E"]>, fn: (e: T["E"]) => any): JsPlumbInstance;
@@ -1802,8 +1787,6 @@ export abstract class JsPlumbInstance<T extends {
     abstract _paintOverlay(o: OverlayBase, params: any, extents: any): void;
     // @internal (undocumented)
     proxyConnection(connection: Connection, index: number, proxyEl: T["E"], endpointGenerator: (c: Connection, idx: number) => EndpointSpec, anchorGenerator: (c: Connection, idx: number) => AnchorSpec): void;
-    // Warning: (ae-incompatible-release-tags) The symbol "reattachOverlay" is marked as @public, but its signature references "Component" which is marked as @internal
-    //
     // (undocumented)
     abstract reattachOverlay(o: OverlayBase, c: Component): void;
     // @internal (undocumented)
@@ -1828,7 +1811,6 @@ export abstract class JsPlumbInstance<T extends {
     abstract removeEndpointClass(ep: Endpoint, c: string): void;
     removeFromGroup(group: string | UIGroup<T["E"]>, el: T["E"], _doNotFireEvent?: boolean): void;
     removeGroup(group: string | UIGroup<T["E"]>, deleteMembers?: boolean, _manipulateView?: boolean, _doNotFireEvent?: boolean): Record<string, PointXY>;
-    // Warning: (ae-incompatible-release-tags) The symbol "removeOverlay" is marked as @public, but its signature references "Component" which is marked as @internal
     removeOverlay(component: Component, overlayId: string): void;
     // (undocumented)
     abstract removeOverlayClass(o: OverlayBase, clazz: string): void;
@@ -1870,8 +1852,6 @@ export abstract class JsPlumbInstance<T extends {
     abstract setEndpointVisible(ep: Endpoint, v: boolean): void;
     // (undocumented)
     abstract setGroupVisible(group: UIGroup, state: boolean): void;
-    // Warning: (ae-incompatible-release-tags) The symbol "setHover" is marked as @public, but its signature references "Component" which is marked as @internal
-    //
     // (undocumented)
     abstract setHover(component: Component, hover: boolean): void;
     setLineStyle(conn: Connection, style: {
@@ -1919,10 +1899,9 @@ export abstract class JsPlumbInstance<T extends {
     unproxyConnection(connection: Connection, index: number): void;
     // (undocumented)
     abstract updateLabel(o: LabelOverlay): void;
+    // Warning: (ae-incompatible-release-tags) The symbol "updateOffset" is marked as @public, but its signature references "UpdateOffsetOptions" which is marked as @internal
     // Warning: (ae-incompatible-release-tags) The symbol "updateOffset" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
     updateOffset(params?: UpdateOffsetOptions): ViewportElement<T["E"]>;
-    // @internal (undocumented)
-    validAnchorsSpec(anchors: [AnchorSpec, AnchorSpec]): boolean;
     // (undocumented)
     readonly viewport: Viewport<T>;
 }
@@ -2143,8 +2122,6 @@ export type Orientation = [AnchorOrientationHint, AnchorOrientationHint];
 export interface OverlayBase {
     // (undocumented)
     attributes: Record<string, string>;
-    // Warning: (ae-incompatible-release-tags) The symbol "component" is marked as @public, but its signature references "Component" which is marked as @internal
-    //
     // (undocumented)
     component: Component;
     // (undocumented)
@@ -2173,12 +2150,8 @@ export const OverlayFactory: {
 
 // @public (undocumented)
 export interface OverlayHandler<OptionsClass> {
-    // Warning: (ae-incompatible-release-tags) The symbol "create" is marked as @public, but its signature references "Component" which is marked as @internal
-    //
     // (undocumented)
     create(instance: JsPlumbInstance, component: Component, options: OptionsClass): OverlayBase;
-    // Warning: (ae-incompatible-release-tags) The symbol "draw" is marked as @public, but its signature references "Component" which is marked as @internal
-    //
     // (undocumented)
     draw(overlay: OverlayBase, component: Component, currentConnectionPaintStyle: PaintStyle, absolutePosition?: PointXY): any;
     // (undocumented)
@@ -2315,8 +2288,6 @@ export type RedropPolicy = typeof REDROP_POLICY_STRICT | typeof REDROP_POLICY_AN
 // @public (undocumented)
 export const REMOVE_CLASS_ACTION = "remove";
 
-// Warning: (ae-incompatible-release-tags) The symbol "_removeTypeCssHelper" is marked as @public, but its signature references "Component" which is marked as @internal
-//
 // @public (undocumented)
 export function _removeTypeCssHelper<E>(component: Component, typeId: string): void;
 
@@ -2345,8 +2316,6 @@ export interface Router<T extends {
     computeAnchorLocation(anchor: A, params: AnchorComputeParams): AnchorPlacement;
     // (undocumented)
     computePath(connection: Connection, timestamp: string): void;
-    // (undocumented)
-    getAnchorOrientation(anchor: A, endpoint?: Endpoint): Orientation;
     // Warning: (ae-incompatible-release-tags) The symbol "getEndpointLocation" is marked as @public, but its signature references "AnchorComputeParams" which is marked as @internal
     //
     // (undocumented)
@@ -2535,9 +2504,9 @@ export const TOP = FaceValues.top;
 // @internal
 export function transformAnchorPlacement(a: AnchorPlacement, dx: number, dy: number): AnchorPlacement;
 
-// Warning: (ae-incompatible-release-tags) The symbol "TranslatedViewportElement" is marked as @public, but its signature references "TranslatedViewportElementBase" which is marked as @internal
+// Warning: (ae-internal-missing-underscore) The name "TranslatedViewportElement" should be prefixed with an underscore because the declaration is marked as @internal
 //
-// @public (undocumented)
+// @internal (undocumented)
 export type TranslatedViewportElement<E> = Omit<TranslatedViewportElementBase<E>, "dirty">;
 
 // Warning: (ae-internal-missing-underscore) The name "TranslatedViewportElementBase" should be prefixed with an underscore because the declaration is marked as @internal
@@ -2604,6 +2573,23 @@ export interface TypeDescriptor extends TypeDescriptorBase {
     overlays?: Array<OverlaySpec>;
 }
 
+// @public
+export interface TypeDescriptorBase {
+    anchor?: AnchorSpec;
+    anchors?: [AnchorSpec, AnchorSpec];
+    connector?: ConnectorSpec;
+    connectorClass?: string;
+    connectorHoverStyle?: PaintStyle;
+    connectorStyle?: PaintStyle;
+    cssClass?: string;
+    endpoint?: EndpointSpec;
+    hoverPaintStyle?: PaintStyle;
+    mergeStrategy?: string;
+    paintStyle?: PaintStyle;
+    parameters?: Record<string, any>;
+    scope?: string;
+}
+
 // @public (undocumented)
 export class UIGroup<E = any> extends UINode<E> {
     constructor(instance: JsPlumbInstance, el: E, options: GroupOptions);
@@ -2640,10 +2626,6 @@ export class UIGroup<E = any> extends UINode<E> {
     // (undocumented)
     endpoint: EndpointSpec;
     // (undocumented)
-    getAnchor(conn: Connection, endpointIndex: number): AnchorSpec;
-    // (undocumented)
-    getEndpoint(conn: Connection, endpointIndex: number): EndpointSpec;
-    // (undocumented)
     getGroups(): Array<UIGroup<E>>;
     // (undocumented)
     getNodes(): Array<UINode<E>>;
@@ -2659,8 +2641,6 @@ export class UIGroup<E = any> extends UINode<E> {
     orphan: boolean;
     // (undocumented)
     orphanAll(): Record<string, PointXY>;
-    // (undocumented)
-    overrideDrop(el: any, targetGroup: UIGroup<E>): boolean;
     // (undocumented)
     proxied: boolean;
     // (undocumented)
@@ -2697,12 +2677,12 @@ export interface UnmanageElementParams<E = any> {
 // @public (undocumented)
 export function updateBounds(connector: ConnectorBase, segment: Segment): void;
 
-// Warning: (ae-incompatible-release-tags) The symbol "_updateHoverStyle" is marked as @public, but its signature references "Component" which is marked as @internal
-//
 // @public (undocumented)
 export function _updateHoverStyle<E>(component: Component): void;
 
-// @public
+// Warning: (ae-internal-missing-underscore) The name "UpdateOffsetOptions" should be prefixed with an underscore because the declaration is marked as @internal
+//
+// @internal
 export interface UpdateOffsetOptions {
     // (undocumented)
     elId?: string;
@@ -2770,6 +2750,8 @@ export class Viewport<T extends {
     _sortedElements: Record<string, Array<[string, number]>>;
     // (undocumented)
     startTransaction(): void;
+    // Warning: (ae-incompatible-release-tags) The symbol "_transformedElementMap" is marked as @public, but its signature references "TranslatedViewportElement" which is marked as @internal
+    //
     // (undocumented)
     _transformedElementMap: Map<string, TranslatedViewportElement<T["E"]>>;
     // Warning: (ae-incompatible-release-tags) The symbol "updateElement" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
@@ -2825,36 +2807,11 @@ export const Y_AXIS_FACES: Axis;
 
 // Warnings were encountered during analysis:
 //
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:108:5 - (ae-incompatible-release-tags) The symbol "applyType" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:109:5 - (ae-incompatible-release-tags) The symbol "applyBaseType" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:110:5 - (ae-incompatible-release-tags) The symbol "destroy" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:118:5 - (ae-incompatible-release-tags) The symbol "setVisible" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:130:5 - (ae-incompatible-release-tags) The symbol "addBaseClass" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:138:5 - (ae-incompatible-release-tags) The symbol "removeBaseClass" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:139:5 - (ae-incompatible-release-tags) The symbol "addClass" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:140:5 - (ae-incompatible-release-tags) The symbol "removeClass" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:146:5 - (ae-incompatible-release-tags) The symbol "showOverlays" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:152:5 - (ae-incompatible-release-tags) The symbol "hideOverlays" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:153:5 - (ae-incompatible-release-tags) The symbol "setPaintStyle" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:158:5 - (ae-incompatible-release-tags) The symbol "mergeParameters" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:174:5 - (ae-incompatible-release-tags) The symbol "getOverlay" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:180:5 - (ae-incompatible-release-tags) The symbol "hideOverlay" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:186:5 - (ae-incompatible-release-tags) The symbol "showOverlay" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:191:5 - (ae-incompatible-release-tags) The symbol "removeAllOverlays" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:204:5 - (ae-incompatible-release-tags) The symbol "removeOverlays" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:209:5 - (ae-incompatible-release-tags) The symbol "getLabel" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:219:5 - (ae-incompatible-release-tags) The symbol "setLabel" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:290:5 - (ae-incompatible-release-tags) The symbol "getData" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:296:5 - (ae-incompatible-release-tags) The symbol "setData" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:302:5 - (ae-incompatible-release-tags) The symbol "mergeData" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/component/component.d.ts:303:5 - (ae-incompatible-release-tags) The symbol "setAbsoluteOverlayPosition" is marked as @public, but its signature references "Component" which is marked as @internal
 // /Users/simon/programming/jsplumb/jsplumb/dist/core/types/connector/abstract-connector.d.ts:29:5 - (ae-incompatible-release-tags) The symbol "sourceInfo" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
 // /Users/simon/programming/jsplumb/jsplumb/dist/core/types/connector/abstract-connector.d.ts:30:5 - (ae-incompatible-release-tags) The symbol "targetInfo" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
 // /Users/simon/programming/jsplumb/jsplumb/dist/core/types/connector/connectors.d.ts:26:5 - (ae-incompatible-release-tags) The symbol "exportGeometry" is marked as @public, but its signature references "ConnectorBase" which is marked as @internal
 // /Users/simon/programming/jsplumb/jsplumb/dist/core/types/connector/connectors.d.ts:32:5 - (ae-incompatible-release-tags) The symbol "importGeometry" is marked as @public, but its signature references "ConnectorBase" which is marked as @internal
 // /Users/simon/programming/jsplumb/jsplumb/dist/core/types/connector/connectors.d.ts:82:5 - (ae-incompatible-release-tags) The symbol "setAnchorOrientation" is marked as @public, but its signature references "ConnectorBase" which is marked as @internal
 // /Users/simon/programming/jsplumb/jsplumb/dist/core/types/core.d.ts:68:5 - (ae-incompatible-release-tags) The symbol "viewportElement" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/factory/overlay-factory.d.ts:12:5 - (ae-incompatible-release-tags) The symbol "get" is marked as @public, but its signature references "Component" which is marked as @internal
-// /Users/simon/programming/jsplumb/jsplumb/dist/core/types/factory/overlay-factory.d.ts:15:5 - (ae-incompatible-release-tags) The symbol "draw" is marked as @public, but its signature references "Component" which is marked as @internal
 
 ```

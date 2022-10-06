@@ -2504,7 +2504,7 @@
           var intersectingElement = this._intersectingGroups[0].intersectingElement;
           var currentGroup = intersectingElement._jsPlumbParentGroup;
           if (currentGroup !== targetGroup) {
-            if (currentGroup == null || !currentGroup.overrideDrop(intersectingElement, targetGroup)) {
+            if (currentGroup == null || !this.instance.groupManager.isOverrideDrop(currentGroup, intersectingElement, targetGroup)) {
               dropGroup = this._intersectingGroups[0];
             }
           }
@@ -3271,7 +3271,7 @@
         this.instance.setHover(this.jpc, false);
         var anchorIdx = this.jpc.endpoints[0].id === this.ep.id ? 0 : 1;
         core.Endpoints.detachFromConnection(this.ep, this.jpc, null, true);
-        core.Endpoints.addConnection(this.floatingEndpoint, this.jpc);
+        core.Endpoints._addConnection(this.floatingEndpoint, this.jpc);
         this.instance.fire(EVENT_CONNECTION_DRAG, this.jpc);
         this.instance.sourceOrTargetChanged(this.jpc.endpoints[anchorIdx].elementId, this.placeholderInfo.id, this.jpc, this.placeholderInfo.element, anchorIdx);
         this.jpc.suspendedEndpoint = this.jpc.endpoints[anchorIdx];
@@ -3285,7 +3285,7 @@
         core.Connections.addClass(this.jpc, this.instance.draggingClass);
         this.floatingId = this.placeholderInfo.id;
         this.floatingIndex = anchorIdx;
-        this.instance._refreshEndpoint(this.ep);
+        core.Endpoints._refreshEndpointClasses(this.ep);
       }
     }, {
       key: "_shouldStartDrag",
@@ -3710,7 +3710,7 @@
           } else {
             this._reattachOrDiscard(p.e);
           }
-          this.instance._refreshEndpoint(this.ep);
+          core.Endpoints._refreshEndpointClasses(this.ep);
           core.Endpoints.removeClass(this.ep, this.instance.draggingClass);
           this._cleanupDraggablePlaceholder();
           core.Connections.removeClass(this.jpc, this.instance.draggingClass);
@@ -3764,7 +3764,7 @@
             source: targetDefinition.def.source === true,
             target: targetDefinition.def.target === true
           }) : p;
-          var anchorsToUse = this.instance.validAnchorsSpec(eps.anchors) ? eps.anchors : this.instance.areDefaultAnchorsSet() ? this.instance.defaults.anchors : null;
+          var anchorsToUse = core.isValidAnchorsSpec(eps.anchors) ? eps.anchors : this.instance.areDefaultAnchorsSet() ? this.instance.defaults.anchors : null;
           var anchorFromDef = targetDefinition.def.anchor;
           var anchorFromPositionFinder = targetDefinition.def.anchorPositionFinder ? targetDefinition.def.anchorPositionFinder(targetElement, elxy, targetDefinition.def, p.e) : null;
           var dropAnchor = anchorFromPositionFinder != null ? anchorFromPositionFinder : anchorFromDef != null ? anchorFromDef : anchorsToUse != null && anchorsToUse[1] != null ? anchorsToUse[1] : null;
@@ -3811,7 +3811,7 @@
         this.jpc.endpoints[idx] = this.jpc.suspendedEndpoint;
         this.instance.setHover(this.jpc, false);
         this.jpc._forceDetach = true;
-        core.Endpoints.addConnection(this.jpc.suspendedEndpoint, this.jpc);
+        core.Endpoints._addConnection(this.jpc.suspendedEndpoint, this.jpc);
         this.instance.sourceOrTargetChanged(this.floatingId, this.jpc.suspendedEndpoint.elementId, this.jpc, this.jpc.suspendedEndpoint.element, idx);
         this.instance.deleteEndpoint(this.floatingEndpoint);
         this.instance.repaint(this.jpc.source);
@@ -3826,7 +3826,6 @@
           var suspendedEndpoint = this.jpc.suspendedEndpoint,
               otherEndpointIdx = this.jpc.suspendedElementType == core.SOURCE ? 1 : 0,
               otherEndpoint = this.jpc.endpoints[otherEndpointIdx];
-              this.jpc;
           return !util.functionChain(true, false, [[core.Components, core.IS_DETACH_ALLOWED, [suspendedEndpoint, this.jpc]], [core.Components, core.IS_DETACH_ALLOWED, [otherEndpoint, this.jpc]], [core.Components, core.IS_DETACH_ALLOWED, [this.jpc]], [this.instance, core.CHECK_CONDITION, [core.INTERCEPT_BEFORE_DETACH, this.jpc]]]);
         }
       }
@@ -3861,7 +3860,7 @@
           core.Endpoints.detachFromConnection(this.jpc.suspendedEndpoint, this.jpc);
         }
         this.jpc.endpoints[idx] = dropEndpoint;
-        core.Endpoints.addConnection(dropEndpoint, this.jpc);
+        core.Endpoints._addConnection(dropEndpoint, this.jpc);
         if (this.jpc.suspendedEndpoint) {
           var suspendedElementId = this.jpc.suspendedEndpoint.elementId;
           this.instance.fireMoveEvent({
@@ -3884,7 +3883,7 @@
           var _toDelete = this.jpc.endpoints[0];
           core.Endpoints.detachFromConnection(_toDelete, this.jpc);
           this.jpc.endpoints[0] = this.jpc.endpoints[0].finalEndpoint;
-          core.Endpoints.addConnection(this.jpc.endpoints[0], this.jpc);
+          core.Endpoints._addConnection(this.jpc.endpoints[0], this.jpc);
         }
         if (util.isObject(optionalData)) {
           core.Components.mergeData(this.jpc, optionalData);
@@ -4039,7 +4038,7 @@
       if (core.Connections.isConnection(o.component)) {
         var connector = o.component.connector;
         parent = connector != null ? connector.canvas : null;
-      } else if (core.Endpoints.isEndpoint(o.component)) {
+      } else if (core.Endpoints._isEndpoint(o.component)) {
         var endpoint = o.component.representation;
         parent = endpoint != null ? endpoint.canvas : endpoint;
       }
@@ -4364,6 +4363,7 @@
       _defineProperty(_assertThisInitialized(_this), "_elementMousedown", void 0);
       _defineProperty(_assertThisInitialized(_this), "_elementContextmenu", void 0);
       _defineProperty(_assertThisInitialized(_this), "_resizeObserver", void 0);
+      _defineProperty(_assertThisInitialized(_this), "_mutationObserver", void 0);
       _defineProperty(_assertThisInitialized(_this), "eventManager", void 0);
       _defineProperty(_assertThisInitialized(_this), "draggingClass", "jtk-dragging");
       _defineProperty(_assertThisInitialized(_this), "elementDraggingClass", "jtk-element-dragging");
@@ -4422,7 +4422,7 @@
               }
             });
             updates.forEach(function (el) {
-              return _this.revalidate(el.target);
+              _this.revalidate(el.target);
             });
           });
         } catch (e) {
@@ -5191,7 +5191,7 @@
                 x: absolutePosition.x,
                 y: absolutePosition.y
               };
-            } else if (core.Endpoints.isEndpoint(component)) {
+            } else if (core.Endpoints._isEndpoint(component)) {
               var locToUse = Array.isArray(o.location) ? o.location : [o.location, o.location];
               cxy = {
                 x: locToUse[0] * component.representation.w,
@@ -5260,7 +5260,7 @@
       key: "setHover",
       value: function setHover(component, hover) {
         component._hover = hover;
-        if (core.Endpoints.isEndpoint(component) && component.representation != null) {
+        if (core.Endpoints._isEndpoint(component) && component.representation != null) {
           this.setEndpointHover(component, hover, -1);
         } else if (core.Connections.isConnection(component) && component.connector != null) {
           this.setConnectorHover(component.connector, hover);

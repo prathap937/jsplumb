@@ -1,5 +1,4 @@
-import { EndpointRepresentation } from "./endpoints";
-import { EndpointHandler } from "../factory/endpoint-factory";
+import { EndpointRepresentation, EndpointHandler } from "./endpoints";
 export declare type ComputedDotEndpoint = [number, number, number, number, number];
 export declare const TYPE_ENDPOINT_DOT = "Dot";
 export interface DotEndpoint extends EndpointRepresentation<ComputedDotEndpoint> {

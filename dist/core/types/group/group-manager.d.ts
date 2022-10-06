@@ -1,6 +1,8 @@
 import { JsPlumbInstance } from "../core";
 import { UIGroup, GroupOptions } from "./group";
 import { PointXY } from "@jsplumb/util";
+import { AnchorSpec, EndpointSpec } from "@jsplumb/common";
+import { Connection } from '../connector/declarations';
 export interface GroupCollapsedParams<E> {
     group: UIGroup<E>;
 }
@@ -56,5 +58,8 @@ export declare class GroupManager<E> {
     getDescendants(group: UIGroup<E>): Array<UIGroup<E>>;
     isDescendant(possibleDescendant: UIGroup<E>, ancestor: UIGroup<E>): boolean;
     reset(): void;
+    isOverrideDrop(group: UIGroup<E>, el: any, targetGroup: UIGroup<E>): boolean;
+    getAnchor(group: UIGroup<E>, conn: Connection, endpointIndex: number): AnchorSpec;
+    getEndpoint(group: UIGroup<E>, conn: Connection, endpointIndex: number): EndpointSpec;
 }
 //# sourceMappingURL=group-manager.d.ts.map

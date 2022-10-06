@@ -1,4 +1,4 @@
-import { EventGenerator, Size, PointXY } from '@jsplumb/util';
+import { Size, PointXY } from '@jsplumb/util';
 import { JsPlumbInstance } from "./core";
 /**
  * Definition of some element's location and rotation in the viewport.
@@ -16,7 +16,7 @@ export interface ViewportPosition extends PointXY {
 export interface ViewportElementBase<E> extends ViewportPosition {
     x2: number;
     y2: number;
-    dirty: boolean;
+    id: string;
 }
 /**
  * @internal
@@ -31,6 +31,9 @@ export interface TranslatedViewportElementBase<E> extends ViewportElementBase<E>
     cr: number;
     sr: number;
 }
+/**
+ * @internal
+ */
 export declare type TranslatedViewportElement<E> = Omit<TranslatedViewportElementBase<E>, "dirty">;
 /**
  * Models the positions of the elements a given jsPlumb instance is tracking. Users of the API should not need to interact directly
@@ -39,29 +42,15 @@ export declare type TranslatedViewportElement<E> = Omit<TranslatedViewportElemen
  */
 export declare class Viewport<T extends {
     E: unknown;
-}> extends EventGenerator {
+}> {
     instance: JsPlumbInstance<T>;
-    private _currentTransaction;
     constructor(instance: JsPlumbInstance<T>);
-    _sortedElements: Record<string, Array<[string, number]>>;
+    _sortedElements: Record<string, Array<[ViewportElement<any>, number]>>;
     _elementMap: Map<string, ViewportElement<T["E"]>>;
     _transformedElementMap: Map<string, TranslatedViewportElement<T["E"]>>;
     _bounds: Record<string, number>;
     private _updateBounds;
     private _recalculateBounds;
-    recomputeBounds(): void;
-    private _finaliseUpdate;
-    shouldFireEvent(event: string, value: unknown, originalEvent?: Event): boolean;
-    startTransaction(): void;
-    endTransaction(): void;
-    updateElements(entries: Array<{
-        id: string;
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        rotation: number;
-    }>): void;
     /**
      * Updates the element with the given id. Any of the provided values may be null, in which case they are ignored (we never overwrite an
      * existing value with null).
@@ -80,10 +69,20 @@ export declare class Viewport<T extends {
      * @param doNotRecalculateBounds If true, the viewport's bounds won't be recalculated after the element's size and position has been refreshed.
      */
     refreshElement(elId: string, doNotRecalculateBounds?: boolean): ViewportElement<T["E"]>;
+    /**
+     * These methods are called in only one place, but can be overridden
+     * @param el
+     * @internal
+     */
     protected getSize(el: T["E"]): Size;
+    /**
+     * These methods are called in only one place, but can be overridden
+     * @param el
+     * @internal
+     */
     protected getOffset(el: T["E"]): PointXY;
     /**
-     * Creates an empty entry for an element with the given ID.
+     * Creates an empty entry for an element with the given ID. The entry is marked 'dirty'.
      * @param doNotRecalculateBounds If true, the viewport's bounds won't be recalculated after the element has been registered.
      * @param id
      */
@@ -107,33 +106,33 @@ export declare class Viewport<T extends {
     /**
      * Gets the width of the content managed by the viewport, taking any rotated elements into account.
      */
-    getBoundsWidth(): number;
+    get boundsWidth(): number;
     /**
      * Gets the height of the content managed by the viewport, taking any rotated elements into account.
      */
-    getBoundsHeight(): number;
+    get boundsHeight(): number;
     /**
      * Gets the leftmost point of the content managed by the viewport, taking any rotated elements into account.
      */
-    getX(): number;
+    get boundsMinX(): number;
     /**
      * Gets the topmost of the content managed by the viewport, taking any rotated elements into account.
      */
-    getY(): number;
+    get boundsMinY(): number;
     /**
-     * Sets the size of the element with the given ID, recalculating bounds.
+     * Informs the viewport that the element with the given ID has changed size.
      * @param id
      * @param w
      * @param h
      */
-    setSize(id: string, w: number, h: number): ViewportElement<T["E"]>;
+    sizeChanged(id: string, w: number, h: number): ViewportElement<T["E"]>;
     /**
      * Sets the [x,y] position of the element with the given ID, recalculating bounds.
      * @param id
      * @param x
      * @param y
      */
-    setPosition(id: string, x: number, y: number): ViewportElement<T["E"]>;
+    positionChanged(id: string, x: number, y: number): ViewportElement<T["E"]>;
     /**
      * Clears the internal state of the viewport, removing all elements.
      */
@@ -142,7 +141,7 @@ export declare class Viewport<T extends {
      * Remove the element with the given ID from the viewport.
      * @param id
      */
-    remove(id: string): void;
+    elementRemoved(id: string): void;
     /**
      * Gets the position of the element. This returns both the original position, and also the translated position of the element. Certain internal methods, such as the anchor
      * calculation code, use the unrotated position and then subsequently apply the element's rotation to any calculated positions.

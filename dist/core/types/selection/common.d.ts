@@ -1,6 +1,10 @@
 import { PaintStyle, OverlaySpec } from '@jsplumb/common';
 import { Component } from "../component/component";
 import { JsPlumbInstance } from "../core";
+/**
+ * Base class for selections of endpoints or connections.
+ * @public
+ */
 export declare class SelectionBase<T extends Component> {
     protected instance: JsPlumbInstance;
     protected entries: Array<T>;

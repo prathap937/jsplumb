@@ -1,4 +1,4 @@
-import { NONE, cls, CLASS_CONNECTOR, CLASS_ENDPOINT, att, ATTRIBUTE_GROUP, CLASS_OVERLAY, ATTRIBUTE_TABINDEX, EVENT_ZOOM, SELECTOR_MANAGED_ELEMENT, ATTRIBUTE_NOT_DRAGGABLE, Components, Connections, Endpoints, SOURCE, TARGET, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_START_DETACH, ATTRIBUTE_SCOPE_PREFIX, CLASS_ENDPOINT_FLOATING, REDROP_POLICY_ANY, REDROP_POLICY_STRICT, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_ANY_SOURCE_OR_TARGET, CHECK_DROP_ALLOWED, classList, EVENT_MAX_CONNECTIONS, IS_DETACH_ALLOWED, CHECK_CONDITION, INTERCEPT_BEFORE_DETACH, createFloatingAnchor, isEndpointRepresentation, ABSOLUTE, BLOCK, ATTRIBUTE_MANAGED, STATIC, FIXED, isLabelOverlay, isArrowOverlay, isDiamondOverlay, isPlainArrowOverlay, isCustomOverlay, pointOnComponentPath, OverlayFactory, JsPlumbInstance, TYPE_ENDPOINT_DOT, TYPE_ENDPOINT_RECTANGLE, TYPE_ENDPOINT_BLANK } from '@jsplumb/core';
+import { NONE, cls, CLASS_CONNECTOR, CLASS_ENDPOINT, att, ATTRIBUTE_GROUP, CLASS_OVERLAY, ATTRIBUTE_TABINDEX, EVENT_ZOOM, SELECTOR_MANAGED_ELEMENT, ATTRIBUTE_NOT_DRAGGABLE, Components, Connections, Endpoints, SOURCE, TARGET, INTERCEPT_BEFORE_DRAG, INTERCEPT_BEFORE_START_DETACH, ATTRIBUTE_SCOPE_PREFIX, CLASS_ENDPOINT_FLOATING, REDROP_POLICY_ANY, REDROP_POLICY_STRICT, REDROP_POLICY_ANY_SOURCE, REDROP_POLICY_ANY_TARGET, REDROP_POLICY_ANY_SOURCE_OR_TARGET, CHECK_DROP_ALLOWED, classList, EVENT_MAX_CONNECTIONS, isValidAnchorsSpec, IS_DETACH_ALLOWED, CHECK_CONDITION, INTERCEPT_BEFORE_DETACH, createFloatingAnchor, isEndpointRepresentation, ABSOLUTE, BLOCK, ATTRIBUTE_MANAGED, STATIC, FIXED, isLabelOverlay, isArrowOverlay, isDiamondOverlay, isPlainArrowOverlay, isCustomOverlay, pointOnComponentPath, OverlayFactory, JsPlumbInstance, TYPE_ENDPOINT_DOT, TYPE_ENDPOINT_RECTANGLE, TYPE_ENDPOINT_BLANK } from '@jsplumb/core';
 import { isString, forEach, fastTrim, log, removeWithFunction, uuid, snapToGrid, extend, findWithFunction, wrap, getWithFunction, getFromSetWithFunction, intersects, merge, each, getAllWithFunction, functionChain, isObject, Events, fromArray, isFunction } from '@jsplumb/util';
 import { WILDCARD, FALSE as FALSE$1, TRUE as TRUE$1, UNDEFINED } from '@jsplumb/common';
 
@@ -2502,7 +2502,7 @@ var ElementDragHandler = function () {
         var intersectingElement = this._intersectingGroups[0].intersectingElement;
         var currentGroup = intersectingElement._jsPlumbParentGroup;
         if (currentGroup !== targetGroup) {
-          if (currentGroup == null || !currentGroup.overrideDrop(intersectingElement, targetGroup)) {
+          if (currentGroup == null || !this.instance.groupManager.isOverrideDrop(currentGroup, intersectingElement, targetGroup)) {
             dropGroup = this._intersectingGroups[0];
           }
         }
@@ -3269,7 +3269,7 @@ var EndpointDragHandler = function () {
       this.instance.setHover(this.jpc, false);
       var anchorIdx = this.jpc.endpoints[0].id === this.ep.id ? 0 : 1;
       Endpoints.detachFromConnection(this.ep, this.jpc, null, true);
-      Endpoints.addConnection(this.floatingEndpoint, this.jpc);
+      Endpoints._addConnection(this.floatingEndpoint, this.jpc);
       this.instance.fire(EVENT_CONNECTION_DRAG, this.jpc);
       this.instance.sourceOrTargetChanged(this.jpc.endpoints[anchorIdx].elementId, this.placeholderInfo.id, this.jpc, this.placeholderInfo.element, anchorIdx);
       this.jpc.suspendedEndpoint = this.jpc.endpoints[anchorIdx];
@@ -3283,7 +3283,7 @@ var EndpointDragHandler = function () {
       Connections.addClass(this.jpc, this.instance.draggingClass);
       this.floatingId = this.placeholderInfo.id;
       this.floatingIndex = anchorIdx;
-      this.instance._refreshEndpoint(this.ep);
+      Endpoints._refreshEndpointClasses(this.ep);
     }
   }, {
     key: "_shouldStartDrag",
@@ -3708,7 +3708,7 @@ var EndpointDragHandler = function () {
         } else {
           this._reattachOrDiscard(p.e);
         }
-        this.instance._refreshEndpoint(this.ep);
+        Endpoints._refreshEndpointClasses(this.ep);
         Endpoints.removeClass(this.ep, this.instance.draggingClass);
         this._cleanupDraggablePlaceholder();
         Connections.removeClass(this.jpc, this.instance.draggingClass);
@@ -3762,7 +3762,7 @@ var EndpointDragHandler = function () {
           source: targetDefinition.def.source === true,
           target: targetDefinition.def.target === true
         }) : p;
-        var anchorsToUse = this.instance.validAnchorsSpec(eps.anchors) ? eps.anchors : this.instance.areDefaultAnchorsSet() ? this.instance.defaults.anchors : null;
+        var anchorsToUse = isValidAnchorsSpec(eps.anchors) ? eps.anchors : this.instance.areDefaultAnchorsSet() ? this.instance.defaults.anchors : null;
         var anchorFromDef = targetDefinition.def.anchor;
         var anchorFromPositionFinder = targetDefinition.def.anchorPositionFinder ? targetDefinition.def.anchorPositionFinder(targetElement, elxy, targetDefinition.def, p.e) : null;
         var dropAnchor = anchorFromPositionFinder != null ? anchorFromPositionFinder : anchorFromDef != null ? anchorFromDef : anchorsToUse != null && anchorsToUse[1] != null ? anchorsToUse[1] : null;
@@ -3809,7 +3809,7 @@ var EndpointDragHandler = function () {
       this.jpc.endpoints[idx] = this.jpc.suspendedEndpoint;
       this.instance.setHover(this.jpc, false);
       this.jpc._forceDetach = true;
-      Endpoints.addConnection(this.jpc.suspendedEndpoint, this.jpc);
+      Endpoints._addConnection(this.jpc.suspendedEndpoint, this.jpc);
       this.instance.sourceOrTargetChanged(this.floatingId, this.jpc.suspendedEndpoint.elementId, this.jpc, this.jpc.suspendedEndpoint.element, idx);
       this.instance.deleteEndpoint(this.floatingEndpoint);
       this.instance.repaint(this.jpc.source);
@@ -3824,7 +3824,6 @@ var EndpointDragHandler = function () {
         var suspendedEndpoint = this.jpc.suspendedEndpoint,
             otherEndpointIdx = this.jpc.suspendedElementType == SOURCE ? 1 : 0,
             otherEndpoint = this.jpc.endpoints[otherEndpointIdx];
-            this.jpc;
         return !functionChain(true, false, [[Components, IS_DETACH_ALLOWED, [suspendedEndpoint, this.jpc]], [Components, IS_DETACH_ALLOWED, [otherEndpoint, this.jpc]], [Components, IS_DETACH_ALLOWED, [this.jpc]], [this.instance, CHECK_CONDITION, [INTERCEPT_BEFORE_DETACH, this.jpc]]]);
       }
     }
@@ -3859,7 +3858,7 @@ var EndpointDragHandler = function () {
         Endpoints.detachFromConnection(this.jpc.suspendedEndpoint, this.jpc);
       }
       this.jpc.endpoints[idx] = dropEndpoint;
-      Endpoints.addConnection(dropEndpoint, this.jpc);
+      Endpoints._addConnection(dropEndpoint, this.jpc);
       if (this.jpc.suspendedEndpoint) {
         var suspendedElementId = this.jpc.suspendedEndpoint.elementId;
         this.instance.fireMoveEvent({
@@ -3882,7 +3881,7 @@ var EndpointDragHandler = function () {
         var _toDelete = this.jpc.endpoints[0];
         Endpoints.detachFromConnection(_toDelete, this.jpc);
         this.jpc.endpoints[0] = this.jpc.endpoints[0].finalEndpoint;
-        Endpoints.addConnection(this.jpc.endpoints[0], this.jpc);
+        Endpoints._addConnection(this.jpc.endpoints[0], this.jpc);
       }
       if (isObject(optionalData)) {
         Components.mergeData(this.jpc, optionalData);
@@ -4037,7 +4036,7 @@ function ensureSVGOverlayPath(o) {
     if (Connections.isConnection(o.component)) {
       var connector = o.component.connector;
       parent = connector != null ? connector.canvas : null;
-    } else if (Endpoints.isEndpoint(o.component)) {
+    } else if (Endpoints._isEndpoint(o.component)) {
       var endpoint = o.component.representation;
       parent = endpoint != null ? endpoint.canvas : endpoint;
     }
@@ -4362,6 +4361,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
     _defineProperty(_assertThisInitialized(_this), "_elementMousedown", void 0);
     _defineProperty(_assertThisInitialized(_this), "_elementContextmenu", void 0);
     _defineProperty(_assertThisInitialized(_this), "_resizeObserver", void 0);
+    _defineProperty(_assertThisInitialized(_this), "_mutationObserver", void 0);
     _defineProperty(_assertThisInitialized(_this), "eventManager", void 0);
     _defineProperty(_assertThisInitialized(_this), "draggingClass", "jtk-dragging");
     _defineProperty(_assertThisInitialized(_this), "elementDraggingClass", "jtk-element-dragging");
@@ -4420,7 +4420,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
             }
           });
           updates.forEach(function (el) {
-            return _this.revalidate(el.target);
+            _this.revalidate(el.target);
           });
         });
       } catch (e) {
@@ -5189,7 +5189,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
               x: absolutePosition.x,
               y: absolutePosition.y
             };
-          } else if (Endpoints.isEndpoint(component)) {
+          } else if (Endpoints._isEndpoint(component)) {
             var locToUse = Array.isArray(o.location) ? o.location : [o.location, o.location];
             cxy = {
               x: locToUse[0] * component.representation.w,
@@ -5258,7 +5258,7 @@ var BrowserJsPlumbInstance = function (_JsPlumbInstance) {
     key: "setHover",
     value: function setHover(component, hover) {
       component._hover = hover;
-      if (Endpoints.isEndpoint(component) && component.representation != null) {
+      if (Endpoints._isEndpoint(component) && component.representation != null) {
         this.setEndpointHover(component, hover, -1);
       } else if (Connections.isConnection(component) && component.connector != null) {
         this.setConnectorHover(component.connector, hover);

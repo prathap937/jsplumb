@@ -61,6 +61,8 @@ export abstract class EventGenerator {
     fire<T>(event: string, value?: T, originalEvent?: Event): any;
     getListener(forEvent: string): Array<any>;
     isSuspendEvents(): boolean;
+    // (undocumented)
+    _listeners: Record<string, Array<Function>>;
     setSuspendEvents(val: boolean): void;
     // (undocumented)
     protected abstract shouldFireEvent(event: string, value: any, originalEvent?: Event): boolean;
@@ -70,7 +72,7 @@ export abstract class EventGenerator {
 
 // @public (undocumented)
 export const Events: {
-    fire(source: EventSource_2, eventName: string, payload: any, originalEvent?: Event): void;
+    fire<T = any>(source: EventSource_2, eventName: string, payload: T, originalEvent?: Event): void;
     subscribe(source: EventSource_2, eventName: string, handler: Function): void;
 };
 

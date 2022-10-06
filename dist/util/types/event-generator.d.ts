@@ -7,7 +7,7 @@
  * @public
  */
 export declare abstract class EventGenerator {
-    private _listeners;
+    _listeners: Record<string, Array<Function>>;
     private eventsSuspended;
     private tick;
     private eventsToDieOn;
@@ -78,7 +78,7 @@ export interface EventSource {
     _listeners: Record<string, Array<Function>>;
 }
 export declare const Events: {
-    fire(source: EventSource, eventName: string, payload: any, originalEvent?: Event): void;
+    fire<T = any>(source: EventSource, eventName: string, payload: T, originalEvent?: Event): void;
     subscribe(source: EventSource, eventName: string, handler: Function): void;
 };
 //# sourceMappingURL=event-generator.d.ts.map

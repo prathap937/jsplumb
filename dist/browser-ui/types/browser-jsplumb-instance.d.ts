@@ -126,6 +126,7 @@ export declare class BrowserJsPlumbInstance extends JsPlumbInstance<{
     _elementMousedown: Function;
     _elementContextmenu: Function;
     private readonly _resizeObserver;
+    private readonly _mutationObserver;
     eventManager: EventManager;
     draggingClass: string;
     elementDraggingClass: string;
@@ -318,20 +319,11 @@ export declare class BrowserJsPlumbInstance extends JsPlumbInstance<{
      *
      * Places this is called:
      *
-     * - dragToGroup in test support, to get the position of the target group
      * - `orphan` in group manager, to get an elements position relative to the group. since in this case we know its
      * a child of the group's content area we could theoretically use getBoundingClientRect here
      * - addToGroup in group manager, to find the position of some element that is about to be dropped
      * - addToGroup in group manager, to get the position of the content area of an uncollapsed group onto which an element is being dropped
-     * - refreshElement, to get the current position of some element
      * - getOffset method in viewport (just does a pass through to the instance)
-     * - onStop of group manager, when ghost proxy is active, to get the location of the original group's content area and the new group's content area
-     * - onStart in drag manager, to get the position of an element that is about to be dragged
-     * - onStart in drag manager, to get the position of an element's group parent when the element is about to be dragged (if the element is in a group)
-     * - onStart in drag manager, to get the position of a group, when checking for target group's for the element that is about to be dragged
-     * - onStart in drag manager, to get the position of all the elements in the current drag group (if there is one), so that they can be moved
-     * relative to each other during the drag.
-     *
      *
      */
     getOffset(el: Element): PointXY;
