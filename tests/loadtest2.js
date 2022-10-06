@@ -111,7 +111,9 @@
 
 
             // for bulk drawing operations this is recommended.
-            if (!actuallyPaint || suspend) instance.setSuspendDrawing(true);
+            if (!actuallyPaint || suspend) {
+                instance.setSuspendDrawing(true);
+            }
 
             var st = (new Date()).getTime(),
                 ww = window.offsetWidth,
@@ -199,8 +201,9 @@
 
             t = (new Date()).getTime();
             // instruct jsplumb to unsuspend drawing, and to do a repaint.
-            if (actuallyPaint && suspend)
+            if (actuallyPaint && suspend) {
                 instance.setSuspendDrawing(false, true);
+            }
             t2 = (new Date()).getTime();
             var repaintTotal = t2 - t;
 
