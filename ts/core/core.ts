@@ -1,6 +1,6 @@
 import {DEFAULT_KEY_ALLOW_NESTED_GROUPS, DEFAULT_KEY_PAINT_STYLE, DEFAULT_KEY_SCOPE, JsPlumbDefaults} from "./defaults"
 
-import { Connection, ConnectionOptions } from './connector/declarations'
+import {Connection, ConnectionOptions, TYPE_DESCRIPTOR_CONNECTION} from './connector/declarations'
 
 import {createEndpoint, Endpoint} from "./endpoint/endpoint"
 import {DotEndpoint, TYPE_ENDPOINT_DOT} from './endpoint/dot-endpoint'
@@ -618,7 +618,6 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
             this._suspendedAt = "" + new Date().getTime()
         } else {
             this._suspendedAt = null
-            this.viewport.recomputeBounds()
         }
         if (repaintAfterwards) {
             this.repaintEverything()
@@ -677,11 +676,6 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
 
         let elId = params.elId
 
-        // if forced repaint, or no new offset provided, we recalculate the size + offset, then store on the viewport.
-        // Here we would prefer to tell the viewport to recalculate size/offset, using whatever functions were made available to it.
-        // abstracting out the size/offset to the viewport allows us to do things like a viewport with fixed size elements, and
-        // to integrate with the Toolkit's layout for offsets (the Toolkit will write the offsets and the community edition
-        // will not need to read from the DOM)
         if (params.recalc) {
             return this.viewport.refreshElement(elId)
         } else {
@@ -757,6 +751,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * Delete all connections attached to the given element.
      * @param el
      * @param params
+     * @public
      */
     deleteConnectionsForElement(el:T["E"], params?:DeleteConnectionOptions):JsPlumbInstance {
 
@@ -893,7 +888,6 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @param id
      */
     getManagedElement(id:string):T["E"] {
-        //return this._managedElements[id] ? this._managedElements[id].el as unknown as T["E"] : null
         return this._managedElements[id]?.el as T["E"]
     }
 
@@ -916,7 +910,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
             this.removeAttribute(_el, ATTRIBUTE_MANAGED)
             delete this._managedElements[id]
 
-            this.viewport.remove(id)
+            this.viewport.elementRemoved(id)
 
             this.fire<{el:T["E"], id:string}>(Constants.EVENT_UNMANAGE_ELEMENT, {el:_el, id})
 
@@ -1105,11 +1099,17 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
     repaintEverything ():JsPlumbInstance {
         let timestamp = uuid(), elId:string
 
-        for (elId in this._managedElements) {
-            this.viewport.refreshElement(elId, true)
-        }
+        // if (force) {
+            for (elId in this._managedElements) {
+                this.viewport.refreshElement(elId, null)
+            }
+            // this.viewport.recomputeBounds()
+        // } else {
+        //     this.viewport.recomputeDirtyElements()
+        // }
 
-        this.viewport.recomputeBounds()
+
+
 
         for (elId in this._managedElements) {
             this.repaint(this._managedElements[elId].el, timestamp, true)
@@ -1127,7 +1127,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      */
     setElementPosition(el:T["E"], x:number, y:number):RedrawResult {
         const id = this.getId(el)
-        this.viewport.setPosition(id, x, y)
+        this.viewport.positionChanged(id, x, y)
         return this.repaint(el)
     }
 
@@ -1638,6 +1638,9 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         return this._setVisible(el, Constants.NONE, changeEndpoints)
     }
 
+    /**
+     * private method to do the business of toggling hiding/showing.
+     */
     private _setVisible (el:T["E"], state:string, alsoChangeEndpoints?:boolean) {
         let visible = state === Constants.BLOCK
         let endpointFunc = null
@@ -1656,7 +1659,8 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                     Connections.setVisible(jpc, true)
                 }
             }
-            else { // the default behaviour for show, and what always happens for hide, is to just set the visibility without getting clever.
+            else {
+                // the default behaviour for show, and what always happens for hide, is to just set the visibility without getting clever.
                 Connections.setVisible(jpc, visible)
             }
         }, endpointFunc)
@@ -1664,9 +1668,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
         return this
     }
 
-    /**
-     * private method to do the business of toggling hiding/showing.
-     */
+
     toggleVisible (el:T["E"], changeEndpoints?:boolean) {
         let endpointFunc = null
         if (changeEndpoints) {
@@ -1705,6 +1707,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * Register a connection type: a set of connection attributes grouped together with an ID.
      * @param id
      * @param type
+     * @public
      */
     registerConnectionType(id:string, type:ConnectionTypeDescriptor):void {
         this._connectionTypes.set(id, extend({}, type))
@@ -1723,6 +1726,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
     /**
      * Register a set of connection types
      * @param types Set of types to register.
+     * @public
      */
     registerConnectionTypes(types:Record<string, ConnectionTypeDescriptor>) {
         for (let i in types) {
@@ -1734,6 +1738,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * Register an endpoint type: a set of endpoint attributes grouped together with an ID.
      * @param id
      * @param type
+     * @public
      */
     registerEndpointType(id:string, type:EndpointTypeDescriptor) {
         this._endpointTypes.set(id, extend({}, type))
@@ -1752,6 +1757,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
     /**
      * Register a set of endpoint types
      * @param types Set of types to register.
+     * @public
      */
     registerEndpointTypes(types:Record<string, EndpointTypeDescriptor>) {
         for (let i in types) {
@@ -1766,7 +1772,7 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
      * @public
      */
     getType(id:string, typeDescriptor:string):TypeDescriptor {
-        return typeDescriptor === "connection" ? this.getConnectionType(id) : this.getEndpointType(id)
+        return typeDescriptor === TYPE_DESCRIPTOR_CONNECTION ? this.getConnectionType(id) : this.getEndpointType(id)
     }
 
     /**
@@ -2189,27 +2195,6 @@ export abstract class JsPlumbInstance<T extends { E:unknown } = any> extends Eve
                 }
             }
             connection.lastPaintedAt = timestamp
-        }
-    }
-
-    /**
-     * @internal
-     * @param endpoint
-     */
-    _refreshEndpoint(endpoint: Endpoint): void {
-
-        if (!endpoint._anchor.isFloating) {
-            if (endpoint.connections.length > 0) {
-                this.addEndpointClass(endpoint, this.endpointConnectedClass)
-            } else {
-                this.removeEndpointClass(endpoint, this.endpointConnectedClass)
-            }
-
-            if (Endpoints.isFull(endpoint)) {
-                this.addEndpointClass(endpoint, this.endpointFullClass)
-            } else {
-                this.removeEndpointClass(endpoint, this.endpointFullClass)
-            }
         }
     }
 

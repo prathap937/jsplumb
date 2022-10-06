@@ -1,4 +1,4 @@
-import {EventGenerator,findWithFunction, getsert, forEach, insertSorted, Size, PointXY} from '@jsplumb/util'
+import {findWithFunction, getsert, insertSorted, Size, PointXY} from '@jsplumb/util'
 import {JsPlumbInstance} from "./core"
 
 /**
@@ -18,7 +18,7 @@ export interface ViewportPosition extends PointXY {
 export interface ViewportElementBase<E> extends ViewportPosition {
     x2:number
     y2:number
-    dirty:boolean
+    id:string
 }
 
 /**
@@ -41,20 +41,20 @@ export interface TranslatedViewportElementBase<E> extends ViewportElementBase<E>
  */
 export type TranslatedViewportElement<E> = Omit<TranslatedViewportElementBase<E>, "dirty">
 
-/**
- * Captures a set of elements affected by some given operation. For internal use.
- * @internal
- */
-class Transaction {
-    affectedElements:Set<string> = new Set()
-}
+// /**
+//  * Captures a set of elements affected by some given operation. For internal use.
+//  * @internal
+//  */
+// class Transaction {
+//     affectedElements:Set<string> = new Set()
+// }
 
 /**
  * @internal
  * @constructor
  */
-function EMPTY_POSITION<E>():ViewportElement<E> {
-    return { x:0, y:0, w:0, h:0, r:0, c:{x:0,y:0}, x2:0, y2:0, t:{x:0, y:0, c:{x:0,y:0}, w:0, h:0, r:0, x2:0, y2:0, cr:0, sr:0 }, dirty:true }
+function EMPTY_POSITION<E>(id:string):ViewportElement<E> {
+    return { id, x:0, y:0, w:0, h:0, r:0, c:{x:0,y:0}, x2:0, y2:0, t:{id, x:0, y:0, c:{x:0,y:0}, w:0, h:0, r:0, x2:0, y2:0, cr:0, sr:0 } }
 }
 
 /**
@@ -62,9 +62,9 @@ function EMPTY_POSITION<E>():ViewportElement<E> {
  * @internal
  */
 
-function rotate<E>(x:number, y:number, w:number, h:number, r:number):TranslatedViewportElement<E> {
+function rotate<E>(id:string, x:number, y:number, w:number, h:number, r:number):TranslatedViewportElement<E> {
 
-    const center={x:x + (w/2), y:y + (h/2)},
+    const center = {x:x + (w/2), y:y + (h/2)},
         cr = Math.cos(r / 360 * Math.PI * 2), sr = Math.sin(r / 360 * Math.PI * 2),
         _point = (x:number, y:number):PointXY => {``
             return {
@@ -94,7 +94,8 @@ function rotate<E>(x:number, y:number, w:number, h:number, r:number):TranslatedV
         x2:xmax,
         y2:ymax,
         cr:cr,
-        sr:sr
+        sr:sr,
+        id
     }
 }
 
@@ -103,7 +104,7 @@ function rotate<E>(x:number, y:number, w:number, h:number, r:number):TranslatedV
  * @param value
  * @param arrayEntry
  */
-const entryComparator = (value:[string, any], arrayEntry:[string, any]) => {
+const entryComparator = (value:[ViewportElement<any>, number], arrayEntry:[ViewportElement<any>, number]) => {
 
     let c = 0
 
@@ -121,19 +122,20 @@ const entryComparator = (value:[string, any], arrayEntry:[string, any]) => {
  * @param value
  * @param arrayEntry
  */
-const reverseEntryComparator = (value:[string, any], arrayEntry:[string, any]) => {
-    return entryComparator(value, arrayEntry) * -1
-}
+// const reverseEntryComparator = (value:[ViewportElement<any>, number], arrayEntry:[ViewportElement<any>, number]) => {
+//     return entryComparator(value, arrayEntry) * -1
+// }
 
 /**
  * @internal
- * @param id
+ * @param element
  * @param value
  * @param array
  * @param sortDescending
  */
-function _updateElementIndex(id:string, value:number, array:Array<[string, number]>, sortDescending?:boolean) {
-    insertSorted<[string, number]>([id, value], array, entryComparator, sortDescending)
+function _updateElementIndex(element:ViewportElement<any>, value:number, array:Array<[ViewportElement<any>, number]>, sortDescending?:boolean) {
+    _clearElementIndex(element.id, array)
+    insertSorted<[ViewportElement<any>, number]>([element, value], array, entryComparator, sortDescending)
 }
 
 /**
@@ -141,9 +143,12 @@ function _updateElementIndex(id:string, value:number, array:Array<[string, numbe
  * @param id
  * @param array
  */
-function _clearElementIndex<T>(id:string, array:Array<T>) {
-    const idx = findWithFunction(array, (entry) => {
-        return entry[0] === id
+function _clearElementIndex(id:string, array:Array<[ViewportElement<any>, number]>) {
+    // const idx = findWithFunction(array, (entry) => {
+    //     return entry[0].id === id
+    // })
+    const idx = array.findIndex( (entry) => {
+        return entry[0].id === id
     })
 
     if (idx > -1) {
@@ -156,25 +161,25 @@ function _clearElementIndex<T>(id:string, array:Array<T>) {
  * with a Viewport.
  * @public
  */
-export class Viewport<T extends{E:unknown}> extends EventGenerator {
+export class Viewport<T extends{E:unknown}> /*extends EventGenerator */{
 
 // --------------- PRIVATE  ------------------------------------------
 
-    private _currentTransaction:Transaction = null
+   // private _currentTransaction:Transaction = null
 
     constructor(public instance:JsPlumbInstance<T>) {
-        super()
+       // super()
     }
 
     //
     // this map contains sorted positions for each element, split into the two axes.
-    // the `xmin` array contains a list of [ id, x ] entries, sorted by `x` in ascending order. `xmax` is
+    // the `xmin` array contains a list of [ ViewportElement, x ] entries, sorted by `x` in ascending order. `xmax` is
     // the same, but in descending order, but for max, and the y*** arrays do the same thing for the y axis.
 
     // so to get the bounds at any point you just need to get the first element from each of these
     // arrays.
     //
-    _sortedElements:Record<string, Array<[string, number]>> = {
+    _sortedElements:Record<string, Array<[ViewportElement<any>, number]>> = {
         xmin:[],
         xmax:[],
         ymin:[],
@@ -191,96 +196,26 @@ export class Viewport<T extends{E:unknown}> extends EventGenerator {
         maxy:0
     };
 
-    private _updateBounds (id:string, updatedElement:ViewportElement<T["E"]>, doNotRecalculateBounds?:boolean) {
+    private _updateBounds (id:string, updatedElement:ViewportElement<T["E"]>) {
         if (updatedElement != null) {
 
-            _clearElementIndex(id, this._sortedElements.xmin)
-            _clearElementIndex(id, this._sortedElements.xmax)
-            _clearElementIndex(id, this._sortedElements.ymin)
-            _clearElementIndex(id, this._sortedElements.ymax)
+            _updateElementIndex(updatedElement, updatedElement.t.x, this._sortedElements.xmin, false)
+            _updateElementIndex(updatedElement, updatedElement.t.x + updatedElement.t.w, this._sortedElements.xmax, true)
+            _updateElementIndex(updatedElement, updatedElement.t.y, this._sortedElements.ymin, false)
+            _updateElementIndex(updatedElement, updatedElement.t.y + updatedElement.t.h, this._sortedElements.ymax, true)
 
-            _updateElementIndex(id, updatedElement.t.x, this._sortedElements.xmin, false)
-            _updateElementIndex(id, updatedElement.t.x + updatedElement.t.w, this._sortedElements.xmax, true)
-            _updateElementIndex(id, updatedElement.t.y, this._sortedElements.ymin, false)
-            _updateElementIndex(id, updatedElement.t.y + updatedElement.t.h, this._sortedElements.ymax, true)
-
-            if (doNotRecalculateBounds !== true) {
-                this._recalculateBounds()
-            }
+            this._recalculateBounds()
 
         } else {
             // a full update?
         }
-    };
+    }
 
     private _recalculateBounds () {
         this._bounds.minx = this._sortedElements.xmin.length > 0 ? this._sortedElements.xmin[0][1] : 0
         this._bounds.maxx = this._sortedElements.xmax.length > 0 ? this._sortedElements.xmax[0][1] : 0
         this._bounds.miny = this._sortedElements.ymin.length > 0 ? this._sortedElements.ymin[0][1] : 0
         this._bounds.maxy = this._sortedElements.ymax.length > 0 ? this._sortedElements.ymax[0][1] : 0
-    }
-
-    recomputeBounds() {
-        this._sortedElements.xmin.length = 0
-        this._sortedElements.xmax.length = 0
-        this._sortedElements.ymin.length = 0
-        this._sortedElements.ymax.length = 0
-
-        this._elementMap.forEach((vp:ViewportElement<any>, id:string) => {
-            this._sortedElements.xmin.push([id, vp.t.x])
-            this._sortedElements.xmax.push([id, vp.t.x + vp.t.w])
-            this._sortedElements.ymin.push([id, vp.t.y])
-            this._sortedElements.ymax.push([id, vp.t.y + vp.t.h])
-        })
-
-        this._sortedElements.xmin.sort(entryComparator)
-        this._sortedElements.ymin.sort(entryComparator)
-        this._sortedElements.xmax.sort(reverseEntryComparator)
-        this._sortedElements.ymax.sort(reverseEntryComparator)
-
-        this._recalculateBounds()
-    }
-
-
-    private _finaliseUpdate (id:string, e:ViewportElement<T["E"]>, doNotRecalculateBounds?:boolean) {
-        e.t = rotate(e.x, e.y, e.w, e.h, e.r)
-        this._transformedElementMap.set(id, e.t)
-
-        if (doNotRecalculateBounds !== true) {
-            this._updateBounds(id, e, doNotRecalculateBounds)
-        }
-    }
-
-    shouldFireEvent(event: string, value: unknown, originalEvent?: Event): boolean {
-        return true
-    }
-
-// ---------------------- PUBLIC -----------------------------
-
-    startTransaction() {
-        if (this._currentTransaction != null) {
-            throw new Error("Viewport: cannot start transaction; a transaction is currently active.")
-        }
-        this._currentTransaction = new Transaction()
-    }
-
-    endTransaction() {
-
-        if (this._currentTransaction != null) {
-            // recompute elements, holding off on computing bounds for the entire viewport until the end.
-            this._currentTransaction.affectedElements.forEach( (id:string) => {
-                const entry = this.getPosition(id)
-                this._finaliseUpdate(id, entry, true)
-            })
-            // recompute bounds for the viewport.
-            this.recomputeBounds()
-            this._currentTransaction = null
-        }
-    }
-
-    updateElements (entries:Array<{id:string, x:number, y:number, width:number, height:number, rotation:number}>) {
-
-        forEach(entries, (e) => this.updateElement(e.id, e.x, e.y, e.width, e.height, e.rotation))
     }
 
     /**
@@ -296,9 +231,8 @@ export class Viewport<T extends{E:unknown}> extends EventGenerator {
      */
     updateElement (id:string, x:number, y:number, width:number, height:number, rotation:number, doNotRecalculateBounds?:boolean):ViewportElement<T["E"]> {
 
-        const e = getsert(this._elementMap, id, EMPTY_POSITION)
+        const e = getsert(this._elementMap, id, () => EMPTY_POSITION(id))
 
-        e.dirty = (x == null && e.x == null) || (y == null && e.y == null) || (width == null && e.w == null) || (height == null && e.h == null)
 
         if (x != null) {
             e.x = x
@@ -325,10 +259,11 @@ export class Viewport<T extends{E:unknown}> extends EventGenerator {
         e.x2 = e.x + e.w
         e.y2 = e.y + e.h
 
-        if (this._currentTransaction == null) {
-            this._finaliseUpdate(id, e, doNotRecalculateBounds)
-        } else {
-            this._currentTransaction.affectedElements.add(id)
+        e.t = rotate(id, e.x, e.y, e.w, e.h, e.r)
+        this._transformedElementMap.set(id, e.t)
+
+        if (doNotRecalculateBounds !== true) {
+            this._updateBounds(id, e)
         }
 
         return e
@@ -340,27 +275,36 @@ export class Viewport<T extends{E:unknown}> extends EventGenerator {
      * @param doNotRecalculateBounds If true, the viewport's bounds won't be recalculated after the element's size and position has been refreshed.
      */
     refreshElement(elId:string, doNotRecalculateBounds?:boolean):ViewportElement<T["E"]>  {
-        const me = this.instance.getManagedElements()
-        const s = me[elId] ? me[elId].el : null
-        if (s != null) {
-            const size = this.getSize(s)
-            const offset = this.getOffset(s)
+        const m = this.instance.getManagedElements()[elId]
+        if (m != null && m.el != null) {
+            const size = this.getSize(m.el)
+            const offset = this.getOffset(m.el)
             return this.updateElement(elId, offset.x, offset.y, size.w, size.h, null, doNotRecalculateBounds)
         } else {
             return null
         }
     }
 
+    /**
+     * These methods are called in only one place, but can be overridden
+     * @param el
+     * @internal
+     */
     protected getSize(el:T["E"]):Size {
         return this.instance.getSize(el)
     }
 
+    /**
+     * These methods are called in only one place, but can be overridden
+     * @param el
+     * @internal
+     */
     protected getOffset(el:T["E"]):PointXY {
         return  this.instance.getOffset(el)
     }
 
     /**
-     * Creates an empty entry for an element with the given ID.
+     * Creates an empty entry for an element with the given ID. The entry is marked 'dirty'.
      * @param doNotRecalculateBounds If true, the viewport's bounds won't be recalculated after the element has been registered.
      * @param id
      */
@@ -387,47 +331,44 @@ export class Viewport<T extends{E:unknown}> extends EventGenerator {
      * @param rotation
      */
     rotateElement (id:string, rotation:number):ViewportElement<T["E"]> {
-        const e = getsert(this._elementMap, id, EMPTY_POSITION)
-        e.r = rotation || 0
-        this._finaliseUpdate(id, e)
-        return e
+        return this.updateElement(id, null, null, null, null, rotation)
     }
 
     /**
      * Gets the width of the content managed by the viewport, taking any rotated elements into account.
      */
-    getBoundsWidth ():number {
+    get boundsWidth ():number {
         return this._bounds.maxx - this._bounds.minx
     }
 
     /**
      * Gets the height of the content managed by the viewport, taking any rotated elements into account.
      */
-    getBoundsHeight():number {
+    get boundsHeight():number {
         return this._bounds.maxy - this._bounds.miny
     }
 
     /**
      * Gets the leftmost point of the content managed by the viewport, taking any rotated elements into account.
      */
-    getX():number {
+    get boundsMinX():number {
         return this._bounds.minx
     }
 
     /**
      * Gets the topmost of the content managed by the viewport, taking any rotated elements into account.
      */
-    getY():number {
+    get boundsMinY():number {
         return this._bounds.miny
     }
 
     /**
-     * Sets the size of the element with the given ID, recalculating bounds.
+     * Informs the viewport that the element with the given ID has changed size.
      * @param id
      * @param w
      * @param h
      */
-    setSize (id:string, w:number, h:number):ViewportElement<T["E"]> {
+    sizeChanged (id:string, w:number, h:number):ViewportElement<T["E"]> {
         if (this._elementMap.has(id)) {
             return this.updateElement(id, null, null, w, h, null)
         }
@@ -439,7 +380,7 @@ export class Viewport<T extends{E:unknown}> extends EventGenerator {
      * @param x
      * @param y
      */
-    setPosition(id:string, x:number, y:number):ViewportElement<T["E"]> {
+    positionChanged(id:string, x:number, y:number):ViewportElement<T["E"]> {
         if (this._elementMap.has(id)) {
             return this.updateElement(id, x, y, null, null, null)
         }
@@ -462,7 +403,7 @@ export class Viewport<T extends{E:unknown}> extends EventGenerator {
      * Remove the element with the given ID from the viewport.
      * @param id
      */
-    remove (id:string) {
+    elementRemoved (id:string) {
 
         _clearElementIndex(id, this._sortedElements.xmin)
         _clearElementIndex(id, this._sortedElements.xmax)
