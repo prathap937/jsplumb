@@ -303,7 +303,7 @@ export const Endpoints = {
      */
     _addConnection(endpoint:Endpoint, conn:Connection) {
         endpoint.connections.push(conn)
-        endpoint.instance._refreshEndpoint(endpoint)
+        Endpoints._refreshEndpointClasses(endpoint)
     },
     /**
      * Deletes every connection attached to the given endpoint.
@@ -348,7 +348,7 @@ export const Endpoints = {
         if (idx >= 0) {
             endpoint.connections.splice(idx, 1)
             // refresh the endpoint's appearance (which can change based on the number of connections, via classes)
-            endpoint.instance._refreshEndpoint(endpoint)
+            Endpoints._refreshEndpointClasses(endpoint)
         }
 
         if (!_transientDetach  && endpoint.deleteOnEmpty && endpoint.connections.length === 0) {
@@ -457,6 +457,27 @@ export const Endpoints = {
     _registerHandler<E,T>(eph:EndpointHandler<E, T>) {
         handlers[eph.type] = eph
         endpointComputers[eph.type] = eph.compute
+    },
+
+    /**
+     * @internal
+     * @param endpoint
+     */
+    _refreshEndpointClasses(endpoint: Endpoint): void {
+
+        if (!endpoint._anchor.isFloating) {
+            if (endpoint.connections.length > 0) {
+                endpoint.instance.addEndpointClass(endpoint, endpoint.instance.endpointConnectedClass)
+            } else {
+                endpoint.instance.removeEndpointClass(endpoint, endpoint.instance.endpointConnectedClass)
+            }
+
+            if (Endpoints.isFull(endpoint)) {
+                endpoint.instance.addEndpointClass(endpoint, endpoint.instance.endpointFullClass)
+            } else {
+                endpoint.instance.removeEndpointClass(endpoint, endpoint.instance.endpointFullClass)
+            }
+        }
     }
 }
 
