@@ -73,7 +73,7 @@ function prepareEndpoint<E>(conn:Connection<E>, existing:Endpoint, index:number,
             connectionsDetachable: conn.detachable || conn.instance.defaults.connectionsDetachable
         })
 
-        conn.instance._refreshEndpoint(e)
+        Endpoints._refreshEndpointClasses(e)
 
         if (existing == null) {
             e.deleteOnEmpty = true
