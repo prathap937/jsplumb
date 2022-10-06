@@ -515,7 +515,7 @@ export class EndpointDragHandler implements DragHandler {
         this.floatingId = this.placeholderInfo.id
         this.floatingIndex = anchorIdx
 
-        this.instance._refreshEndpoint(this.ep) // ensure all classes are up to date on the stationary endpoint.
+        Endpoints._refreshEndpointClasses(this.ep) // ensure all classes are up to date on the stationary endpoint.
     }
 
     /**
@@ -1042,7 +1042,7 @@ export class EndpointDragHandler implements DragHandler {
             }
 
             // refresh the appearance of the endpoint, if necessary
-            this.instance._refreshEndpoint(this.ep)
+            Endpoints._refreshEndpointClasses(this.ep)
             Endpoints.removeClass(this.ep, this.instance.draggingClass)
 
             // common clean up
