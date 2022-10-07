@@ -185,6 +185,7 @@ export declare abstract class JsPlumbInstance<T extends {
      * Delete all connections attached to the given element.
      * @param el
      * @param params
+     * @public
      */
     deleteConnectionsForElement(el: T["E"], params?: DeleteConnectionOptions): JsPlumbInstance;
     private fireDetachEvent;
@@ -452,32 +453,36 @@ export declare abstract class JsPlumbInstance<T extends {
     private _createTargetDefinition;
     show(el: T["E"], changeEndpoints?: boolean): JsPlumbInstance;
     hide(el: T["E"], changeEndpoints?: boolean): JsPlumbInstance;
-    private _setVisible;
     /**
      * private method to do the business of toggling hiding/showing.
      */
+    private _setVisible;
     toggleVisible(el: T["E"], changeEndpoints?: boolean): void;
     private _operation;
     /**
      * Register a connection type: a set of connection attributes grouped together with an ID.
      * @param id
      * @param type
+     * @public
      */
     registerConnectionType(id: string, type: ConnectionTypeDescriptor): void;
     /**
      * Register a set of connection types
      * @param types Set of types to register.
+     * @public
      */
     registerConnectionTypes(types: Record<string, ConnectionTypeDescriptor>): void;
     /**
      * Register an endpoint type: a set of endpoint attributes grouped together with an ID.
      * @param id
      * @param type
+     * @public
      */
     registerEndpointType(id: string, type: EndpointTypeDescriptor): void;
     /**
      * Register a set of endpoint types
      * @param types Set of types to register.
+     * @public
      */
     registerEndpointTypes(types: Record<string, EndpointTypeDescriptor>): void;
     /**

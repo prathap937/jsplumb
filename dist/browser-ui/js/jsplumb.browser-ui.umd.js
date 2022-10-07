@@ -4363,7 +4363,6 @@
       _defineProperty(_assertThisInitialized(_this), "_elementMousedown", void 0);
       _defineProperty(_assertThisInitialized(_this), "_elementContextmenu", void 0);
       _defineProperty(_assertThisInitialized(_this), "_resizeObserver", void 0);
-      _defineProperty(_assertThisInitialized(_this), "_mutationObserver", void 0);
       _defineProperty(_assertThisInitialized(_this), "eventManager", void 0);
       _defineProperty(_assertThisInitialized(_this), "draggingClass", "jtk-dragging");
       _defineProperty(_assertThisInitialized(_this), "elementDraggingClass", "jtk-element-dragging");
@@ -4422,7 +4421,7 @@
               }
             });
             updates.forEach(function (el) {
-              _this.revalidate(el.target);
+              return _this.revalidate(el.target);
             });
           });
         } catch (e) {

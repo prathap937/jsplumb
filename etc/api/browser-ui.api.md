@@ -1217,7 +1217,7 @@ export interface UIComponent {
 
 // Warnings were encountered during analysis:
 //
-// /Users/simon/programming/jsplumb/jsplumb/dist/browser-ui/types/browser-jsplumb-instance.d.ts:495:9 - (ae-forgotten-export) The symbol "ElementAttributes" needs to be exported by the entry point index.d.ts
+// /Users/simon/programming/jsplumb/jsplumb/dist/browser-ui/types/browser-jsplumb-instance.d.ts:486:9 - (ae-forgotten-export) The symbol "ElementAttributes" needs to be exported by the entry point index.d.ts
 // /Users/simon/programming/jsplumb/jsplumb/dist/browser-ui/types/svg-util.d.ts:17:5 - (ae-forgotten-export) The symbol "_attr" needs to be exported by the entry point index.d.ts
 // /Users/simon/programming/jsplumb/jsplumb/dist/browser-ui/types/svg-util.d.ts:18:5 - (ae-forgotten-export) The symbol "_node" needs to be exported by the entry point index.d.ts
 

@@ -1352,6 +1352,11 @@ var jsPlumbBrowserUI = (function (exports) {
   var DEFAULT_KEY_REATTACH_CONNECTIONS = "reattachConnections";
   var DEFAULT_KEY_SCOPE = "scope";
 
+  var TYPE_ID_CONNECTION = "_jsplumb_connection";
+  var ID_PREFIX_CONNECTION = "_jsPlumb_c";
+  var TYPE_DESCRIPTOR_CONNECTION = "connection";
+  var DEFAULT_LABEL_LOCATION_CONNECTION = 0.5;
+
   function isFullOverlaySpec(o) {
     return o.type != null && o.options != null;
   }
@@ -1975,11 +1980,6 @@ var jsPlumbBrowserUI = (function (exports) {
     return aa;
   }
 
-  var TYPE_ID_CONNECTION = "_jsplumb_connection";
-  var ID_PREFIX_CONNECTION = "_jsPlumb_c";
-  var TYPE_DESCRIPTOR_CONNECTION = "connection";
-  var DEFAULT_LABEL_LOCATION_CONNECTION = 0.5;
-
   function prepareEndpoint(conn, existing, index, anchor, element, elementId, endpoint) {
     var e;
     if (existing) {
@@ -2020,7 +2020,7 @@ var jsPlumbBrowserUI = (function (exports) {
         reattachConnections: conn.reattach || conn.instance.defaults.reattachConnections,
         connectionsDetachable: conn.detachable || conn.instance.defaults.connectionsDetachable
       });
-      conn.instance._refreshEndpoint(e);
+      Endpoints._refreshEndpointClasses(e);
       if (existing == null) {
         e.deleteOnEmpty = true;
       }
@@ -3045,7 +3045,7 @@ var jsPlumbBrowserUI = (function (exports) {
     },
     _addConnection: function _addConnection(endpoint, conn) {
       endpoint.connections.push(conn);
-      endpoint.instance._refreshEndpoint(endpoint);
+      Endpoints._refreshEndpointClasses(endpoint);
     },
     deleteEveryConnection: function deleteEveryConnection(endpoint, params) {
       var c = endpoint.connections.length;
@@ -3069,7 +3069,7 @@ var jsPlumbBrowserUI = (function (exports) {
       idx = idx == null ? endpoint.connections.indexOf(connection) : idx;
       if (idx >= 0) {
         endpoint.connections.splice(idx, 1);
-        endpoint.instance._refreshEndpoint(endpoint);
+        Endpoints._refreshEndpointClasses(endpoint);
       }
       if (!_transientDetach && endpoint.deleteOnEmpty && endpoint.connections.length === 0) {
         endpoint.instance.deleteEndpoint(endpoint);
@@ -3121,6 +3121,20 @@ var jsPlumbBrowserUI = (function (exports) {
     _registerHandler: function _registerHandler(eph) {
       handlers[eph.type] = eph;
       endpointComputers[eph.type] = eph.compute;
+    },
+    _refreshEndpointClasses: function _refreshEndpointClasses(endpoint) {
+      if (!endpoint._anchor.isFloating) {
+        if (endpoint.connections.length > 0) {
+          endpoint.instance.addEndpointClass(endpoint, endpoint.instance.endpointConnectedClass);
+        } else {
+          endpoint.instance.removeEndpointClass(endpoint, endpoint.instance.endpointConnectedClass);
+        }
+        if (Endpoints.isFull(endpoint)) {
+          endpoint.instance.addEndpointClass(endpoint, endpoint.instance.endpointFullClass);
+        } else {
+          endpoint.instance.removeEndpointClass(endpoint, endpoint.instance.endpointFullClass);
+        }
+      }
     }
   };
 
@@ -4435,12 +4449,9 @@ var jsPlumbBrowserUI = (function (exports) {
     return ConnectionSelection;
   }(SelectionBase);
 
-  var Transaction = function Transaction() {
-    _classCallCheck$1(this, Transaction);
-    _defineProperty$1(this, "affectedElements", new Set());
-  };
-  function EMPTY_POSITION() {
+  function EMPTY_POSITION(id) {
     return {
+      id: id,
       x: 0,
       y: 0,
       w: 0,
@@ -4453,6 +4464,7 @@ var jsPlumbBrowserUI = (function (exports) {
       x2: 0,
       y2: 0,
       t: {
+        id: id,
         x: 0,
         y: 0,
         c: {
@@ -4466,11 +4478,10 @@ var jsPlumbBrowserUI = (function (exports) {
         y2: 0,
         cr: 0,
         sr: 0
-      },
-      dirty: true
+      }
     };
   }
-  function rotate(x, y, w, h, r) {
+  function rotate(id, x, y, w, h, r) {
     var center = {
       x: x + w / 2,
       y: y + h / 2
@@ -4502,7 +4513,8 @@ var jsPlumbBrowserUI = (function (exports) {
       x2: xmax,
       y2: ymax,
       cr: cr,
-      sr: sr
+      sr: sr,
+      id: id
     };
   }
   var entryComparator = function entryComparator(value, arrayEntry) {
@@ -4514,60 +4526,46 @@ var jsPlumbBrowserUI = (function (exports) {
     }
     return c;
   };
-  var reverseEntryComparator = function reverseEntryComparator(value, arrayEntry) {
-    return entryComparator(value, arrayEntry) * -1;
-  };
-  function _updateElementIndex(id, value, array, sortDescending) {
-    insertSorted([id, value], array, entryComparator, sortDescending);
+  function _updateElementIndex(element, value, array, sortDescending) {
+    _clearElementIndex(element.id, array);
+    insertSorted([element, value], array, entryComparator, sortDescending);
   }
   function _clearElementIndex(id, array) {
-    var idx = findWithFunction(array, function (entry) {
-      return entry[0] === id;
+    var idx = array.findIndex(function (entry) {
+      return entry[0].id === id;
     });
     if (idx > -1) {
       array.splice(idx, 1);
     }
   }
-  var Viewport = function (_EventGenerator) {
-    _inherits$1(Viewport, _EventGenerator);
-    var _super = _createSuper$1(Viewport);
+  var Viewport = function () {
     function Viewport(instance) {
-      var _this;
       _classCallCheck$1(this, Viewport);
-      _this = _super.call(this);
-      _this.instance = instance;
-      _defineProperty$1(_assertThisInitialized$1(_this), "_currentTransaction", null);
-      _defineProperty$1(_assertThisInitialized$1(_this), "_sortedElements", {
+      this.instance = instance;
+      _defineProperty$1(this, "_sortedElements", {
         xmin: [],
         xmax: [],
         ymin: [],
         ymax: []
       });
-      _defineProperty$1(_assertThisInitialized$1(_this), "_elementMap", new Map());
-      _defineProperty$1(_assertThisInitialized$1(_this), "_transformedElementMap", new Map());
-      _defineProperty$1(_assertThisInitialized$1(_this), "_bounds", {
+      _defineProperty$1(this, "_elementMap", new Map());
+      _defineProperty$1(this, "_transformedElementMap", new Map());
+      _defineProperty$1(this, "_bounds", {
         minx: 0,
         maxx: 0,
         miny: 0,
         maxy: 0
       });
-      return _this;
     }
     _createClass$1(Viewport, [{
       key: "_updateBounds",
-      value: function _updateBounds(id, updatedElement, doNotRecalculateBounds) {
+      value: function _updateBounds(id, updatedElement) {
         if (updatedElement != null) {
-          _clearElementIndex(id, this._sortedElements.xmin);
-          _clearElementIndex(id, this._sortedElements.xmax);
-          _clearElementIndex(id, this._sortedElements.ymin);
-          _clearElementIndex(id, this._sortedElements.ymax);
-          _updateElementIndex(id, updatedElement.t.x, this._sortedElements.xmin, false);
-          _updateElementIndex(id, updatedElement.t.x + updatedElement.t.w, this._sortedElements.xmax, true);
-          _updateElementIndex(id, updatedElement.t.y, this._sortedElements.ymin, false);
-          _updateElementIndex(id, updatedElement.t.y + updatedElement.t.h, this._sortedElements.ymax, true);
-          if (doNotRecalculateBounds !== true) {
-            this._recalculateBounds();
-          }
+          _updateElementIndex(updatedElement, updatedElement.t.x, this._sortedElements.xmin, false);
+          _updateElementIndex(updatedElement, updatedElement.t.x + updatedElement.t.w, this._sortedElements.xmax, true);
+          _updateElementIndex(updatedElement, updatedElement.t.y, this._sortedElements.ymin, false);
+          _updateElementIndex(updatedElement, updatedElement.t.y + updatedElement.t.h, this._sortedElements.ymax, true);
+          this._recalculateBounds();
         }
       }
     }, {
@@ -4579,73 +4577,11 @@ var jsPlumbBrowserUI = (function (exports) {
         this._bounds.maxy = this._sortedElements.ymax.length > 0 ? this._sortedElements.ymax[0][1] : 0;
       }
     }, {
-      key: "recomputeBounds",
-      value: function recomputeBounds() {
-        var _this2 = this;
-        this._sortedElements.xmin.length = 0;
-        this._sortedElements.xmax.length = 0;
-        this._sortedElements.ymin.length = 0;
-        this._sortedElements.ymax.length = 0;
-        this._elementMap.forEach(function (vp, id) {
-          _this2._sortedElements.xmin.push([id, vp.t.x]);
-          _this2._sortedElements.xmax.push([id, vp.t.x + vp.t.w]);
-          _this2._sortedElements.ymin.push([id, vp.t.y]);
-          _this2._sortedElements.ymax.push([id, vp.t.y + vp.t.h]);
-        });
-        this._sortedElements.xmin.sort(entryComparator);
-        this._sortedElements.ymin.sort(entryComparator);
-        this._sortedElements.xmax.sort(reverseEntryComparator);
-        this._sortedElements.ymax.sort(reverseEntryComparator);
-        this._recalculateBounds();
-      }
-    }, {
-      key: "_finaliseUpdate",
-      value: function _finaliseUpdate(id, e, doNotRecalculateBounds) {
-        e.t = rotate(e.x, e.y, e.w, e.h, e.r);
-        this._transformedElementMap.set(id, e.t);
-        if (doNotRecalculateBounds !== true) {
-          this._updateBounds(id, e, doNotRecalculateBounds);
-        }
-      }
-    }, {
-      key: "shouldFireEvent",
-      value: function shouldFireEvent(event, value, originalEvent) {
-        return true;
-      }
-    }, {
-      key: "startTransaction",
-      value: function startTransaction() {
-        if (this._currentTransaction != null) {
-          throw new Error("Viewport: cannot start transaction; a transaction is currently active.");
-        }
-        this._currentTransaction = new Transaction();
-      }
-    }, {
-      key: "endTransaction",
-      value: function endTransaction() {
-        var _this3 = this;
-        if (this._currentTransaction != null) {
-          this._currentTransaction.affectedElements.forEach(function (id) {
-            var entry = _this3.getPosition(id);
-            _this3._finaliseUpdate(id, entry, true);
-          });
-          this.recomputeBounds();
-          this._currentTransaction = null;
-        }
-      }
-    }, {
-      key: "updateElements",
-      value: function updateElements(entries) {
-        var _this4 = this;
-        forEach(entries, function (e) {
-          return _this4.updateElement(e.id, e.x, e.y, e.width, e.height, e.rotation);
-        });
-      }
-    }, {
       key: "updateElement",
       value: function updateElement(id, x, y, width, height, rotation, doNotRecalculateBounds) {
-        var e = getsert(this._elementMap, id, EMPTY_POSITION);
-        e.dirty = x == null && e.x == null || y == null && e.y == null || width == null && e.w == null || height == null && e.h == null;
+        var e = getsert(this._elementMap, id, function () {
+          return EMPTY_POSITION(id);
+        });
         if (x != null) {
           e.x = x;
         }
@@ -4665,21 +4601,20 @@ var jsPlumbBrowserUI = (function (exports) {
         e.c.y = e.y + e.h / 2;
         e.x2 = e.x + e.w;
         e.y2 = e.y + e.h;
-        if (this._currentTransaction == null) {
-          this._finaliseUpdate(id, e, doNotRecalculateBounds);
-        } else {
-          this._currentTransaction.affectedElements.add(id);
+        e.t = rotate(id, e.x, e.y, e.w, e.h, e.r);
+        this._transformedElementMap.set(id, e.t);
+        if (doNotRecalculateBounds !== true) {
+          this._updateBounds(id, e);
         }
         return e;
       }
     }, {
       key: "refreshElement",
       value: function refreshElement(elId, doNotRecalculateBounds) {
-        var me = this.instance.getManagedElements();
-        var s = me[elId] ? me[elId].el : null;
-        if (s != null) {
-          var size = this.getSize(s);
-          var offset = this.getOffset(s);
+        var m = this.instance.getManagedElements()[elId];
+        if (m != null && m.el != null) {
+          var size = this.getSize(m.el);
+          var offset = this.getOffset(m.el);
           return this.updateElement(elId, offset.x, offset.y, size.w, size.h, null, doNotRecalculateBounds);
         } else {
           return null;
@@ -4708,41 +4643,38 @@ var jsPlumbBrowserUI = (function (exports) {
     }, {
       key: "rotateElement",
       value: function rotateElement(id, rotation) {
-        var e = getsert(this._elementMap, id, EMPTY_POSITION);
-        e.r = rotation || 0;
-        this._finaliseUpdate(id, e);
-        return e;
+        return this.updateElement(id, null, null, null, null, rotation);
       }
     }, {
-      key: "getBoundsWidth",
-      value: function getBoundsWidth() {
+      key: "boundsWidth",
+      get: function get() {
         return this._bounds.maxx - this._bounds.minx;
       }
     }, {
-      key: "getBoundsHeight",
-      value: function getBoundsHeight() {
+      key: "boundsHeight",
+      get: function get() {
         return this._bounds.maxy - this._bounds.miny;
       }
     }, {
-      key: "getX",
-      value: function getX() {
+      key: "boundsMinX",
+      get: function get() {
         return this._bounds.minx;
       }
     }, {
-      key: "getY",
-      value: function getY() {
+      key: "boundsMinY",
+      get: function get() {
         return this._bounds.miny;
       }
     }, {
-      key: "setSize",
-      value: function setSize(id, w, h) {
+      key: "sizeChanged",
+      value: function sizeChanged(id, w, h) {
         if (this._elementMap.has(id)) {
           return this.updateElement(id, null, null, w, h, null);
         }
       }
     }, {
-      key: "setPosition",
-      value: function setPosition(id, x, y) {
+      key: "positionChanged",
+      value: function positionChanged(id, x, y) {
         if (this._elementMap.has(id)) {
           return this.updateElement(id, x, y, null, null, null);
         }
@@ -4759,8 +4691,8 @@ var jsPlumbBrowserUI = (function (exports) {
         this._recalculateBounds();
       }
     }, {
-      key: "remove",
-      value: function remove(id) {
+      key: "elementRemoved",
+      value: function elementRemoved(id) {
         _clearElementIndex(id, this._sortedElements.xmin);
         _clearElementIndex(id, this._sortedElements.xmax);
         _clearElementIndex(id, this._sortedElements.ymin);
@@ -4786,7 +4718,7 @@ var jsPlumbBrowserUI = (function (exports) {
       }
     }]);
     return Viewport;
-  }(EventGenerator);
+  }();
 
   var segmentMap = {};
   var Segments = {
@@ -6582,7 +6514,6 @@ var jsPlumbBrowserUI = (function (exports) {
           this._suspendedAt = "" + new Date().getTime();
         } else {
           this._suspendedAt = null;
-          this.viewport.recomputeBounds();
         }
         if (repaintAfterwards) {
           this.repaintEverything();
@@ -6790,7 +6721,7 @@ var jsPlumbBrowserUI = (function (exports) {
           var id = _this3.getId(_el);
           _this3.removeAttribute(_el, ATTRIBUTE_MANAGED);
           delete _this3._managedElements[id];
-          _this3.viewport.remove(id);
+          _this3.viewport.elementRemoved(id);
           _this3.fire(EVENT_UNMANAGE_ELEMENT, {
             el: _el,
             id: id
@@ -6945,9 +6876,8 @@ var jsPlumbBrowserUI = (function (exports) {
         var timestamp = uuid(),
             elId;
         for (elId in this._managedElements) {
-          this.viewport.refreshElement(elId, true);
+          this.viewport.refreshElement(elId, null);
         }
-        this.viewport.recomputeBounds();
         for (elId in this._managedElements) {
           this.repaint(this._managedElements[elId].el, timestamp, true);
         }
@@ -6957,7 +6887,7 @@ var jsPlumbBrowserUI = (function (exports) {
       key: "setElementPosition",
       value: function setElementPosition(el, x, y) {
         var id = this.getId(el);
-        this.viewport.setPosition(id, x, y);
+        this.viewport.positionChanged(id, x, y);
         return this.repaint(el);
       }
     }, {
@@ -7423,7 +7353,7 @@ var jsPlumbBrowserUI = (function (exports) {
     }, {
       key: "getType",
       value: function getType(id, typeDescriptor) {
-        return typeDescriptor === "connection" ? this.getConnectionType(id) : this.getEndpointType(id);
+        return typeDescriptor === TYPE_DESCRIPTOR_CONNECTION ? this.getConnectionType(id) : this.getEndpointType(id);
       }
     }, {
       key: "getConnectionType",
@@ -7724,22 +7654,6 @@ var jsPlumbBrowserUI = (function (exports) {
             }
           }
           connection.lastPaintedAt = timestamp;
-        }
-      }
-    }, {
-      key: "_refreshEndpoint",
-      value: function _refreshEndpoint(endpoint) {
-        if (!endpoint._anchor.isFloating) {
-          if (endpoint.connections.length > 0) {
-            this.addEndpointClass(endpoint, this.endpointConnectedClass);
-          } else {
-            this.removeEndpointClass(endpoint, this.endpointConnectedClass);
-          }
-          if (Endpoints.isFull(endpoint)) {
-            this.addEndpointClass(endpoint, this.endpointFullClass);
-          } else {
-            this.removeEndpointClass(endpoint, this.endpointFullClass);
-          }
         }
       }
     }, {
@@ -12785,7 +12699,7 @@ var jsPlumbBrowserUI = (function (exports) {
         Connections.addClass(this.jpc, this.instance.draggingClass);
         this.floatingId = this.placeholderInfo.id;
         this.floatingIndex = anchorIdx;
-        this.instance._refreshEndpoint(this.ep);
+        Endpoints._refreshEndpointClasses(this.ep);
       }
     }, {
       key: "_shouldStartDrag",
@@ -13210,7 +13124,7 @@ var jsPlumbBrowserUI = (function (exports) {
           } else {
             this._reattachOrDiscard(p.e);
           }
-          this.instance._refreshEndpoint(this.ep);
+          Endpoints._refreshEndpointClasses(this.ep);
           Endpoints.removeClass(this.ep, this.instance.draggingClass);
           this._cleanupDraggablePlaceholder();
           Connections.removeClass(this.jpc, this.instance.draggingClass);

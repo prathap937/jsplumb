@@ -1193,6 +1193,7 @@ export const Endpoints: {
     _setPreparedEndpoint<C_1>(endpoint: Endpoint, ep: EndpointRepresentation<C_1>): void;
     _compute<T, ElementType>(ep: EndpointRepresentation<T>, anchorPoint: AnchorPlacement, orientation: Orientation, endpointStyle: any): void;
     _registerHandler<E, T_1>(eph: EndpointHandler<E, T_1>): void;
+    _refreshEndpointClasses(endpoint: Endpoint): void;
 };
 
 // @public
@@ -1789,8 +1790,6 @@ export abstract class JsPlumbInstance<T extends {
     proxyConnection(connection: Connection, index: number, proxyEl: T["E"], endpointGenerator: (c: Connection, idx: number) => EndpointSpec, anchorGenerator: (c: Connection, idx: number) => AnchorSpec): void;
     // (undocumented)
     abstract reattachOverlay(o: OverlayBase, c: Component): void;
-    // @internal (undocumented)
-    _refreshEndpoint(endpoint: Endpoint): void;
     registerConnectionType(id: string, type: ConnectionTypeDescriptor): void;
     registerConnectionTypes(types: Record<string, ConnectionTypeDescriptor>): void;
     registerEndpointType(id: string, type: EndpointTypeDescriptor): void;
@@ -1891,6 +1890,7 @@ export abstract class JsPlumbInstance<T extends {
     // (undocumented)
     abstract toggleClass(el: T["E"] | ArrayLike<T["E"]>, clazz: string): void;
     toggleGroup(group: string | UIGroup<T["E"]>): void;
+    // (undocumented)
     toggleVisible(el: T["E"], changeEndpoints?: boolean): void;
     // (undocumented)
     abstract trigger(el: Document | T["E"], event: string, originalEvent?: Event, payload?: any, detail?: number): void;
@@ -2703,68 +2703,53 @@ export type UUID = string;
 // @public
 export class Viewport<T extends {
     E: unknown;
-}> extends EventGenerator {
+}> {
     constructor(instance: JsPlumbInstance<T>);
     // Warning: (ae-incompatible-release-tags) The symbol "addElement" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
     addElement(id: string, x: number, y: number, width: number, height: number, rotation: number): ViewportElement<T["E"]>;
     // (undocumented)
     _bounds: Record<string, number>;
+    get boundsHeight(): number;
+    get boundsMinX(): number;
+    get boundsMinY(): number;
+    get boundsWidth(): number;
     // Warning: (ae-incompatible-release-tags) The symbol "_elementMap" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
     //
     // (undocumented)
     _elementMap: Map<string, ViewportElement<T["E"]>>;
-    // (undocumented)
-    endTransaction(): void;
-    getBoundsHeight(): number;
-    getBoundsWidth(): number;
+    elementRemoved(id: string): void;
     // Warning: (ae-incompatible-release-tags) The symbol "getElements" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
     getElements(): Map<string, ViewportElement<T["E"]>>;
-    // (undocumented)
+    // @internal
     protected getOffset(el: T["E"]): PointXY;
     // Warning: (ae-incompatible-release-tags) The symbol "getPosition" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
     getPosition(id: string): ViewportElement<T["E"]>;
-    // (undocumented)
+    // @internal
     protected getSize(el: T["E"]): Size;
-    getX(): number;
-    getY(): number;
     // (undocumented)
     instance: JsPlumbInstance<T>;
     isEmpty(): boolean;
-    // (undocumented)
-    recomputeBounds(): void;
+    // Warning: (ae-incompatible-release-tags) The symbol "positionChanged" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
+    positionChanged(id: string, x: number, y: number): ViewportElement<T["E"]>;
     // Warning: (ae-incompatible-release-tags) The symbol "refreshElement" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
     refreshElement(elId: string, doNotRecalculateBounds?: boolean): ViewportElement<T["E"]>;
     // Warning: (ae-incompatible-release-tags) The symbol "registerElement" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
     registerElement(id: string, doNotRecalculateBounds?: boolean): ViewportElement<T["E"]>;
-    remove(id: string): void;
     reset(): void;
     // Warning: (ae-incompatible-release-tags) The symbol "rotateElement" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
     rotateElement(id: string, rotation: number): ViewportElement<T["E"]>;
-    // Warning: (ae-incompatible-release-tags) The symbol "setPosition" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
-    setPosition(id: string, x: number, y: number): ViewportElement<T["E"]>;
-    // Warning: (ae-incompatible-release-tags) The symbol "setSize" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
-    setSize(id: string, w: number, h: number): ViewportElement<T["E"]>;
+    // Warning: (ae-incompatible-release-tags) The symbol "sizeChanged" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
+    sizeChanged(id: string, w: number, h: number): ViewportElement<T["E"]>;
+    // Warning: (ae-incompatible-release-tags) The symbol "_sortedElements" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
+    //
     // (undocumented)
-    shouldFireEvent(event: string, value: unknown, originalEvent?: Event): boolean;
-    // (undocumented)
-    _sortedElements: Record<string, Array<[string, number]>>;
-    // (undocumented)
-    startTransaction(): void;
+    _sortedElements: Record<string, Array<[ViewportElement<any>, number]>>;
     // Warning: (ae-incompatible-release-tags) The symbol "_transformedElementMap" is marked as @public, but its signature references "TranslatedViewportElement" which is marked as @internal
     //
     // (undocumented)
     _transformedElementMap: Map<string, TranslatedViewportElement<T["E"]>>;
     // Warning: (ae-incompatible-release-tags) The symbol "updateElement" is marked as @public, but its signature references "ViewportElement" which is marked as @internal
     updateElement(id: string, x: number, y: number, width: number, height: number, rotation: number, doNotRecalculateBounds?: boolean): ViewportElement<T["E"]>;
-    // (undocumented)
-    updateElements(entries: Array<{
-        id: string;
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        rotation: number;
-    }>): void;
 }
 
 // Warning: (ae-internal-missing-underscore) The name "ViewportElement" should be prefixed with an underscore because the declaration is marked as @internal
@@ -2780,7 +2765,7 @@ export interface ViewportElement<E> extends ViewportElementBase<E> {
 // @internal (undocumented)
 export interface ViewportElementBase<E> extends ViewportPosition {
     // (undocumented)
-    dirty: boolean;
+    id: string;
     // (undocumented)
     x2: number;
     // (undocumented)

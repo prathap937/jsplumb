@@ -302,6 +302,11 @@
     var DEFAULT_KEY_REATTACH_CONNECTIONS = "reattachConnections";
     var DEFAULT_KEY_SCOPE = "scope";
 
+    var TYPE_ID_CONNECTION = "_jsplumb_connection";
+    var ID_PREFIX_CONNECTION = "_jsPlumb_c";
+    var TYPE_DESCRIPTOR_CONNECTION = "connection";
+    var DEFAULT_LABEL_LOCATION_CONNECTION = 0.5;
+
     function isFullOverlaySpec(o) {
       return o.type != null && o.options != null;
     }
@@ -924,11 +929,6 @@
       });
       return aa;
     }
-
-    var TYPE_ID_CONNECTION = "_jsplumb_connection";
-    var ID_PREFIX_CONNECTION = "_jsPlumb_c";
-    var TYPE_DESCRIPTOR_CONNECTION = "connection";
-    var DEFAULT_LABEL_LOCATION_CONNECTION = 0.5;
 
     function prepareEndpoint(conn, existing, index, anchor, element, elementId, endpoint) {
       var e;
@@ -6310,7 +6310,7 @@
       }, {
         key: "getType",
         value: function getType(id, typeDescriptor) {
-          return typeDescriptor === "connection" ? this.getConnectionType(id) : this.getEndpointType(id);
+          return typeDescriptor === TYPE_DESCRIPTOR_CONNECTION ? this.getConnectionType(id) : this.getEndpointType(id);
         }
       }, {
         key: "getConnectionType",

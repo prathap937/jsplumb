@@ -126,7 +126,6 @@ export declare class BrowserJsPlumbInstance extends JsPlumbInstance<{
     _elementMousedown: Function;
     _elementContextmenu: Function;
     private readonly _resizeObserver;
-    private readonly _mutationObserver;
     eventManager: EventManager;
     draggingClass: string;
     elementDraggingClass: string;
